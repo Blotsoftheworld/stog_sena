@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>🧵 Иголка в стоге сена 3D — Онлайн</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; }
+  canvas { display: block; }
+
+  /* ======== ЛОГИН ======== */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 600;
+    background: linear-gradient(180deg, #1a1005, #000);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #ffd700;
+  }
+  #login-screen.hidden { display: none; }
+  #login-screen h1 { font-size: 42px; text-shadow: 0 0 30px #ffd700; margin-bottom: 10px; }
+  #login-screen .subtitle { font-size: 16px; color: #aaa; margin-bottom: 40px; }
+  #login-box {
+    background: rgba(30, 20, 10, 0.95);
+    border: 3px solid #ffd700;
+    border-radius: 20px; padding: 40px 50px;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+  }
+  #login-box input {
+    width: 100%; padding: 14px 18px; margin-bottom: 15px;
+    background: rgba(0,0,0,0.6); border: 2px solid #555;
+    border-radius: 10px; color: #fff; font-size: 16px;
+    outline: none; transition: 0.3s;
+  }
+  #login-box input:focus { border-color: #ffd700; }
+  #login-box button {
+    width: 100%; padding: 15px; margin-top: 10px;
+    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 18px; font-weight: bold; cursor: pointer;
+    transition: 0.2s;
+  }
+  #login-box button:hover { transform: scale(1.02); }
+  #login-error { color: #ff6b6b; text-align: center; margin-top: 15px; font-size: 14px; }
+
+  /* ======== МУЛЬТИПЛЕЕР ======== */
+  #mp-screen {
+    position: fixed; inset: 0; z-index: 590;
+    background: linear-gradient(180deg, #0a1a2a, #000);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; color: #4fc3f7;
+  }
+  #mp-screen.show { display: flex; }
+  #mp-screen h1 { font-size: 36px; margin-bottom: 30px; text-shadow: 0 0 20px #4fc3f7; }
+  #mp-box {
+    background: rgba(20, 30, 40, 0.95);
+    border: 3px solid #4fc3f7;
+    border-radius: 20px; padding: 40px 50px;
+    box-shadow: 0 0 50px rgba(79, 195, 247, 0.3);
+    width: 500px; max-width: 90vw;
+  }
+  #mp-box .tabs {
+    display: flex; gap: 10px; margin-bottom: 25px;
+  }
+  #mp-box .tab {
+    flex: 1; padding: 12px; text-align: center;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid #555;
+    border-radius: 10px; cursor: pointer;
+    color: #888; font-weight: bold;
+    transition: 0.2s;
+  }
+  #mp-box .tab.active {
+    background: rgba(79, 195, 247, 0.2);
+    border-color: #4fc3f7; color: #fff;
+  }
+  #mp-box .content { display: none; }
+  #mp-box .content.active { display: block; }
+  #mp-box input {
+    width: 100%; padding: 14px 18px; margin-bottom: 15px;
+    background: rgba(0,0,0,0.6); border: 2px solid #555;
+    border-radius: 10px; color: #fff; font-size: 16px;
+    outline: none;
+  }
+  #mp-box input:focus { border-color: #4fc3f7; }
+  #mp-box button {
+    width: 100%; padding: 15px;
+    background: linear-gradient(180deg, #1976d2, #0d47a1);
+    border: none; border-radius: 12px; color: #fff;
+    font-size: 18px; font-weight: bold; cursor: pointer;
+    transition: 0.2s;
+  }
+  #mp-box button:hover { transform: scale(1.02); }
+  #mp-box button:disabled { background: #333; cursor: not-allowed; }
+  #mp-status {
+    color: #aaa; text-align: center; margin-top: 15px;
+    font-size: 13px;
+  }
+  #room-id-box {
+    background: rgba(255, 215, 0, 0.1);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 15px; margin-bottom: 15px;
+    text-align: center;
+  }
+  #room-id-box .label { color: #aaa; font-size: 12px; margin-bottom: 5px; }
+  #room-id-box .id {
+    color: #ffd700; font-size: 20px; font-weight: bold;
+    letter-spacing: 2px; user-select: text;
+    font-family: monospace;
+  }
+  #room-id-box .copy-hint { color: #888; font-size: 11px; margin-top: 5px; }
+
+  /* ======== СПИСОК ИГРОКОВ ======== */
+  #players-panel {
+    position: fixed; top: 80px; right: 15px;
+    background: rgba(10, 10, 10, 0.85);
+    border: 2px solid rgba(79, 195, 247, 0.5);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: #fff; font-size: 13px;
+    min-width: 180px; max-height: 250px;
+    overflow-y: auto;
+    pointer-events: none;
+    z-index: 20;
+  }
+  #players-panel h3 {
+    color: #4fc3f7; font-size: 13px; margin-bottom: 6px;
+    border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+    padding-bottom: 5px;
+  }
+  .player-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 0; font-size: 12px;
+  }
+  .player-item .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4fc3f7; box-shadow: 0 0 6px #4fc3f7;
+  }
+  .player-item.me .dot { background: #ffd700; box-shadow: 0 0 6px #ffd700; }
+  .player-item.me .name { color: #ffd700; font-weight: bold; }
+  .player-item .name { color: #ddd; }
+
+  /* ======== КОМНАТА ======== */
+  #room-badge {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+    background: rgba(10, 10, 10, 0.85);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 6px 16px;
+    color: #ffd700; font-size: 13px;
+    z-index: 25;
+    font-family: monospace;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  #room-badge:hover { background: rgba(255, 215, 0, 0.15); }
+  #room-badge.hidden { display: none; }
+
+  /* ======== ЧАТ ======== */
+  #chat-box {
+    position: fixed; bottom: 15px; left: 15px;
+    width: 320px;
+    background: rgba(10, 10, 10, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 10px 12px;
+    color: #fff; font-size: 13px;
+    z-index: 30;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  #chat-messages {
+    flex: 1; overflow-y: auto; max-height: 140px;
+    font-size: 12px; line-height: 1.4;
+  }
+  .chat-msg { margin-bottom: 2px; }
+  .chat-msg .nick { color: #ffd700; font-weight: bold; }
+  .chat-msg .nick.me { color: #4fc3f7; }
+  .chat-msg.system { color: #aaa; font-style: italic; }
+  #chat-input {
+    width: 100%; padding: 8px 10px;
+    background: rgba(0,0,0,0.6); border: 1px solid #555;
+    border-radius: 8px; color: #fff; font-size: 13px;
+    outline: none; display: none;
+  }
+  #chat-input:focus { border-color: #ffd700; }
+  #chat-hint {
+    color: #888; font-size: 11px; text-align: center;
+    padding-top: 4px;
+  }
+  #chat-hint b { color: #ffd700; }
+  #chat-hint.hidden { display: none; }
+
+  /* ======== HUD ======== */
+  #hud {
+    position: fixed; top: 15px; left: 15px; color: #fff;
+    background: rgba(20, 15, 10, 0.75);
+    padding: 16px 22px; border-radius: 14px;
+    font-size: 15px; line-height: 1.9;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  #hud .row { display: flex; justify-content: space-between; gap: 24px; }
+  #hud b { color: #ffd700; }
+
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 22px; height: 22px; pointer-events: none; z-index: 10;
+  }
+  #crosshair.hover { transform: translate(-50%,-50%) scale(1.3); }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.85);
+    box-shadow: 0 0 5px rgba(0,0,0,0.95);
+  }
+  #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; }
+  #crosshair::after { top: 10px; left: 0; height: 2px; width: 22px; }
+  #crosshair.hover::before, #crosshair.hover::after { background: #ffd700; }
+
+  #inventory-bar {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    width: 340px; height: 26px;
+    background: rgba(10, 10, 10, 0.85);
+    border-radius: 13px;
+    border: 2px solid rgba(255, 215, 0, 0.7);
+    overflow: hidden;
+  }
+  #inventory-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d);
+    transition: width 0.25s;
+  }
+  #inventory-text {
+    position: absolute; inset: 0;
+    text-align: center; color: #fff; font-size: 14px; line-height: 22px;
+    text-shadow: 2px 2px 4px #000; font-weight: bold;
+  }
+
+  #stamina-bar {
+    position: fixed; bottom: 135px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 12px;
+    background: rgba(10, 10, 10, 0.85);
+    border-radius: 6px;
+    border: 2px solid rgba(68, 170, 68, 0.7);
+    overflow: hidden;
+  }
+  #stamina-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #44aa44, #66cc66);
+    transition: width 0.15s;
+  }
+  #stamina-text {
+    position: absolute; inset: 0;
+    text-align: center; color: #fff; font-size: 10px; line-height: 8px;
+    text-shadow: 1px 1px 2px #000; font-weight: bold;
+  }
+
+  #hint {
+    position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
+    color: #fff; background: rgba(10, 10, 10, 0.85);
+    padding: 11px 26px; border-radius: 12px;
+    font-size: 15px; text-align: center;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    white-space: nowrap;
+  }
+  #hint b { color: #ffd700; }
+
+  #shop-toggle {
+    position: fixed; top: 15px; right: 15px;
+    background: linear-gradient(180deg, rgba(180, 40, 30, 0.95), rgba(120, 20, 15, 0.95));
+    color: #fff; border: 2px solid rgba(255, 215, 0, 0.6);
+    border-radius: 12px; padding: 14px 24px;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    transition: 0.2s;
+  }
+  #shop-toggle:hover { transform: scale(1.05); }
+  #shop-toggle.ready {
+    background: linear-gradient(180deg, rgba(74, 143, 58, 0.95), rgba(45, 90, 35, 0.95));
+    animation: pulseGreen 1.2s infinite alternate;
+  }
+  @keyframes pulseGreen {
+    from { box-shadow: 0 0 12px rgba(74, 143, 58, 0.6); }
+    to { box-shadow: 0 0 28px rgba(124, 240, 92, 0.9); }
+  }
+
+  #shop-menu {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  #shop-menu.open { display: flex; }
+  #shop-window {
+    background: linear-gradient(rgba(70, 45, 20, 0.98), rgba(40, 25, 10, 0.98));
+    border: 4px solid #c9a227;
+    border-radius: 18px;
+    padding: 32px; width: 540px; max-width: 90vw;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+    max-height: 90vh; overflow-y: auto;
+  }
+  #shop-window h2 {
+    color: #ffd700; text-align: center; margin-bottom: 8px;
+    font-size: 26px;
+  }
+  .money-row {
+    color: #fff; text-align: center; margin-bottom: 22px; font-size: 17px;
+  }
+  .money-row b { color: #ffd700; font-size: 22px; }
+  .shop-item {
+    display: flex; align-items: center; gap: 15px;
+    background: rgba(0,0,0,0.35);
+    padding: 16px; border-radius: 12px; margin-bottom: 12px;
+    border: 1px solid rgba(201, 162, 39, 0.35);
+  }
+  .shop-item .info { flex: 1; color: #fff; }
+  .shop-item .name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+  .shop-item .desc { font-size: 13px; color: #ccc; }
+  .shop-item .lvl { color: #4fc3f7; font-size: 12px; margin-top: 4px; font-weight: bold; }
+  .shop-item button {
+    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 12px 20px; font-size: 14px; font-weight: bold;
+    cursor: pointer; min-width: 110px;
+  }
+  .shop-item button:hover:not(:disabled) { transform: scale(1.05); }
+  .shop-item button:disabled { background: #333; color: #666; cursor: not-allowed; }
+  .shop-item button .price { display: block; color: #ffd700; font-size: 12px; margin-top: 2px; }
+  #shop-close {
+    display: block; margin: 20px auto 0; padding: 13px 44px;
+    background: linear-gradient(180deg, #c0392b, #8b1e0f);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: 16px; font-weight: bold; cursor: pointer;
+  }
+
+  #message {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    display: none; align-items: center; justify-content: center;
+    z-index: 300;
+  }
+  #message.show { display: flex; }
+  #message-box {
+    text-align: center; color: #fff; padding: 55px 75px;
+    background: linear-gradient(180deg, #2a2a2a, #111);
+    border: 4px solid #ffd700; border-radius: 24px;
+  }
+  #message-box h1 { color: #ffd700; font-size: 44px; margin-bottom: 24px; }
+  #message-box p { font-size: 20px; margin: 12px 0; }
+  #message-box button {
+    margin-top: 32px; padding: 15px 55px;
+    background: #ffd700; color: #000; border: none; border-radius: 12px;
+    font-size: 20px; font-weight: bold; cursor: pointer;
+  }
+
+  #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .popup {
+    position: absolute; color: #ffd700; font-size: 26px; font-weight: bold;
+    text-shadow: 2px 2px 6px #000;
+    animation: floatUp 1.3s forwards;
+  }
+  @keyframes floatUp {
+    0% { transform: translate(-50%, 0); opacity: 1; }
+    100% { transform: translate(-50%, -110px); opacity: 0; }
+  }
+
+  #click-to-play {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98));
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; color: #fff; flex-direction: column; cursor: pointer;
+  }
+  #click-to-play.hidden { display: none; }
+  #click-to-play .title {
+    color: #ffd700; font-size: 52px; font-weight: bold;
+    text-shadow: 0 0 40px #ffd700; margin-bottom: 22px;
+  }
+  #click-to-play .sub { font-size: 20px; color: #ccc; }
+  #click-to-play .blink { animation: blink 1.5s infinite; margin-top: 35px; font-size: 24px; color: #ffd700; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  #click-indicator {
+    position: fixed; bottom: 160px; left: 50%; transform: translateX(-50%);
+    color: #fff; background: rgba(10, 10, 10, 0.85);
+    padding: 8px 22px; border-radius: 10px; font-size: 14px;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    display: none;
+  }
+  #click-indicator.show { display: block; }
+
+  #cooldown {
+    position: fixed; bottom: 135px; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 8px; background: rgba(0,0,0,0.75);
+    border-radius: 4px; overflow: hidden; display: none;
+  }
+  #cooldown.show { display: block; }
+  #cooldown-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b6b, #ffd700);
+  }
+
+  #loading {
+    position: fixed; inset: 0; z-index: 500;
+    background: linear-gradient(180deg, #1a1005, #000);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #ffd700;
+    transition: opacity 0.8s ease;
+  }
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading .title { font-size: 42px; font-weight: bold; text-shadow: 0 0 30px #ffd700; margin-bottom: 20px; }
+  #loading .sub { font-size: 16px; color: #ccc; margin-bottom: 40px; }
+  #loading .bar-outer {
+    width: 400px; max-width: 80vw; height: 24px;
+    background: rgba(255,215,0,0.15);
+    border: 2px solid #ffd700; border-radius: 12px; overflow: hidden;
+  }
+  #loading .bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d);
+    transition: width 0.3s;
+  }
+  #loading .percent { margin-top: 18px; font-size: 24px; font-weight: bold; color: #ffd700; }
+  #loading .status { margin-top: 10px; font-size: 14px; color: #aaa; }
+</style>
+</head>
+<body>
+
+<!-- ЛОГИН -->
+<div id="login-screen">
+  <h1>🧵 Иголка в стоге сена</h1>
+  <div class="subtitle">Онлайн-ферма</div>
+  <div id="login-box">
+    <input type="text" id="login-username" placeholder="👤 Никнейм" maxlength="16">
+    <input type="password" id="login-password" placeholder="🔑 Пароль" maxlength="30">
+    <button id="login-btn">🎮 Войти</button>
+    <button id="register-btn" style="background: linear-gradient(180deg, #c0392b, #8b1e0f);">📝 Регистрация</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- МУЛЬТИПЛЕЕР -->
+<div id="mp-screen">
+  <h1>🌐 Мультиплеер</h1>
+  <div id="mp-box">
+    <div class="tabs">
+      <div class="tab active" id="tab-host">🏠 Создать комнату</div>
+      <div class="tab" id="tab-join">🔗 Подключиться</div>
+    </div>
+    
+    <div class="content active" id="content-host">
+      <div id="room-id-box" style="display:none;">
+        <div class="label">ID твоей комнаты:</div>
+        <div class="id" id="my-room-id">...</div>
+        <div class="copy-hint">Кликни чтобы скопировать</div>
+      </div>
+      <button id="host-btn">🏠 Создать комнату</button>
+      <button id="start-game-btn" style="display:none; margin-top: 10px; background: linear-gradient(180deg, #4a8f3a, #2d5a23);">▶️ Начать игру</button>
+    </div>
+
+    <div class="content" id="content-join">
+      <input type="text" id="join-room-id" placeholder="Введи ID комнаты друга" maxlength="36">
+      <button id="join-btn">🔗 Подключиться</button>
+    </div>
+    
+    <div id="mp-status">Выбери действие выше</div>
+  </div>
+</div>
+
+<!-- ЗАГРУЗКА -->
+<div id="loading">
+  <div class="title">🧵 Иголка в стоге сена</div>
+  <div class="sub">Подготовка фермы...</div>
+  <div class="bar-outer"><div class="bar-fill" id="loading-fill"></div></div>
+  <div class="percent" id="loading-percent">0%</div>
+  <div class="status" id="loading-status">Инициализация...</div>
+</div>
+
+<!-- HUD -->
+<div id="room-badge" class="hidden">🏠 Комната: <span id="room-badge-id">-</span> (клик — копировать)</div>
+
+<div id="hud">
+  <div class="row"><span>🌾 Сено:</span> <b id="hay">0</b>/<b id="maxHay">25</b></div>
+  <div class="row"><span>🥛 Молоко:</span> <b id="milk">0</b></div>
+  <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>$</div>
+  <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
+</div>
+
+<div id="shop-toggle">🏠 Амбар (Z / Я)</div>
+<div id="crosshair"></div>
+
+<div id="inventory-bar">
+  <div id="inventory-fill"></div>
+  <div id="inventory-text">0 / 25</div>
+</div>
+
+<div id="stamina-bar">
+  <div id="stamina-fill"></div>
+  <div id="stamina-text">10 / 10</div>
+</div>
+
+<div id="cooldown"><div id="cooldown-fill"></div></div>
+<div id="click-indicator">🖱️ Клик — собрать колосок</div>
+<div id="hint">🖱️ ЛКМ | WASD | <b>Shift</b> — бег | <b>E</b> — действие | <b>Z</b> — магазин | <b>T</b> — чат</div>
+<div id="popups"></div>
+
+<!-- СПИСОК ИГРОКОВ -->
+<div id="players-panel" style="display:none;">
+  <h3>👥 Игроки онлайн</h3>
+  <div id="players-list"></div>
+</div>
+
+<!-- ЧАТ -->
+<div id="chat-box" style="display:none;">
+  <div id="chat-messages"></div>
+  <input type="text" id="chat-input" placeholder="Написать сообщение..." maxlength="100">
+  <div id="chat-hint">Нажми <b>T</b> чтобы написать</div>
+</div>
+
+<!-- МАГАЗИН -->
+<div id="shop-menu">
+  <div id="shop-window">
+    <h2>🏠 АМБАР — Улучшения</h2>
+    <div class="money-row">💰 Деньги: <b id="shop-money">0</b>$ | 🥛 Молоко: <b id="shop-milk">0</b></div>
+
+    <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
+      <div class="info">
+        <div class="name">🥛 Продать всё молоко</div>
+        <div class="desc">1 литр = 5$</div>
+        <div class="lvl">У тебя: <b id="sellMilkCount">0</b> л</div>
+      </div>
+      <button id="sellMilk">Продать<span class="price" id="sellMilkPrice">0$</span></button>
+    </div>
+
+    <div class="shop-item">
+      <div class="info"><div class="name">⚡ Скорость</div><div class="desc">Быстрее бегаешь</div><div class="lvl">Уровень: <b id="speedLvl">1</b></div></div>
+      <button id="buySpeed">Купить<span class="price" id="speedPrice">20$</span></button>
+    </div>
+
+    <div class="shop-item">
+      <div class="info"><div class="name">💪 Скорость сбора</div><div class="desc">Меньше кулдаун</div><div class="lvl">Уровень: <b id="gatherLvl">1</b></div></div>
+      <button id="buyGather">Купить<span class="price" id="gatherPrice">30$</span></button>
+    </div>
+
+    <div class="shop-item">
+      <div class="info"><div class="name">🎒 Инвентарь</div><div class="desc">Больше сена</div><div class="lvl">Уровень: <b id="invLvl">1</b></div></div>
+      <button id="buyInv">Купить<span class="price" id="invPrice">50$</span></button>
+    </div>
+
+    <div class="shop-item">
+      <div class="info"><div class="name">🔍 Удача</div><div class="desc">Шанс найти иголку</div><div class="lvl">Уровень: <b id="luckLvl">1</b></div></div>
+      <button id="buyLuck">Купить<span class="price" id="luckPrice">100$</span></button>
+    </div>
+
+    <div class="shop-item" style="border-color: rgba(139, 90, 43, 0.5);">
+      <div class="info"><div class="name">🗡️ Вилы</div><div class="desc">+5 сена за клик</div><div class="lvl">Разовая</div></div>
+      <button id="buyFork">Купить<span class="price">500$</span></button>
+    </div>
+
+    <div class="shop-item" style="border-color: rgba(255, 100, 0, 0.5);">
+      <div class="info"><div class="name">💥 Динамит</div><div class="desc">+15 сена за клик</div><div class="lvl">Разовая</div></div>
+      <button id="buyDynamite">Купить<span class="price">1200$</span></button>
+    </div>
+
+    <div class="shop-item" style="border-color: rgba(100, 200, 255, 0.5);">
+      <div class="info"><div class="name">🌀 Пылесос</div><div class="desc">Зажми ЛКМ — автосбор</div><div class="lvl">Разовая</div></div>
+      <button id="buyVacuum">Купить<span class="price">2500$</span></button>
+    </div>
+
+    <div class="shop-item" style="border-color: rgba(150, 100, 255, 0.5);">
+      <div class="info"><div class="name">⚙️ Автосборщик</div><div class="desc">Сам собирает рядом</div><div class="lvl">Уровень: <b id="autoGatherLvl">0</b></div></div>
+      <button id="buyAutoGather">Купить<span class="price" id="autoGatherPrice">150$</span></button>
+    </div>
+
+    <button id="shop-close">Закрыть (Z / Я)</button>
+  </div>
+</div>
+
+<div id="message">
+  <div id="message-box">
+    <h1>🎉 ПОБЕДА! 🎉</h1>
+    <p>Ты нашёл иголку! 🧵</p>
+    <p>💰 Заработано: <b id="final-money">0</b>$</p>
+    <p>🥛 Продано молока: <b id="final-milk">0</b> л</p>
+    <p>🌾 Собрано сена: <b id="final-hay">0</b></p>
+    <button onclick="location.reload()">Играть снова</button>
+  </div>
+</div>
+
+<div id="click-to-play">
+  <div class="title">🧵 Иголка в стоге сена</div>
+  <div class="sub">Собирай сено, корми корову — и найди иголку!</div>
+  <div class="blink">👆 Кликни, чтобы играть</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

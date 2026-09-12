@@ -1,0 +1,1727 @@
+// ============================================
+// МУЛЬТИПЛЕЕР (PeerJS)
+// ============================================
+var peer = null;
+var isHost = false;
+var myRoomId = null;
+var myId = null;
+var myNickname = '';
+var myColor = '#4a90d9';
+var connections = {}; // { peerId: DataConnection } — для хоста это клиенты, для клиента — только хост
+var hostConnection = null; // для клиента — соединение с хостом
+var remotePlayers = {}; // { peerId: { model, data, lastUpdate } }
+
+// Цвета для игроков
+var PLAYER_COLORS = ['#4a90d9', '#d94a4a', '#4ad94a', '#d9d94a', '#d94ad9', '#4ad9d9', '#d97a4a', '#7a4ad9'];
+
+function randomColor() {
+  return PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)];
+}
+
+function generateRoomId() {
+  var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  var id = '';
+  for (var i = 0; i < 3; i++) {
+    for (var j = 0; j < 4; j++) id += chars[Math.floor(Math.random() * chars.length)];
+    if (i < 2) id += '-';
+  }
+  return id;
+}
+
+// ============================================
+// ХОСТ
+// ============================================
+function hostRoom() {
+  isHost = true;
+  myRoomId = generateRoomId();
+  myId = 'host-' + myRoomId;
+  myColor = randomColor();
+  
+  peer = new Peer(myId, { debug: 1 });
+  
+  peer.on('open', function(id) {
+    console.log('[MP] Комната создана:', myRoomId);
+    document.getElementById('my-room-id').textContent = myRoomId;
+    document.getElementById('room-id-box').style.display = 'block';
+    document.getElementById('host-btn').style.display = 'none';
+    document.getElementById('start-game-btn').style.display = 'block';
+    document.getElementById('mp-status').textContent = 'Ждём игроков... Они увидят твой ID';
+    
+    updateRoomBadge(myRoomId);
+  });
+  
+  peer.on('connection', function(conn) {
+    console.log('[MP] Подключился:', conn.peer);
+    connections[conn.peer] = conn;
+    
+    conn.on('open', function() {
+      // Отправляем игроку информацию о хосте
+      conn.send({
+        type: 'welcome',
+        hostNickname: myNickname,
+        hostColor: myColor,
+        existingPlayers: Object.keys(connections).map(function(pid) {
+          if (pid === conn.peer) return null;
+          var p = remotePlayers[pid];
+          return p ? { id: pid, nickname: p.data.nickname, color: p.data.color, x: p.data.x, y: p.data.y, z: p.data.z, yaw: p.data.yaw } : null;
+        }).filter(Boolean)
+      });
+      
+      // Оповещаем остальных о новом игроке
+      broadcast({
+        type: 'player_joined',
+        id: conn.peer
+      }, conn.peer);
+      
+      addChatMessage('system', conn.peer + ' присоединился к игре');
+      updatePlayersList();
+    });
+    
+    conn.on('data', function(data) {
+      handleNetworkData(data, conn.peer);
+    });
+    
+    conn.on('close', function() {
+      console.log('[MP] Отключился:', conn.peer);
+      delete connections[conn.peer];
+      removeRemotePlayer(conn.peer);
+      
+      broadcast({ type: 'player_left', id: conn.peer });
+      addChatMessage('system', conn.peer + ' покинул игру');
+      updatePlayersList();
+    });
+    
+    conn.on('error', function(err) {
+      console.error('[MP] Ошибка соединения:', err);
+    });
+  });
+  
+  peer.on('error', function(err) {
+    console.error('[MP] Ошибка:', err);
+    if (err.type === 'unavailable-id') {
+      // ID занят — генерируем новый
+      hostRoom();
+    } else {
+      document.getElementById('mp-status').textContent = '❌ Ошибка: ' + err.message;
+    }
+  });
+}
+
+// ============================================
+// КЛИЕНТ
+// ============================================
+function joinRoom(roomId) {
+  isHost = false;
+  myRoomId = roomId;
+  myId = 'p-' + Math.random().toString(36).substring(2, 10);
+  myColor = randomColor();
+  
+  peer = new Peer(myId, { debug: 1 });
+  
+  peer.on('open', function() {
+    console.log('[MP] Мой ID:', myId, '→ подключаюсь к', 'host-' + roomId);
+    
+    var conn = peer.connect('host-' + roomId, { reliable: true });
+    hostConnection = conn;
+    
+    conn.on('open', function() {
+      console.log('[MP] Подключён к хосту');
+      document.getElementById('mp-status').textContent = '✅ Подключено! Начинаем игру...';
+      
+      conn.send({
+        type: 'hello',
+        nickname: myNickname,
+        color: myColor,
+        x: player.position.x,
+        y: player.position.y,
+        z: player.position.z,
+        yaw: player.yaw
+      });
+      
+      addChatMessage('system', 'Подключено к комнате ' + roomId);
+      updateRoomBadge(roomId);
+      
+      // Запускаем игру
+      setTimeout(function() {
+        startGameFromMP();
+      }, 800);
+    });
+    
+    conn.on('data', function(data) {
+      handleNetworkData(data, 'host-' + roomId);
+    });
+    
+    conn.on('close', function() {
+      addChatMessage('system', '❌ Хост отключился');
+      document.getElementById('mp-status').textContent = '❌ Хост отключился';
+    });
+    
+    conn.on('error', function(err) {
+      console.error('[MP] Ошибка:', err);
+      document.getElementById('mp-status').textContent = '❌ Не удалось подключиться';
+    });
+  });
+  
+  peer.on('error', function(err) {
+    console.error('[MP] Ошибка:', err);
+    document.getElementById('mp-status').textContent = '❌ Ошибка: ' + err.message;
+  });
+}
+
+// ============================================
+// ОБРАБОТКА СЕТЕВЫХ ДАННЫХ
+// ============================================
+function handleNetworkData(data, fromId) {
+  if (!data || !data.type) return;
+  
+  switch (data.type) {
+    case 'hello':
+      // Только хост получает hello
+      if (isHost) {
+        remotePlayers[fromId] = {
+          data: {
+            nickname: data.nickname || fromId.substring(0, 8),
+            color: data.color || '#4a90d9',
+            x: data.x, y: data.y, z: data.z, yaw: data.yaw
+          },
+          lastUpdate: performance.now()
+        };
+        ensureRemoteModel(fromId);
+        addChatMessage('system', (data.nickname || fromId) + ' присоединился');
+        updatePlayersList();
+      }
+      break;
+      
+    case 'welcome':
+      // Клиент получает приветствие от хоста
+      if (!isHost) {
+        addRemotePlayerModel('host-' + myRoomId, data.hostNickname, data.hostColor, 0, 0, 0, 0);
+        remotePlayers['host-' + myRoomId] = {
+          data: {
+            nickname: data.hostNickname,
+            color: data.hostColor,
+            x: 0, y: 0, z: 0, yaw: 0
+          },
+          lastUpdate: performance.now()
+        };
+        
+        // Добавляем других игроков, которые уже в комнате
+        if (data.existingPlayers) {
+          data.existingPlayers.forEach(function(p) {
+            addRemotePlayerModel(p.id, p.nickname, p.color, p.x, p.y, p.z, p.yaw);
+            remotePlayers[p.id] = {
+              data: { nickname: p.nickname, color: p.color, x: p.x, y: p.y, z: p.z, yaw: p.yaw },
+              lastUpdate: performance.now()
+            };
+          });
+        }
+        updatePlayersList();
+      }
+      break;
+      
+    case 'move':
+      // Обновление позиции игрока
+      if (!remotePlayers[fromId]) {
+        remotePlayers[fromId] = { data: {}, lastUpdate: 0 };
+      }
+      remotePlayers[fromId].data.x = data.x;
+      remotePlayers[fromId].data.y = data.y;
+      remotePlayers[fromId].data.z = data.z;
+      remotePlayers[fromId].data.yaw = data.yaw;
+      remotePlayers[fromId].lastUpdate = performance.now();
+      ensureRemoteModel(fromId);
+      
+      // Если хост — ретранслируем остальным
+      if (isHost) {
+        broadcast({
+          type: 'move',
+          id: fromId,
+          x: data.x, y: data.y, z: data.z, yaw: data.yaw
+        }, fromId);
+      }
+      break;
+      
+    case 'player_joined':
+      if (!isHost) {
+        addChatMessage('system', 'Новый игрок подключился');
+      }
+      break;
+      
+    case 'player_left':
+      removeRemotePlayer(data.id);
+      updatePlayersList();
+      break;
+      
+    case 'chat':
+      addChatMessage(data.nickname, data.text, data.color, fromId === myId);
+      // Хост ретранслирует
+      if (isHost) {
+        broadcast({ type: 'chat', nickname: data.nickname, text: data.text, color: data.color, fromId: fromId }, fromId);
+      }
+      break;
+  }
+}
+
+// ============================================
+// ОТПРАВКА ДАННЫХ
+// ============================================
+function broadcast(data, exceptId) {
+  if (!isHost) return;
+  Object.keys(connections).forEach(function(pid) {
+    if (pid === exceptId) return;
+    try {
+      connections[pid].send(data);
+    } catch (e) {}
+  });
+}
+
+function sendToHost(data) {
+  if (isHost) return;
+  if (hostConnection && hostConnection.open) {
+    try {
+      hostConnection.send(data);
+    } catch (e) {}
+  }
+}
+
+// ============================================
+// МОДЕЛИ УДАЛЁННЫХ ИГРОКОВ
+// ============================================
+function ensureRemoteModel(peerId) {
+  if (remotePlayers[peerId] && remotePlayers[peerId].model) return;
+  var p = remotePlayers[peerId];
+  if (!p) return;
+  addRemotePlayerModel(peerId, p.data.nickname, p.data.color, p.data.x, p.data.y, p.data.z, p.data.yaw);
+}
+
+function addRemotePlayerModel(peerId, nickname, color, x, y, z, yaw) {
+  if (remotePlayers[peerId] && remotePlayers[peerId].model) return;
+  
+  var model = createPlayerModel(nickname, color);
+  model.position.set(x || 0, y || 0, z || 0);
+  if (yaw !== undefined) model.rotation.y = yaw;
+  scene.add(model);
+  
+  if (!remotePlayers[peerId]) remotePlayers[peerId] = { data: {}, lastUpdate: 0 };
+  remotePlayers[peerId].model = model;
+  remotePlayers[peerId].data.nickname = nickname;
+  remotePlayers[peerId].data.color = color;
+}
+
+function removeRemotePlayer(peerId) {
+  var p = remotePlayers[peerId];
+  if (p && p.model) {
+    scene.remove(p.model);
+  }
+  delete remotePlayers[peerId];
+}
+
+// ============================================
+// СОЗДАНИЕ МОДЕЛИ ИГРОКА
+// ============================================
+function createPlayerModel(username, color) {
+  var group = new THREE.Group();
+  var bodyColor = new THREE.Color(color || 0x4a90d9);
+  var bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor });
+  var skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+  
+  var body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.35), bodyMat);
+  body.position.y = 1.2;
+  body.castShadow = true;
+  group.add(body);
+  
+  var head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
+  head.position.y = 1.9;
+  head.castShadow = true;
+  group.add(head);
+  
+  var hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+  hair.position.y = 2.15;
+  group.add(hair);
+  
+  var legGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+  var legMat = new THREE.MeshStandardMaterial({ color: 0x2a4a7a });
+  var leftLeg = new THREE.Mesh(legGeo, legMat);
+  leftLeg.position.set(-0.15, 0.45, 0);
+  leftLeg.castShadow = true;
+  group.add(leftLeg);
+  
+  var rightLeg = new THREE.Mesh(legGeo, legMat);
+  rightLeg.position.set(0.15, 0.45, 0);
+  rightLeg.castShadow = true;
+  group.add(rightLeg);
+  
+  var armGeo = new THREE.BoxGeometry(0.15, 0.5, 0.15);
+  var leftArm = new THREE.Mesh(armGeo, bodyMat);
+  leftArm.position.set(-0.4, 1.15, 0);
+  leftArm.castShadow = true;
+  group.add(leftArm);
+  
+  var rightArm = new THREE.Mesh(armGeo, bodyMat);
+  rightArm.position.set(0.4, 1.15, 0);
+  rightArm.castShadow = true;
+  group.add(rightArm);
+  
+  var label = makeLabel(username || 'Игрок');
+  label.position.y = 2.6;
+  label.scale.set(3, 0.7, 1);
+  group.add(label);
+  
+  return group;
+}
+
+// ============================================
+// ОБНОВЛЕНИЕ УДАЛЁННЫХ ИГРОКОВ
+// ============================================
+function updateRemotePlayers(dt) {
+  var now = performance.now();
+  Object.keys(remotePlayers).forEach(function(pid) {
+    var p = remotePlayers[pid];
+    if (!p.model || !p.data) return;
+    
+    // Плавно двигаем к целевой позиции
+    if (p.data.x !== undefined) {
+      p.model.position.x += (p.data.x - p.model.position.x) * dt * 10;
+      p.model.position.y += ((p.data.y || 0) - p.model.position.y) * dt * 10;
+      p.model.position.z += (p.data.z - p.model.position.z) * dt * 10;
+    }
+    if (p.data.yaw !== undefined) {
+      var targetYaw = p.data.yaw;
+      // Плавный поворот
+      var diff = targetYaw - p.model.rotation.y;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      p.model.rotation.y += diff * dt * 10;
+    }
+    
+    // Если давно не получали данных — скрываем (или удаляем)
+    if (now - p.lastUpdate > 10000) {
+      // Игрок пропал
+      if (p.model.visible) p.model.visible = false;
+    } else {
+      if (!p.model.visible) p.model.visible = true;
+    }
+  });
+}
+
+// ============================================
+// ОТПРАВКА СВОЕЙ ПОЗИЦИИ (20 раз/сек)
+// ============================================
+var lastNetworkSend = 0;
+var NETWORK_RATE = 0.05; // 50мс
+
+function sendMyPosition(dt) {
+  lastNetworkSend += dt;
+  if (lastNetworkSend < NETWORK_RATE) return;
+  lastNetworkSend = 0;
+  
+  var data = {
+    type: 'move',
+    x: player.position.x,
+    y: player.position.y,
+    z: player.position.z,
+    yaw: player.yaw
+  };
+  
+  if (isHost) {
+    broadcast(data);
+  } else {
+    sendToHost(data);
+  }
+}
+
+// ============================================
+// СПИСОК ИГРОКОВ
+// ============================================
+function updatePlayersList() {
+  var list = document.getElementById('players-list');
+  if (!list) return;
+  
+  var html = '<div class="player-item me"><div class="dot"></div><div class="name">' + myNickname + ' (ты)</div></div>';
+  
+  Object.keys(remotePlayers).forEach(function(pid) {
+    var p = remotePlayers[pid];
+    if (p.data && p.data.nickname) {
+      html += '<div class="player-item"><div class="dot"></div><div class="name">' + p.data.nickname + '</div></div>';
+    }
+  });
+  
+  list.innerHTML = html;
+}
+
+// ============================================
+// ЧАТ
+// ============================================
+function addChatMessage(nickname, text, color, isMe, isSystem) {
+  var messages = document.getElementById('chat-messages');
+  if (!messages) return;
+  
+  var div = document.createElement('div');
+  div.className = 'chat-msg' + (isSystem ? ' system' : '');
+  
+  if (isSystem) {
+    div.textContent = text;
+  } else {
+    var nickSpan = document.createElement('span');
+    nickSpan.className = 'nick' + (isMe ? ' me' : '');
+    if (color) nickSpan.style.color = color;
+    nickSpan.textContent = nickname + ': ';
+    div.appendChild(nickSpan);
+    div.appendChild(document.createTextNode(text));
+  }
+  
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  
+  // Ограничиваем 50 сообщениями
+  while (messages.children.length > 50) {
+    messages.removeChild(messages.firstChild);
+  }
+}
+
+function sendChat(text) {
+  if (!text.trim()) return;
+  
+  addChatMessage(myNickname, text, myColor, true);
+  
+  var data = {
+    type: 'chat',
+    nickname: myNickname,
+    text: text,
+    color: myColor,
+    fromId: myId
+  };
+  
+  if (isHost) {
+    broadcast(data);
+  } else {
+    sendToHost(data);
+  }
+}
+
+// ============================================
+// UI: БЕЙДЖ КОМНАТЫ
+// ============================================
+function updateRoomBadge(roomId) {
+  var badge = document.getElementById('room-badge');
+  var idSpan = document.getElementById('room-badge-id');
+  if (badge && idSpan) {
+    idSpan.textContent = roomId;
+    badge.classList.remove('hidden');
+  }
+}
+
+document.getElementById('room-badge').onclick = function() {
+  if (myRoomId) {
+    navigator.clipboard.writeText(myRoomId).then(function() {
+      showHint('📋 ID комнаты скопирован!');
+    });
+  }
+};
+
+// ============================================
+// UI: МУЛЬТИПЛЕЕР
+// ============================================
+document.getElementById('tab-host').onclick = function() {
+  document.getElementById('tab-host').classList.add('active');
+  document.getElementById('tab-join').classList.remove('active');
+  document.getElementById('content-host').classList.add('active');
+  document.getElementById('content-join').classList.remove('active');
+};
+
+document.getElementById('tab-join').onclick = function() {
+  document.getElementById('tab-join').classList.add('active');
+  document.getElementById('tab-host').classList.remove('active');
+  document.getElementById('content-join').classList.add('active');
+  document.getElementById('content-host').classList.remove('active');
+};
+
+document.getElementById('host-btn').onclick = function() {
+  document.getElementById('mp-status').textContent = '⏳ Создаём комнату...';
+  hostRoom();
+};
+
+document.getElementById('start-game-btn').onclick = function() {
+  startGameFromMP();
+};
+
+document.getElementById('join-btn').onclick = function() {
+  var roomId = document.getElementById('join-room-id').value.trim().toLowerCase();
+  if (!roomId) {
+    document.getElementById('mp-status').textContent = '❌ Введи ID комнаты';
+    return;
+  }
+  document.getElementById('mp-status').textContent = '⏳ Подключаемся...';
+  joinRoom(roomId);
+};
+
+document.getElementById('my-room-id').onclick = function() {
+  if (myRoomId) {
+    navigator.clipboard.writeText(myRoomId).then(function() {
+      showHint('📋 ID скопирован!');
+    });
+  }
+};
+
+// ============================================
+// СТАРТ ИГРЫ ИЗ МП
+// ============================================
+function startGameFromMP() {
+  document.getElementById('mp-screen').classList.remove('show');
+  document.getElementById('loading').classList.remove('done');
+  setLoad(100, 'Загрузка мира...');
+  
+  setTimeout(function() {
+    document.getElementById('loading').classList.add('done');
+    document.getElementById('players-panel').style.display = 'block';
+    document.getElementById('chat-box').style.display = 'flex';
+    
+    updateHUD();
+    updateShopMenu();
+    updatePlayersList();
+    
+    animate();
+    setInterval(saveUserData, 30000);
+  }, 500);
+}
+
+// ============================================
+// АВТОРИЗАЦИЯ
+// ============================================
+var loginScreen = document.getElementById('login-screen');
+var loginUsername = document.getElementById('login-username');
+var loginPassword = document.getElementById('login-password');
+var loginError = document.getElementById('login-error');
+
+document.getElementById('login-btn').onclick = function() {
+  var username = loginUsername.value.trim();
+  var password = loginPassword.value;
+  
+  var result = loginUser(username, password);
+  if (result.success) {
+    Object.assign(state, result.data);
+    state.stamina = state.staminaMax;
+    myNickname = username;
+    loginScreen.classList.add('hidden');
+    
+    // Показываем мультиплеер-меню
+    document.getElementById('mp-screen').classList.add('show');
+  } else {
+    loginError.textContent = result.error;
+  }
+};
+
+document.getElementById('register-btn').onclick = function() {
+  var username = loginUsername.value.trim();
+  var password = loginPassword.value;
+  
+  var result = registerUser(username, password);
+  if (result.success) {
+    loginError.textContent = '✓ Аккаунт создан! Теперь войдите.';
+    loginError.style.color = '#4fc3f7';
+  } else {
+    loginError.textContent = result.error;
+  }
+};
+
+// ============================================
+// ЗАГРУЗКА
+// ============================================
+var loadingEl = document.getElementById('loading');
+var loadingFill = document.getElementById('loading-fill');
+var loadingPercent = document.getElementById('loading-percent');
+var loadingStatus = document.getElementById('loading-status');
+
+var loadSteps = ['Инициализация...', 'Земля...', 'Колоски...', 'Амбар...', 'Корова...', 'Иголка...', 'Готово!'];
+
+function setLoad(percent, status) {
+  loadingFill.style.width = percent + '%';
+  loadingPercent.textContent = Math.floor(percent) + '%';
+  if (status) loadingStatus.textContent = status;
+}
+
+// ============================================
+// АККАУНТЫ
+// ============================================
+var currentUser = null;
+
+function getAccounts() {
+  var data = localStorage.getItem('haystack_accounts');
+  return data ? JSON.parse(data) : {};
+}
+function saveAccounts(a) { localStorage.setItem('haystack_accounts', JSON.stringify(a)); }
+function hashPassword(p) {
+  var h = 0;
+  for (var i = 0; i < p.length; i++) { h = ((h << 5) - h) + p.charCodeAt(i); h = h & h; }
+  return h.toString(16);
+}
+
+function registerUser(u, p) {
+  var a = getAccounts();
+  if (a[u]) return { success: false, error: 'Ник занят!' };
+  if (u.length < 3) return { success: false, error: 'Ник мин. 3 символа!' };
+  if (p.length < 4) return { success: false, error: 'Пароль мин. 4 символа!' };
+  a[u] = {
+    password: hashPassword(p),
+    money: 0, hay: 0, milk: 0, totalHay: 0, totalMilkSold: 0,
+    maxHay: 25, moveSpeed: 5.0, gatherCooldown: 0.8,
+    foundNeedle: false, speedLvl: 1, gatherLvl: 1, invLvl: 1, luckLvl: 1,
+    hasFork: false, hasDynamite: false, hasVacuum: false,
+    autoGatherLvl: 0, staminaMax: 10
+  };
+  saveAccounts(a);
+  return { success: true };
+}
+
+function loginUser(u, p) {
+  var a = getAccounts();
+  if (!a[u]) return { success: false, error: 'Пользователь не найден!' };
+  if (a[u].password !== hashPassword(p)) return { success: false, error: 'Неверный пароль!' };
+  currentUser = u;
+  return { success: true, data: a[u] };
+}
+
+function saveUserData() {
+  if (!currentUser) return;
+  var a = getAccounts();
+  if (a[currentUser]) {
+    a[currentUser].money = state.money;
+    a[currentUser].hay = state.hay;
+    a[currentUser].milk = state.milk;
+    a[currentUser].totalHay = state.totalHay;
+    a[currentUser].totalMilkSold = state.totalMilkSold;
+    a[currentUser].maxHay = state.maxHay;
+    a[currentUser].moveSpeed = state.moveSpeed;
+    a[currentUser].gatherCooldown = state.gatherCooldown;
+    a[currentUser].foundNeedle = state.foundNeedle;
+    a[currentUser].speedLvl = state.speedLvl;
+    a[currentUser].gatherLvl = state.gatherLvl;
+    a[currentUser].invLvl = state.invLvl;
+    a[currentUser].luckLvl = state.luckLvl;
+    a[currentUser].hasFork = state.hasFork;
+    a[currentUser].hasDynamite = state.hasDynamite;
+    a[currentUser].hasVacuum = state.hasVacuum;
+    a[currentUser].autoGatherLvl = state.autoGatherLvl;
+    a[currentUser].staminaMax = state.staminaMax;
+    saveAccounts(a);
+  }
+}
+
+// ============================================
+// СОСТОЯНИЕ
+// ============================================
+var state = {
+  money: 0, hay: 0, milk: 0, totalHay: 0, totalMilkSold: 0,
+  maxHay: 25, moveSpeed: 5.0, gatherCooldown: 0.8, lastGatherTime: 0,
+  foundNeedle: false, speedLvl: 1, gatherLvl: 1, invLvl: 1, luckLvl: 1,
+  hasFork: false, hasDynamite: false, hasVacuum: false,
+  forkCooldown: 2.0, lastForkTime: 0,
+  dynamiteCooldown: 8.0, lastDynamiteTime: 0,
+  vacuumActive: false, vacuumTimer: 0,
+  autoGatherLvl: 0, autoGatherTimer: 0,
+  stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0
+};
+
+var PRICES = {
+  speed: [20, 40, 80, 160, 320, 640, 1280],
+  gather: [30, 60, 120, 240, 480, 960, 1920],
+  inv: [50, 100, 200, 400, 800, 1600, 3200],
+  luck: [100, 250, 600, 1500, 4000],
+  fork: [500], dynamite: [1200], vacuum: [2500],
+  autoGather: [150, 400, 1000, 2500, 6000]
+};
+
+var MILK_PRICE = 5;
+
+// ============================================
+// СЦЕНА
+// ============================================
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9dc4e8);
+scene.fog = new THREE.Fog(0xb8d4e8, 45, 130);
+
+var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 300);
+var renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.BasicShadowMap;
+document.body.appendChild(renderer.domElement);
+
+var VIEW_DISTANCE = 80;
+var UPDATE_INTERVAL = 0.1;
+var frustum = new THREE.Frustum();
+var projScreenMatrix = new THREE.Matrix4();
+var visibleObjects = [];
+
+function updateVisibility() {
+  camera.updateMatrixWorld();
+  projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  frustum.setFromProjectionMatrix(projScreenMatrix);
+  for (var i = 0; i < visibleObjects.length; i++) {
+    var obj = visibleObjects[i];
+    if (obj.userData && obj.userData.viewPosition) {
+      obj.visible = player.position.distanceTo(obj.userData.viewPosition) < VIEW_DISTANCE;
+    }
+  }
+}
+
+var hemiLight = new THREE.HemisphereLight(0xcce0ff, 0x4a7a2a, 0.8);
+scene.add(hemiLight);
+
+var sun = new THREE.DirectionalLight(0xfff5e0, 1.4);
+sun.position.set(40, 60, 30);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -40;
+sun.shadow.camera.right = 40;
+sun.shadow.camera.top = 40;
+sun.shadow.camera.bottom = -40;
+scene.add(sun);
+scene.add(sun.target);
+
+var colliders = [];
+function addCollider(x, z, r) { colliders.push({ x: x, z: z, r: r }); }
+var WORLD_BOUND = 38;
+
+setLoad(5, loadSteps[0]);
+
+// ЗЕМЛЯ
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({ color: 0x4a7a2a, roughness: 1 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+setLoad(10, loadSteps[1]);
+
+// СТОГ
+var haystackGroup = new THREE.Group();
+haystackGroup.position.set(0, 0, -15);
+scene.add(haystackGroup);
+
+var HAYSTACK_RADIUS = 3.0;
+var HAYSTACK_HEIGHT = 5.2;
+
+var stemMaterials = [], headMaterials = [], awnMaterials = [];
+for (var m = 0; m < 8; m++) {
+  var hue = 0.10 + Math.random() * 0.05;
+  stemMaterials.push(new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue, 0.65, 0.38 + Math.random() * 0.08), roughness: 0.85 }));
+  headMaterials.push(new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue + 0.005, 0.75, 0.52 + Math.random() * 0.1), roughness: 0.75 }));
+  awnMaterials.push(new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(hue - 0.01, 0.55, 0.6), roughness: 0.85 }));
+}
+
+var stemGeo = new THREE.CylinderGeometry(0.018, 0.028, 0.65, 5);
+var grainGeo = new THREE.SphereGeometry(0.026, 5, 4);
+var tipGeo = new THREE.ConeGeometry(0.014, 0.08, 4);
+var awnGeo = new THREE.CylinderGeometry(0.003, 0.004, 0.18, 3);
+var knotGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.035, 5);
+var leafGeo = new THREE.ConeGeometry(0.014, 0.18, 3);
+
+function addStalk(parentGroup, x, y, z, rotX, rotY, rotZ, scale) {
+  var stemMat = stemMaterials[Math.floor(Math.random() * 8)];
+  var headMat = headMaterials[Math.floor(Math.random() * 8)];
+  var awnMat = awnMaterials[Math.floor(Math.random() * 8)];
+  var stem = new THREE.Mesh(stemGeo, stemMat);
+  stem.position.set(x, y, z);
+  stem.rotation.set(rotX, rotY, rotZ);
+  stem.scale.setScalar(scale);
+  parentGroup.add(stem);
+  var knot = new THREE.Mesh(knotGeo, headMat);
+  knot.position.set(x, y - 0.1 * scale, z);
+  knot.rotation.set(rotX, rotY, rotZ);
+  knot.scale.setScalar(scale);
+  parentGroup.add(knot);
+  for (var i = 0; i < 7; i++) {
+    var t = i / 6;
+    var gy = y + (0.30 + t * 0.24) * scale;
+    var ga = i * 2.3 + rotY;
+    var grain = new THREE.Mesh(grainGeo, headMat);
+    grain.position.set(x + Math.cos(ga) * 0.022 * scale, gy, z + Math.sin(ga) * 0.022 * scale);
+    grain.scale.set(0.7 * scale, 1.6 * scale, 0.7 * scale);
+    parentGroup.add(grain);
+  }
+  var tip = new THREE.Mesh(tipGeo, headMat);
+  tip.position.set(x, y + 0.6 * scale, z);
+  tip.scale.setScalar(scale);
+  parentGroup.add(tip);
+  for (var a = 0; a < 5; a++) {
+    var aa = (a / 5) * Math.PI * 2 + rotY;
+    var awn = new THREE.Mesh(awnGeo, awnMat);
+    awn.position.set(x + Math.cos(aa) * 0.015 * scale, y + 0.62 * scale, z + Math.sin(aa) * 0.015 * scale);
+    awn.rotation.set(-Math.sin(aa) * 0.35, rotY, Math.cos(aa) * 0.35);
+    awn.scale.setScalar(scale);
+    parentGroup.add(awn);
+  }
+  for (var L = 0; L < 2; L++) {
+    var langle = Math.random() * Math.PI * 2;
+    var leaf = new THREE.Mesh(leafGeo, stemMat);
+    leaf.position.set(x + Math.cos(langle) * 0.03 * scale, y - (0.18 + L * 0.1) * scale, z + Math.sin(langle) * 0.03 * scale);
+    leaf.rotation.set(rotX, rotY, Math.cos(langle) * 1.2);
+    leaf.scale.set(scale, scale, scale * 0.3);
+    parentGroup.add(leaf);
+  }
+}
+
+function getConeRadius(hp) { return HAYSTACK_RADIUS * (1 - Math.pow(hp, 0.9) * 0.95); }
+
+var coreMass = new THREE.Mesh(
+  new THREE.ConeGeometry(HAYSTACK_RADIUS * 0.82, HAYSTACK_HEIGHT * 0.94, 16),
+  new THREE.MeshStandardMaterial({ color: 0x9a7a28, roughness: 1 })
+);
+coreMass.position.y = HAYSTACK_HEIGHT * 0.47;
+haystackGroup.add(coreMass);
+
+setLoad(25, loadSteps[2]);
+
+var layer1Stalks = [], layer2Stalks = [], layer3Stalks = [], skirtStalks = [];
+
+for (var i1 = 0; i1 < 100; i1++) {
+  var hp1 = Math.pow(Math.random(), 0.9);
+  var ang1 = Math.random() * Math.PI * 2;
+  var r1 = getConeRadius(hp1) * (0.5 + Math.random() * 0.3);
+  addStalk(haystackGroup, Math.cos(ang1) * r1, hp1 * HAYSTACK_HEIGHT, Math.sin(ang1) * r1,
+    (Math.random() - 0.5) * 0.8, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.8, 0.85 + Math.random() * 0.3);
+}
+haystackGroup.children.slice(-100).forEach(function(s) { if (s.isMesh) layer1Stalks.push(s); });
+setLoad(35);
+
+for (var i2 = 0; i2 < 130; i2++) {
+  var hp2 = Math.pow(Math.random(), 0.9);
+  var ang2 = Math.random() * Math.PI * 2;
+  var r2 = getConeRadius(hp2) * (0.8 + Math.random() * 0.15);
+  addStalk(haystackGroup, Math.cos(ang2) * r2, hp2 * HAYSTACK_HEIGHT, Math.sin(ang2) * r2,
+    (Math.random() - 0.5) * 1.0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 1.0, 0.9 + Math.random() * 0.35);
+}
+haystackGroup.children.slice(-130).forEach(function(s) { if (s.isMesh) layer2Stalks.push(s); });
+setLoad(45);
+
+for (var i3 = 0; i3 < 160; i3++) {
+  var hp3 = Math.pow(Math.random(), 0.9);
+  var ang3 = Math.random() * Math.PI * 2;
+  var r3 = getConeRadius(hp3) * (0.95 + Math.random() * 0.12);
+  var outAngle = Math.atan2(Math.sin(ang3), Math.cos(ang3));
+  addStalk(haystackGroup, Math.cos(ang3) * r3, hp3 * HAYSTACK_HEIGHT, Math.sin(ang3) * r3,
+    (Math.random() - 0.5) * 0.6, outAngle + (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.6, 0.95 + Math.random() * 0.4);
+}
+haystackGroup.children.slice(-160).forEach(function(s) { if (s.isMesh) layer3Stalks.push(s); });
+setLoad(55);
+
+for (var i4 = 0; i4 < 80; i4++) {
+  var hp4 = 0.65 + Math.random() * 0.35;
+  var ang4 = Math.random() * Math.PI * 2;
+  var r4 = getConeRadius(hp4) * (0.85 + Math.random() * 0.15);
+  addStalk(haystackGroup, Math.cos(ang4) * r4, hp4 * HAYSTACK_HEIGHT, Math.sin(ang4) * r4,
+    (Math.random() - 0.5) * 0.4, ang4, -Math.cos(ang4) * 0.15, 0.8 + Math.random() * 0.3);
+}
+for (var tipI = 0; tipI < 20; tipI++) {
+  var tang = Math.random() * Math.PI * 2;
+  var tr = Math.random() * 0.12;
+  addStalk(haystackGroup, Math.cos(tang) * tr, HAYSTACK_HEIGHT * (0.97 + Math.random() * 0.06), Math.sin(tang) * tr,
+    (Math.random() - 0.5) * 0.5, tang, (Math.random() - 0.5) * 0.5, 0.7 + Math.random() * 0.3);
+}
+for (var sk = 0; sk < 60; sk++) {
+  var sang = (sk / 60) * Math.PI * 2 + Math.random() * 0.1;
+  var sr = HAYSTACK_RADIUS * (0.98 + Math.random() * 0.1);
+  addStalk(haystackGroup, Math.cos(sang) * sr, 0.1 + Math.random() * 0.2, Math.sin(sang) * sr,
+    Math.PI - (Math.random() * 0.5 + 0.4), sang, (Math.random() - 0.5) * 0.6, 0.95 + Math.random() * 0.4);
+}
+haystackGroup.children.slice(-60).forEach(function(s) { if (s.isMesh) skirtStalks.push(s); });
+
+function updateHaystackLOD() {
+  var d = player.position.distanceTo(haystackGroup.position);
+  var show1 = d < 40, show2 = d < 40, show3 = d < 25, showSkirt = d < 25;
+  layer1Stalks.forEach(function(s) { s.visible = show1; });
+  layer2Stalks.forEach(function(s) { s.visible = show2; });
+  layer3Stalks.forEach(function(s) { s.visible = show3; });
+  skirtStalks.forEach(function(s) { s.visible = showSkirt; });
+}
+
+addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
+setLoad(65, loadSteps[3]);
+
+// ИГОЛКА
+var needle = new THREE.Group();
+var needleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6),
+  new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.15 }));
+needleBody.rotation.z = Math.PI / 2;
+needle.add(needleBody);
+var needleEye = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.018, 6, 12),
+  new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.15 }));
+needleEye.position.x = 0.45;
+needleEye.rotation.y = Math.PI / 2;
+needle.add(needleEye);
+needle.position.set((Math.random() - 0.5) * 4, 1 + Math.random() * 3, (Math.random() - 0.5) * 4);
+needle.userData.isNeedle = true;
+needle.visible = false;
+haystackGroup.add(needle);
+
+function relocateNeedle() {
+  var a = Math.random() * Math.PI * 2;
+  var r = Math.random() * HAYSTACK_RADIUS * 0.85;
+  var h = 0.5 + Math.random() * (HAYSTACK_HEIGHT * 0.7);
+  needle.position.set(Math.cos(a) * r, h, Math.sin(a) * r);
+  needle.rotation.set(Math.random(), Math.random() * Math.PI * 2, Math.random());
+}
+
+var needleRelocateTimer = 0;
+var needleRelocateInterval = 30 + Math.random() * 30;
+
+function updateNeedlePosition(dt) {
+  if (state.foundNeedle) return;
+  needleRelocateTimer += dt;
+  if (needleRelocateTimer >= needleRelocateInterval) {
+    needleRelocateTimer = 0;
+    needleRelocateInterval = 30 + Math.random() * 30;
+    relocateNeedle();
+  }
+}
+
+// АМБАР
+var barn = new THREE.Group();
+barn.position.set(0, 0, 22);
+scene.add(barn);
+
+var redMat = new THREE.MeshStandardMaterial({ color: 0xa8241c, roughness: 0.85 });
+var redDarkMat = new THREE.MeshStandardMaterial({ color: 0x7a1810, roughness: 0.9 });
+var whiteTrimMat = new THREE.MeshStandardMaterial({ color: 0xf0ede5, roughness: 0.8 });
+var roofMat = new THREE.MeshStandardMaterial({ color: 0x3a2415, roughness: 0.9 });
+
+var BARN_W = 12, BARN_D = 10, BARN_H = 6.5, WALL_T = 0.4, doorW = 4.5;
+
+var barnFloor = new THREE.Mesh(new THREE.BoxGeometry(BARN_W - WALL_T * 2, 0.15, BARN_D - WALL_T * 2),
+  new THREE.MeshStandardMaterial({ color: 0x9a7858, roughness: 1 }));
+barnFloor.position.set(0, 0.075, 0);
+barnFloor.receiveShadow = true;
+barn.add(barnFloor);
+
+var backWall = new THREE.Mesh(new THREE.BoxGeometry(BARN_W, BARN_H, WALL_T), redMat);
+backWall.position.set(0, BARN_H / 2, BARN_D / 2);
+backWall.castShadow = true;
+barn.add(backWall);
+
+[-BARN_W / 2, BARN_W / 2].forEach(function(x) {
+  var sw = new THREE.Mesh(new THREE.BoxGeometry(WALL_T, BARN_H, BARN_D), redMat);
+  sw.position.set(x, BARN_H / 2, 0);
+  sw.castShadow = true;
+  barn.add(sw);
+});
+
+var sideW = (BARN_W - doorW) / 2;
+[-1, 1].forEach(function(sign) {
+  var fp = new THREE.Mesh(new THREE.BoxGeometry(sideW, BARN_H, WALL_T), redMat);
+  fp.position.set(sign * (doorW / 2 + sideW / 2), BARN_H / 2, -BARN_D / 2);
+  fp.castShadow = true;
+  barn.add(fp);
+});
+
+var lintel = new THREE.Mesh(new THREE.BoxGeometry(doorW, 1.8, WALL_T), redMat);
+lintel.position.set(0, BARN_H - 0.9, -BARN_D / 2);
+barn.add(lintel);
+
+var roofGeo = new THREE.BoxGeometry(BARN_W + 1.2, 0.5, BARN_D * 0.65);
+var roofL = new THREE.Mesh(roofGeo, roofMat);
+roofL.position.set(0, BARN_H + 1.5, -BARN_D * 0.25);
+roofL.rotation.x = -Math.PI / 6;
+barn.add(roofL);
+var roofR = new THREE.Mesh(roofGeo, roofMat);
+roofR.position.set(0, BARN_H + 1.5, BARN_D * 0.25);
+roofR.rotation.x = Math.PI / 6;
+barn.add(roofR);
+
+for (var bx = -BARN_W / 2 + 0.5; bx <= BARN_W / 2 - 0.5; bx += 1) addCollider(bx, 22 + BARN_D / 2, 0.55);
+for (var bz = -BARN_D / 2 + 0.5; bz <= BARN_D / 2 - 0.5; bz += 1) {
+  addCollider(-BARN_W / 2, 22 + bz, 0.55);
+  addCollider(BARN_W / 2, 22 + bz, 0.55);
+}
+for (var fx = -BARN_W / 2 + 0.5; fx <= -doorW / 2 - 0.3; fx += 0.7) addCollider(fx, 22 - BARN_D / 2, 0.55);
+for (var fx2 = doorW / 2 + 0.3; fx2 <= BARN_W / 2 - 0.5; fx2 += 0.7) addCollider(fx2, 22 - BARN_D / 2, 0.55);
+
+setLoad(80, loadSteps[4]);
+
+// КОРОВА (упрощённо)
+var cow = new THREE.Group();
+cow.position.set(15, 0, 5);
+cow.rotation.y = -Math.PI / 4;
+scene.add(cow);
+
+var cowBodyMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f0, roughness: 0.85 });
+var cowSpotMat = new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.9 });
+var cowPinkMat = new THREE.MeshStandardMaterial({ color: 0xe8a0a8, roughness: 0.8 });
+
+var bodyCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 1.6, 16), cowBodyMat);
+bodyCyl.rotation.z = Math.PI / 2;
+bodyCyl.position.set(0, 2.0, 0);
+bodyCyl.castShadow = true;
+cow.add(bodyCyl);
+
+[0.8, -0.8].forEach(function(x) {
+  var s = new THREE.Mesh(new THREE.SphereGeometry(0.95, 16, 14), cowBodyMat);
+  s.position.set(x, 2.0, 0);
+  s.castShadow = true;
+  cow.add(s);
+});
+
+var cowHead = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 14), cowBodyMat);
+cowHead.position.set(2.5, 2.9, 0);
+cowHead.castShadow = true;
+cow.add(cowHead);
+
+var cowSnout = new THREE.Mesh(
+  new THREE.SphereGeometry(0.42, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), cowPinkMat);
+cowSnout.position.set(3.15, 2.7, 0);
+cowSnout.rotation.z = Math.PI / 2;
+cow.add(cowSnout);
+
+[0.28, -0.28].forEach(function(z) {
+  var eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+  eyeWhite.position.set(2.85, 3.1, z);
+  cow.add(eyeWhite);
+  var pupil = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10),
+    new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.1 }));
+  pupil.position.set(2.98, 3.1, z + 0.02);
+  cow.add(pupil);
+});
+
+[[1.0, 0.6], [1.0, -0.6], [-1.0, 0.6], [-1.0, -0.6]].forEach(function(p) {
+  var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.4, 10), cowBodyMat);
+  leg.position.set(p[0], 1.0, p[1]);
+  leg.castShadow = true;
+  cow.add(leg);
+  var hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.22, 10),
+    new THREE.MeshStandardMaterial({ color: 0x2a1f15 }));
+  hoof.position.set(p[0], 0.11, p[1]);
+  cow.add(hoof);
+});
+
+addCollider(15, 5, 2.0);
+setLoad(90, loadSteps[5]);
+
+// ДЕРЕВЬЯ
+function makeTree(x, z) {
+  var tree = new THREE.Group();
+  tree.position.set(x, 0, z);
+  tree.userData.viewPosition = new THREE.Vector3(x, 0, z);
+  var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 3.5, 8),
+    new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 1 }));
+  trunk.position.y = 1.75;
+  trunk.castShadow = true;
+  tree.add(trunk);
+  for (var i = 0; i < 3; i++) {
+    var leaf = new THREE.Mesh(new THREE.SphereGeometry(1.5 - i * 0.3, 8, 6),
+      new THREE.MeshStandardMaterial({ color: 0x3d5a2a, roughness: 1 }));
+    leaf.position.y = 3.5 + i * 0.7;
+    leaf.castShadow = true;
+    tree.add(leaf);
+  }
+  visibleObjects.push(tree);
+  return tree;
+}
+
+[[-25, -10], [-30, 15], [25, -15], [30, 10], [-15, 25], [20, 25]].forEach(function(p) {
+  scene.add(makeTree(p[0], p[1]));
+  addCollider(p[0], p[1], 0.7);
+});
+
+// ЗАБОР
+var fenceMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
+var fenceGeo = new THREE.BoxGeometry(0.25, 2, 0.25);
+for (var fi = -40; fi <= 40; fi += 4) {
+  [-40, 40].forEach(function(z) {
+    var post = new THREE.Mesh(fenceGeo, fenceMat);
+    post.position.set(fi, 1, z);
+    scene.add(post);
+  });
+  [-40, 40].forEach(function(x) {
+    var post = new THREE.Mesh(fenceGeo, fenceMat);
+    post.position.set(x, 1, fi);
+    scene.add(post);
+  });
+}
+
+// ТЕКСТ-СПРАЙТ
+function makeLabel(text) {
+  var canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, 512, 128);
+  ctx.font = 'Bold 44px Arial';
+  ctx.fillStyle = '#ffd700';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(canvas);
+  var mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(5, 1.2, 1);
+  return sprite;
+}
+
+var stackLabel = makeLabel('🌾 СТОГ — клик');
+stackLabel.position.set(0, HAYSTACK_HEIGHT + 1.2, 0);
+haystackGroup.add(stackLabel);
+
+var cowLabel = makeLabel('🐄 КОРОВА — [E]');
+cowLabel.position.set(0, 4.8, 0);
+cow.add(cowLabel);
+
+var barnLabel = makeLabel('🏠 АМБАР — [E]');
+barnLabel.position.set(0, BARN_H + 3.5, -BARN_D / 2);
+barn.add(barnLabel);
+
+// ИГРОК
+var player = {
+  position: new THREE.Vector3(0, 1.7, 15),
+  yaw: 0, pitch: 0, radius: 0.4
+};
+
+// УПРАВЛЕНИЕ
+var keys = {};
+var MOUSE_SENS = 0.0022;
+var isLocked = false;
+var shopOpen = false;
+var chatFocused = false;
+
+var clickToPlay = document.getElementById('click-to-play');
+clickToPlay.addEventListener('click', function() {
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('pointerlockchange', function() {
+  isLocked = document.pointerLockElement === renderer.domElement;
+  if (isLocked) clickToPlay.classList.add('hidden');
+  else if (!state.foundNeedle && !shopOpen && !chatFocused) clickToPlay.classList.remove('hidden');
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isLocked) return;
+  player.yaw -= e.movementX * MOUSE_SENS;
+  player.pitch -= e.movementY * MOUSE_SENS;
+  player.pitch = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, player.pitch));
+});
+
+document.addEventListener('keydown', function(e) {
+  if (chatFocused) return;
+  keys[e.code] = true;
+  if (e.code === 'KeyE') interact();
+  if (e.code === 'KeyZ' || e.code === 'KeyP' || e.key === 'я' || e.key === 'Я') {
+    e.preventDefault();
+    toggleShop();
+  }
+  if (e.code === 'KeyT') {
+    e.preventDefault();
+    openChat();
+  }
+});
+
+document.addEventListener('keyup', function(e) {
+  keys[e.code] = false;
+});
+
+var isMouseDown = false;
+renderer.domElement.addEventListener('mousedown', function(e) {
+  if (!isLocked || e.button !== 0 || shopOpen) return;
+  if (state.foundNeedle) return;
+  isMouseDown = true;
+  tryGatherHay();
+});
+document.addEventListener('mouseup', function(e) {
+  if (e.button === 0) isMouseDown = false;
+});
+
+// ЧАТ
+function openChat() {
+  chatFocused = true;
+  document.exitPointerLock();
+  var input = document.getElementById('chat-input');
+  var hint = document.getElementById('chat-hint');
+  input.style.display = 'block';
+  hint.classList.add('hidden');
+  input.focus();
+}
+
+function closeChat() {
+  chatFocused = false;
+  var input = document.getElementById('chat-input');
+  var hint = document.getElementById('chat-hint');
+  input.style.display = 'none';
+  input.value = '';
+  hint.classList.remove('hidden');
+  if (!state.foundNeedle && !shopOpen) renderer.domElement.requestPointerLock();
+}
+
+document.getElementById('chat-input').addEventListener('keydown', function(e) {
+  e.stopPropagation();
+  if (e.code === 'Enter') {
+    sendChat(this.value);
+    closeChat();
+  }
+  if (e.code === 'Escape') {
+    closeChat();
+  }
+});
+
+// СБОР СЕНА
+var raycaster = new THREE.Raycaster();
+
+function tryGatherHay() {
+  var now = performance.now();
+  if (now - state.lastGatherTime < state.gatherCooldown * 1000) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) { showHint('❌ Далеко от стога!'); return; }
+  if (state.hay >= state.maxHay) { showHint('🎒 Инвентарь полон!'); return; }
+  
+  var hayPerGather = 1, toolUsed = '';
+  if (state.vacuumActive) { hayPerGather = 8; toolUsed = 'vacuum'; spawnVacuumParticles(); }
+  else if (state.hasFork && now - state.lastForkTime >= state.forkCooldown * 1000) {
+    hayPerGather = 5; state.lastForkTime = now; toolUsed = 'fork'; spawnForkParticle();
+  }
+  else if (state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown * 1000) {
+    hayPerGather = 15; state.lastDynamiteTime = now; toolUsed = 'dynamite'; spawnExplosion();
+  }
+  
+  state.lastGatherTime = now;
+  var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
+  state.hay += actualHay;
+  state.totalHay += actualHay;
+  
+  var luckBonus = (state.luckLvl - 1) * 0.0015 * actualHay;
+  if (Math.random() < 0.003 + luckBonus) { findNeedle(); return; }
+  
+  if (toolUsed !== 'vacuum') spawnStalkParticle();
+  var txt = '+' + actualHay + ' 🌾';
+  if (toolUsed === 'fork') txt += ' 🗡️';
+  if (toolUsed === 'dynamite') txt += ' 💥';
+  if (toolUsed === 'vacuum') txt += ' 🌀';
+  showPopup(txt, window.innerWidth / 2, window.innerHeight / 2 - 50);
+  updateHUD();
+  updateShopMenu();
+}
+
+// ЭФФЕКТЫ
+function spawnForkParticle() {
+  for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i * 50);
+}
+function spawnExplosion() {
+  for (var i = 0; i < 20; i++) {
+    var part = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15),
+      new THREE.MeshBasicMaterial({ color: [0xff6600, 0xffcc00, 0xff3300][i % 3] }));
+    part.position.copy(haystackGroup.position);
+    part.position.y += HAYSTACK_HEIGHT / 2;
+    part.position.x += (Math.random() - 0.5) * 3;
+    part.position.z += (Math.random() - 0.5) * 3;
+    var vel = new THREE.Vector3((Math.random() - 0.5) * 15, Math.random() * 12 + 5, (Math.random() - 0.5) * 15);
+    scene.add(part);
+    particles.push({ mesh: part, vel: vel, angVel: new THREE.Vector3(Math.random() * 20, Math.random() * 20, Math.random() * 20), life: 2 });
+  }
+}
+function spawnVacuumParticles() {
+  for (var i = 0; i < 8; i++) {
+    var stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.4, 4),
+      new THREE.MeshBasicMaterial({ color: 0xe8c547 }));
+    var dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    stalk.position.copy(camera.position).addScaledVector(dir, 3 + Math.random() * 5);
+    stalk.position.x += (Math.random() - 0.5) * 4;
+    stalk.position.z += (Math.random() - 0.5) * 4;
+    var toPlayer = new THREE.Vector3().subVectors(camera.position, stalk.position).normalize();
+    var vel = new THREE.Vector3(toPlayer.x * 10, 2, toPlayer.z * 10);
+    scene.add(stalk);
+    particles.push({ mesh: stalk, vel: vel, angVel: new THREE.Vector3(Math.random() * 15, Math.random() * 15, Math.random() * 15), life: 0.8 });
+  }
+}
+
+// ВЗАИМОДЕЙСТВИЕ
+function interact() {
+  if (shopOpen || state.foundNeedle) return;
+  var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
+  if (dCow < 7) {
+    if (state.hay > 0) {
+      var milk = state.hay;
+      state.milk += milk;
+      state.hay = 0;
+      showPopup('+' + milk + ' 🥛', window.innerWidth / 2, window.innerHeight / 2 - 50);
+      showHint('🥛 Корова дала ' + milk + ' л молока!');
+    } else showHint('❌ Нет сена');
+    updateHUD();
+    updateShopMenu();
+    return;
+  }
+  var dBarn = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  if (dBarn < 10) toggleShop();
+}
+
+function findNeedle() {
+  state.foundNeedle = true;
+  needle.visible = true;
+  document.exitPointerLock();
+  setTimeout(function() {
+    document.getElementById('final-money').textContent = state.money;
+    document.getElementById('final-milk').textContent = state.totalMilkSold;
+    document.getElementById('final-hay').textContent = state.totalHay;
+    document.getElementById('message').classList.add('show');
+  }, 500);
+}
+
+function showPopup(text, x, y) {
+  var p = document.createElement('div');
+  p.className = 'popup';
+  p.textContent = text;
+  p.style.left = x + 'px';
+  p.style.top = y + 'px';
+  document.getElementById('popups').appendChild(p);
+  setTimeout(function() { p.remove(); }, 1300);
+}
+
+var hintTimeout;
+function showHint(text) {
+  var hint = document.getElementById('hint');
+  hint.innerHTML = text;
+  clearTimeout(hintTimeout);
+  hintTimeout = setTimeout(function() {
+    hint.innerHTML = '🖱️ ЛКМ | WASD | <b>Shift</b> — бег | <b>E</b> — действие | <b>Z</b> — магазин | <b>T</b> — чат';
+  }, 2500);
+}
+
+var particles = [];
+function spawnStalkParticle() {
+  var stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.5, 4),
+    new THREE.MeshStandardMaterial({ color: 0xe8c547, roughness: 0.85 }));
+  var dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  stalk.position.copy(camera.position).addScaledVector(dir, 1.5);
+  var vel = new THREE.Vector3((Math.random() - 0.5) * 4, 2 + Math.random() * 2, (Math.random() - 0.5) * 4);
+  var angVel = new THREE.Vector3((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10);
+  scene.add(stalk);
+  particles.push({ mesh: stalk, vel: vel, angVel: angVel, life: 1.2 });
+}
+
+function updateParticles(dt) {
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.life -= dt;
+    p.vel.y -= 9.8 * dt;
+    p.mesh.position.addScaledVector(p.vel, dt);
+    p.mesh.rotation.x += p.angVel.x * dt;
+    p.mesh.rotation.y += p.angVel.y * dt;
+    p.mesh.rotation.z += p.angVel.z * dt;
+    if (p.life <= 0 || p.mesh.position.y < 0) {
+      scene.remove(p.mesh);
+      particles.splice(i, 1);
+    }
+  }
+}
+
+// МАГАЗИН
+var shopMenu = document.getElementById('shop-menu');
+var shopToggle = document.getElementById('shop-toggle');
+shopToggle.onclick = toggleShop;
+document.getElementById('shop-close').onclick = toggleShop;
+
+function toggleShop() {
+  var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  if (!shopOpen && d > 12) { showHint('❌ Подойди к амбару 🏠'); return; }
+  shopOpen = !shopOpen;
+  if (shopOpen) {
+    shopMenu.classList.add('open');
+    document.exitPointerLock();
+    updateShopMenu();
+  } else {
+    shopMenu.classList.remove('open');
+    if (!state.foundNeedle) renderer.domElement.requestPointerLock();
+  }
+}
+
+function updateShopMenu() {
+  document.getElementById('shop-money').textContent = state.money;
+  document.getElementById('shop-milk').textContent = state.milk;
+  document.getElementById('speedLvl').textContent = state.speedLvl;
+  document.getElementById('gatherLvl').textContent = state.gatherLvl;
+  document.getElementById('invLvl').textContent = state.invLvl;
+  document.getElementById('luckLvl').textContent = state.luckLvl;
+  
+  var sp = PRICES.speed[state.speedLvl - 1];
+  var gp = PRICES.gather[state.gatherLvl - 1];
+  var ip = PRICES.inv[state.invLvl - 1];
+  var lp = PRICES.luck[state.luckLvl - 1];
+  
+  document.getElementById('speedPrice').textContent = sp ? sp + '$' : 'MAX';
+  document.getElementById('gatherPrice').textContent = gp ? gp + '$' : 'MAX';
+  document.getElementById('invPrice').textContent = ip ? ip + '$' : 'MAX';
+  document.getElementById('luckPrice').textContent = lp ? lp + '$' : 'MAX';
+  
+  document.getElementById('buySpeed').disabled = !sp || state.money < sp;
+  document.getElementById('buyGather').disabled = !gp || state.money < gp;
+  document.getElementById('buyInv').disabled = !ip || state.money < ip;
+  document.getElementById('buyLuck').disabled = !lp || state.money < lp;
+  
+  document.getElementById('sellMilkCount').textContent = state.milk;
+  document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '$';
+  document.getElementById('sellMilk').disabled = state.milk === 0;
+  
+  document.getElementById('buyFork').textContent = state.hasFork ? '✓ Куплено' : 'Купить';
+  document.getElementById('buyFork').disabled = state.hasFork || state.money < PRICES.fork[0];
+  document.getElementById('buyDynamite').textContent = state.hasDynamite ? '✓ Куплено' : 'Купить';
+  document.getElementById('buyDynamite').disabled = state.hasDynamite || state.money < PRICES.dynamite[0];
+  document.getElementById('buyVacuum').textContent = state.hasVacuum ? '✓ Куплено' : 'Купить';
+  document.getElementById('buyVacuum').disabled = state.hasVacuum || state.money < PRICES.vacuum[0];
+  
+  document.getElementById('autoGatherLvl').textContent = state.autoGatherLvl;
+  var agp = PRICES.autoGather[state.autoGatherLvl];
+  document.getElementById('autoGatherPrice').textContent = agp ? agp + '$' : 'MAX';
+  document.getElementById('buyAutoGather').disabled = !agp || state.money < agp;
+}
+
+document.getElementById('sellMilk').onclick = function() {
+  if (state.milk === 0) return;
+  var e = state.milk * MILK_PRICE;
+  state.money += e;
+  state.totalMilkSold += state.milk;
+  showPopup('+' + e + '$', window.innerWidth / 2, window.innerHeight / 2);
+  state.milk = 0;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buySpeed').onclick = function() {
+  var p = PRICES.speed[state.speedLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.speedLvl++;
+  state.moveSpeed = 5 + (state.speedLvl - 1) * 1.5;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyGather').onclick = function() {
+  var p = PRICES.gather[state.gatherLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.gatherLvl++;
+  state.gatherCooldown = Math.max(0.1, 0.8 * Math.pow(0.7, state.gatherLvl - 1));
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyInv').onclick = function() {
+  var p = PRICES.inv[state.invLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.invLvl++;
+  state.maxHay = 25 + (state.invLvl - 1) * 15;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyLuck').onclick = function() {
+  var p = PRICES.luck[state.luckLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.luckLvl++;
+  updateShopMenu();
+};
+document.getElementById('buyFork').onclick = function() {
+  if (state.hasFork || state.money < PRICES.fork[0]) return;
+  state.money -= PRICES.fork[0]; state.hasFork = true;
+  showHint('🗡️ Вилы куплены!');
+  updateShopMenu();
+};
+document.getElementById('buyDynamite').onclick = function() {
+  if (state.hasDynamite || state.money < PRICES.dynamite[0]) return;
+  state.money -= PRICES.dynamite[0]; state.hasDynamite = true;
+  showHint('💥 Динамит куплен!');
+  updateShopMenu();
+};
+document.getElementById('buyVacuum').onclick = function() {
+  if (state.hasVacuum || state.money < PRICES.vacuum[0]) return;
+  state.money -= PRICES.vacuum[0]; state.hasVacuum = true;
+  showHint('🌀 Пылесос куплен!');
+  updateShopMenu();
+};
+document.getElementById('buyAutoGather').onclick = function() {
+  var p = PRICES.autoGather[state.autoGatherLvl];
+  if (!p || state.money < p) return;
+  state.money -= p; state.autoGatherLvl++;
+  showHint('⚙️ Автосбор ур.' + state.autoGatherLvl);
+  updateShopMenu();
+};
+
+function updateHUD() {
+  document.getElementById('money').textContent = state.money;
+  document.getElementById('hay').textContent = state.hay;
+  document.getElementById('maxHay').textContent = state.maxHay;
+  document.getElementById('milk').textContent = state.milk;
+  document.getElementById('speed').textContent = state.moveSpeed.toFixed(1);
+  var fill = (state.hay / state.maxHay) * 100;
+  document.getElementById('inventory-fill').style.width = fill + '%';
+  document.getElementById('inventory-text').textContent = state.hay + ' / ' + state.maxHay;
+}
+
+function updateStaminaUI() {
+  var p = (state.stamina / state.staminaMax) * 100;
+  document.getElementById('stamina-fill').style.width = p + '%';
+  if (p < 20) document.getElementById('stamina-fill').style.background = 'linear-gradient(90deg, #ff4444, #ff6b6b)';
+  else if (p < 50) document.getElementById('stamina-fill').style.background = 'linear-gradient(90deg, #ffaa00, #ffcc00)';
+  else document.getElementById('stamina-fill').style.background = 'linear-gradient(90deg, #44aa44, #66cc66)';
+  document.getElementById('stamina-text').textContent = Math.floor(state.stamina) + ' / ' + state.staminaMax;
+}
+
+function resolveCollisions(newPos) {
+  for (var i = 0; i < colliders.length; i++) {
+    var c = colliders[i];
+    var dx = newPos.x - c.x, dz = newPos.z - c.z;
+    var distSq = dx * dx + dz * dz;
+    var minDist = c.r + player.radius;
+    if (distSq < minDist * minDist) {
+      var dist = Math.sqrt(distSq) || 0.001;
+      var overlap = minDist - dist;
+      newPos.x += (dx / dist) * overlap;
+      newPos.z += (dz / dist) * overlap;
+    }
+  }
+  newPos.x = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, newPos.x));
+  newPos.z = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, newPos.z));
+  return newPos;
+}
+
+var clock = new THREE.Clock();
+var moveTime = 0;
+var visibilityTimer = 0;
+
+function updatePlayer(dt) {
+  if (shopOpen || state.foundNeedle) return;
+  var dir = new THREE.Vector3();
+  if (keys['KeyW']) dir.z -= 1;
+  if (keys['KeyS']) dir.z += 1;
+  if (keys['KeyA']) dir.x -= 1;
+  if (keys['KeyD']) dir.x += 1;
+  
+  var isRunning = (keys['ShiftLeft'] || keys['ShiftRight']) && dir.lengthSq() > 0;
+  var speedMult = 1;
+  if (isRunning && state.stamina > 0) {
+    speedMult = 1.8;
+    state.stamina -= state.staminaDrain * dt;
+    if (state.stamina < 0) state.stamina = 0;
+  } else if (!isRunning && state.stamina < state.staminaMax) {
+    state.stamina += state.staminaRegen * dt;
+    if (state.stamina > state.staminaMax) state.stamina = state.staminaMax;
+  }
+  
+  if (dir.lengthSq() > 0) {
+    dir.normalize();
+    var speed = state.moveSpeed * speedMult;
+    var cos = Math.cos(player.yaw), sin = Math.sin(player.yaw);
+    var moveX = dir.x * cos + dir.z * sin;
+    var moveZ = -dir.x * sin + dir.z * cos;
+    
+    var tryX = new THREE.Vector3(player.position.x + moveX * speed * dt, player.position.y, player.position.z);
+    resolveCollisions(tryX);
+    player.position.x = tryX.x;
+    var tryZ = new THREE.Vector3(player.position.x, player.position.y, player.position.z + moveZ * speed * dt);
+    resolveCollisions(tryZ);
+    player.position.z = tryZ.z;
+    moveTime += dt * speed;
+  }
+  
+  var bob = dir.lengthSq() > 0 ? Math.sin(moveTime * 2) * 0.05 : 0;
+  camera.position.copy(player.position);
+  camera.position.y += bob;
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+  updateStaminaUI();
+}
+
+function updateCooldownUI() {
+  var now = performance.now();
+  var el = now - state.lastGatherTime;
+  var t = state.gatherCooldown * 1000;
+  if (el < t) {
+    document.getElementById('cooldown').classList.add('show');
+    document.getElementById('cooldown-fill').style.width = (el / t) * 100 + '%';
+  } else document.getElementById('cooldown').classList.remove('show');
+}
+
+function updateCrosshair() {
+  var dS = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
+  var dC = player.position.distanceTo(cow.position);
+  var dB = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  var ch = document.getElementById('crosshair');
+  var ci = document.getElementById('click-indicator');
+  if (dS < HAYSTACK_RADIUS + 10) {
+    ch.classList.add('hover'); ci.classList.add('show');
+  } else {
+    ch.classList.remove('hover'); ci.classList.remove('show');
+    if (dC < 7) ch.classList.add('hover');
+  }
+  if (dB < 12) shopToggle.classList.add('ready');
+  else shopToggle.classList.remove('ready');
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.1);
+  
+  updatePlayer(dt);
+  updateParticles(dt);
+  updateCooldownUI();
+  updateAutoGather(dt);
+  updateVacuum(dt);
+  updateAutoGatherPassive(dt);
+  updateNeedlePosition(dt);
+  updateRemotePlayers(dt);
+  sendMyPosition(dt);
+  if (isLocked && !shopOpen) updateCrosshair();
+  
+  visibilityTimer += dt;
+  if (visibilityTimer >= UPDATE_INTERVAL) {
+    visibilityTimer = 0;
+    updateVisibility();
+    updateHaystackLOD();
+  }
+  
+  sun.position.set(player.position.x + 40, 60, player.position.z + 30);
+  sun.target.position.set(player.position.x, 0, player.position.z);
+  sun.target.updateMatrixWorld();
+  
+  renderer.render(scene, camera);
+}
+
+function updateAutoGather(dt) {
+  if (!isMouseDown || !isLocked || shopOpen || state.foundNeedle) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) return;
+  if (state.hay >= state.maxHay) return;
+  tryGatherHay();
+}
+
+function updateAutoGatherPassive(dt) {
+  if (state.autoGatherLvl === 0 || shopOpen || state.foundNeedle) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) return;
+  if (state.hay >= state.maxHay) return;
+  var interval = Math.max(0.5, 3.0 - (state.autoGatherLvl - 1) * 0.4);
+  state.autoGatherTimer += dt;
+  if (state.autoGatherTimer >= interval) {
+    state.autoGatherTimer = 0;
+    var a = Math.min(state.autoGatherLvl, state.maxHay - state.hay);
+    state.hay += a;
+    state.totalHay += a;
+    if (Math.random() < 0.003 + (state.luckLvl - 1) * 0.0015 * a) { findNeedle(); return; }
+    showPopup('+' + a + ' 🌾 ⚙️', window.innerWidth / 2, window.innerHeight / 2 - 80);
+    updateHUD();
+  }
+}
+
+function updateVacuum(dt) {
+  if (!state.hasVacuum || !isMouseDown || !isLocked || shopOpen || state.foundNeedle) {
+    state.vacuumActive = false;
+    return;
+  }
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
+  if (d > HAYSTACK_RADIUS + 15) { state.vacuumActive = false; return; }
+  state.vacuumActive = true;
+}
+
+window.addEventListener('resize', function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+setLoad(100, loadSteps[6]);
+setTimeout(function() {
+  loadingEl.classList.add('done');
+}, 800);
