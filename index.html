@@ -16,50 +16,35 @@
     display: flex; align-items: center; justify-content: center;
     flex-direction: column; color: #ffd700;
     transition: opacity 0.8s ease;
-    
-    /* ФОН ИЗ ПАПКИ img/ */
-    background-image: url('img/loading-bg.jpg');
+    background-image: url('loading-bg.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-color: #1a1005;
   }
-  
-  /* Затемнение поверх фото — чтобы текст читался */
   #loading::before {
     content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%);
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 100%);
     z-index: 1;
   }
-  
-  /* Контент поверх затемнения */
-  #loading > * {
-    position: relative;
-    z-index: 2;
-  }
-  
+  #loading > * { position: relative; z-index: 2; }
   #loading.done { opacity: 0; pointer-events: none; }
   #loading .title {
     font-size: 42px; font-weight: bold;
     text-shadow: 0 0 40px #ffd700, 0 4px 12px #000;
-    margin-bottom: 15px;
-    text-align: center;
-    padding: 0 20px;
-    letter-spacing: 2px;
+    margin-bottom: 15px; text-align: center;
+    padding: 0 20px; letter-spacing: 2px;
   }
   #loading .sub {
     font-size: 16px; color: #ddd;
-    margin-bottom: 40px;
-    text-shadow: 0 2px 6px #000;
+    margin-bottom: 40px; text-shadow: 0 2px 6px #000;
   }
   #loading .bar-outer {
     width: 400px; max-width: 80vw; height: 26px;
     background: rgba(0,0,0,0.6);
     border: 3px solid #ffd700;
-    border-radius: 14px;
-    overflow: hidden;
+    border-radius: 14px; overflow: hidden;
     box-shadow: 0 0 40px rgba(255,215,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
   }
   #loading .bar-fill {
@@ -75,8 +60,7 @@
   }
   #loading .status {
     margin-top: 12px; font-size: 14px; color: #ccc;
-    text-shadow: 0 2px 6px #000;
-    min-height: 20px;
+    text-shadow: 0 2px 6px #000; min-height: 20px;
   }
 
   /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
@@ -113,7 +97,6 @@
     font-size: 15px; font-weight: bold;
     display: none; align-items: center; justify-content: center;
     touch-action: none; z-index: 25;
-    transition: background 0.1s, transform 0.1s;
   }
   #runBtn.show { display: flex; }
   #runBtn.active { background: rgba(100, 200, 255, 0.6); transform: scale(1.1); }
@@ -126,7 +109,6 @@
     font-size: 28px; font-weight: bold;
     display: none; align-items: center; justify-content: center;
     touch-action: none; z-index: 25;
-    transition: background 0.1s, transform 0.1s;
   }
   #shootBtn.show { display: flex; }
   #shootBtn.active { background: rgba(255, 50, 50, 0.7); transform: scale(0.95); }
