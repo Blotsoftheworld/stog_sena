@@ -20,12 +20,6 @@ var statusMessages = [
   'Загрузка завершена!'
 ];
 
-function setLoad(p, s) {
-  loadingFill.style.width = p + '%';
-  loadingPercent.textContent = Math.floor(p) + '%';
-  if (s) loadingStatus.textContent = s;
-}
-
 function animateLoading() {
   var now = performance.now();
   var elapsed = now - loadingStart;
@@ -609,7 +603,7 @@ document.addEventListener('mousemove', function(e) {
   player.pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, player.pitch));
 });
 
-// === ДЖОЙСТИК ===
+// ДЖОЙСТИК
 var moveJoystick = document.getElementById('moveJoystick');
 var moveKnob = document.getElementById('moveKnob');
 var moveActive = false;
@@ -647,7 +641,7 @@ moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.s
 document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
-// === КЛАВИАТУРА ===
+// КЛАВИАТУРА
 document.addEventListener('keydown', function(e) {
   var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
   if (!key) return;
@@ -680,7 +674,7 @@ document.addEventListener('keyup', function(e) {
   if (!e.shiftKey) keys.shift = false;
 });
 
-// === КНОПКА RUN ===
+// RUN
 var runBtn = document.getElementById('runBtn');
 var staminaFillMobile = document.getElementById('staminaFill-mobile');
 var isRunningTouch = false;
@@ -704,7 +698,7 @@ runBtn.addEventListener('mousedown', startRunTouch);
 runBtn.addEventListener('mouseup', stopRunTouch);
 runBtn.addEventListener('mouseleave', stopRunTouch);
 
-// === КНОПКА E ===
+// E
 var shootBtn = document.getElementById('shootBtn');
 
 function pressEButton(e) {
@@ -746,9 +740,7 @@ function isNearHaystack() {
   return d < HAYSTACK_RADIUS + 10;
 }
 
-// ============================================
 // СБОР СЕНА
-// ============================================
 function tryGatherHay() {
   var now = performance.now();
   if (now - state.lastGatherTime < state.gatherCooldown * 1000) return;
@@ -783,9 +775,7 @@ function tryGatherHay() {
   updateShopMenu();
 }
 
-// ============================================
-// ЭФФЕКТЫ ИНСТРУМЕНТОВ
-// ============================================
+// ЭФФЕКТЫ
 function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i * 50); }
 function spawnExplosion() {
   for (var i = 0; i < 20; i++) {
@@ -816,9 +806,7 @@ function spawnVacuumParticles() {
   }
 }
 
-// ============================================
 // ВЗАИМОДЕЙСТВИЕ (E)
-// ============================================
 function interact() {
   if (shopOpen || state.foundNeedle) return;
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
@@ -837,9 +825,6 @@ function interact() {
   if (dBarn < 12) toggleShop();
 }
 
-// ============================================
-// ИГОЛКА
-// ============================================
 function findNeedle() {
   state.foundNeedle = true;
   needle.visible = true;
@@ -852,9 +837,6 @@ function findNeedle() {
   }, 500);
 }
 
-// ============================================
-// ЭФФЕКТЫ
-// ============================================
 function showPopup(text, x, y) {
   var p = document.createElement('div');
   p.className = 'popup';
@@ -905,9 +887,7 @@ function updateParticles(dt) {
   }
 }
 
-// ============================================
 // МАГАЗИН
-// ============================================
 var shopMenu = document.getElementById('shop-menu');
 
 function toggleShop() {
@@ -1028,9 +1008,7 @@ document.getElementById('buyAutoGather').onclick = function() {
   updateShopMenu();
 };
 
-// ============================================
 // HUD
-// ============================================
 function updateHUD() {
   document.getElementById('money').textContent = state.money;
   document.getElementById('hay').textContent = state.hay;
@@ -1059,9 +1037,7 @@ function updateStaminaUI() {
   }
 }
 
-// ============================================
 // КОЛЛИЗИИ
-// ============================================
 function resolveCollisions(newPos) {
   for (var i = 0; i < colliders.length; i++) {
     var c = colliders[i];
@@ -1080,9 +1056,7 @@ function resolveCollisions(newPos) {
   return newPos;
 }
 
-// ============================================
 // ИГРОВОЙ ЦИКЛ
-// ============================================
 var clock = new THREE.Clock();
 var moveTime = 0;
 var visibilityTimer = 0;
@@ -1228,7 +1202,5 @@ window.addEventListener('resize', function() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ============================================
 // СТАРТ
-// ============================================
 animateLoading();
