@@ -10,6 +10,75 @@
   body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
   canvas { display: block; }
 
+  /* ======== ЗАГРУЗКА ======== */
+  #loading {
+    position: fixed; inset: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #ffd700;
+    transition: opacity 0.8s ease;
+    
+    /* ФОН ИЗ ПАПКИ img/ */
+    background-image: url('img/loading-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #1a1005;
+  }
+  
+  /* Затемнение поверх фото — чтобы текст читался */
+  #loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%);
+    z-index: 1;
+  }
+  
+  /* Контент поверх затемнения */
+  #loading > * {
+    position: relative;
+    z-index: 2;
+  }
+  
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading .title {
+    font-size: 42px; font-weight: bold;
+    text-shadow: 0 0 40px #ffd700, 0 4px 12px #000;
+    margin-bottom: 15px;
+    text-align: center;
+    padding: 0 20px;
+    letter-spacing: 2px;
+  }
+  #loading .sub {
+    font-size: 16px; color: #ddd;
+    margin-bottom: 40px;
+    text-shadow: 0 2px 6px #000;
+  }
+  #loading .bar-outer {
+    width: 400px; max-width: 80vw; height: 26px;
+    background: rgba(0,0,0,0.6);
+    border: 3px solid #ffd700;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(255,215,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  #loading .bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d);
+    transition: width 0.1s linear;
+    box-shadow: 0 0 20px #ffd700;
+  }
+  #loading .percent {
+    margin-top: 20px; font-size: 28px; font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 20px #ffd700, 0 2px 6px #000;
+  }
+  #loading .status {
+    margin-top: 12px; font-size: 14px; color: #ccc;
+    text-shadow: 0 2px 6px #000;
+    min-height: 20px;
+  }
+
   /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint {
@@ -97,7 +166,6 @@
   }
   @media (max-width: 700px) { #pcHint { display: none !important; } }
 
-  /* HUD */
   #hud {
     position: fixed; top: 15px; left: 15px; color: #fff;
     background: rgba(20, 15, 10, 0.75);
@@ -112,7 +180,6 @@
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
 
-  /* ИНВЕНТАРЬ */
   #inventory-bar {
     position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
     width: 340px; max-width: 80vw; height: 26px;
@@ -135,7 +202,6 @@
     text-shadow: 2px 2px 4px #000; font-weight: bold;
   }
 
-  /* ПОДСКАЗКА СНИЗУ */
   #hint {
     position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
     color: #fff; background: rgba(10, 10, 10, 0.85);
@@ -148,7 +214,6 @@
   #hint.show { display: block; }
   #hint b { color: #ffd700; }
 
-  /* ПРЫГАЮЩИЙ ТЕКСТ */
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup {
     position: absolute; color: #ffd700; font-size: 22px; font-weight: bold;
@@ -160,7 +225,6 @@
     100% { transform: translate(-50%, -110px); opacity: 0; }
   }
 
-  /* МАГАЗИН */
   #shop-menu {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     display: none; align-items: center; justify-content: center;
@@ -203,31 +267,6 @@
     font-size: 15px; font-weight: bold; cursor: pointer;
   }
 
-  /* ЗАГРУЗКА */
-  #loading {
-    position: fixed; inset: 0; z-index: 500;
-    background: linear-gradient(180deg, #1a1005, #000);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; color: #ffd700;
-    transition: opacity 0.8s ease;
-  }
-  #loading.done { opacity: 0; pointer-events: none; }
-  #loading .title { font-size: 28px; font-weight: bold; text-shadow: 0 0 30px #ffd700; margin-bottom: 15px; text-align: center; padding: 0 20px; }
-  #loading .sub { font-size: 14px; color: #ccc; margin-bottom: 30px; }
-  #loading .bar-outer {
-    width: 320px; max-width: 80vw; height: 22px;
-    background: rgba(255,215,0,0.15);
-    border: 2px solid #ffd700; border-radius: 12px; overflow: hidden;
-  }
-  #loading .bar-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d);
-    transition: width 0.3s;
-  }
-  #loading .percent { margin-top: 15px; font-size: 20px; font-weight: bold; color: #ffd700; }
-  #loading .status { margin-top: 8px; font-size: 13px; color: #aaa; }
-
-  /* ПОБЕДА */
   #message {
     position: fixed; inset: 0; background: rgba(0,0,0,0.92);
     display: none; align-items: center; justify-content: center;
@@ -283,7 +322,7 @@
   <div class="sub">Подготовка фермы...</div>
   <div class="bar-outer"><div class="bar-fill" id="loading-fill"></div></div>
   <div class="percent" id="loading-percent">0%</div>
-  <div class="status" id="loading-status">Инициализация...</div>
+  <div class="status" id="loading-status">Загрузка...</div>
 </div>
 
 <div id="lookArea">
@@ -309,7 +348,6 @@
   <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
 </div>
 
-<!-- ИНВЕНТАРЬ -->
 <div id="inventory-bar">
   <div id="inventory-fill"></div>
   <div id="inventory-text">0 / 25</div>
