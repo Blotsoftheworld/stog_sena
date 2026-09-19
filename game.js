@@ -638,16 +638,21 @@ runBtn.addEventListener('mousedown', startRunTouch);
 runBtn.addEventListener('mouseup', stopRunTouch);
 runBtn.addEventListener('mouseleave', stopRunTouch);
 
+// === КНОПКА E — ИСПРАВЛЕНО ===
 var shootBtn = document.getElementById('shootBtn');
 
 function pressEButton(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
-  shootBtn.classList.add('active');
-  setTimeout(function() { shootBtn.classList.remove('active'); }, 120);
-  interact();
+  if (shootBtn) {
+    shootBtn.classList.add('active');
+    setTimeout(function() { shootBtn.classList.remove('active'); }, 120);
+  }
+  interact(); // ГЛАВНОЕ — вызываем функцию взаимодействия
 }
-shootBtn.addEventListener('touchstart', pressEButton, { passive: false });
-shootBtn.addEventListener('mousedown', pressEButton);
+if (shootBtn) {
+  shootBtn.addEventListener('touchstart', pressEButton, { passive: false });
+  shootBtn.addEventListener('mousedown', pressEButton);
+}
 
 var clickToPlay = document.getElementById('click-to-play');
 clickToPlay.addEventListener('click', function() {
@@ -739,6 +744,7 @@ function spawnVacuumParticles() {
   }
 }
 
+// === ВЗАИМОДЕЙСТВИЕ С КОРОВОЙ / АМБАРОМ ===
 function interact() {
   if (shopOpen || state.foundNeedle) return;
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
@@ -754,7 +760,7 @@ function interact() {
     return;
   }
   var dBarn = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
-  if (dBarn < 10) toggleShop();
+  if (dBarn < 12) toggleShop();
 }
 
 function findNeedle() {
@@ -782,10 +788,14 @@ function showPopup(text, x, y) {
 var hintTimeout;
 function showHint(text) {
   var hint = document.getElementById('hint');
-  hint.textContent = text;
+  if (!hint) return;
+  hint.innerHTML = text;
   hint.classList.add('show');
   clearTimeout(hintTimeout);
-  hintTimeout = setTimeout(function() { hint.classList.remove('show'); }, 2500);
+  hintTimeout = setTimeout(function() {
+    hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин';
+    hint.classList.remove('show');
+  }, 2500);
 }
 
 var particles = [];
@@ -936,12 +946,24 @@ document.getElementById('buyAutoGather').onclick = function() {
   updateShopMenu();
 };
 
+// === HUD ОБНОВЛЕНИЕ — ИНВЕНТАРЬ ТЕПЕРЬ ОБНОВЛЯЕТСЯ ===
 function updateHUD() {
   document.getElementById('money').textContent = state.money;
   document.getElementById('hay').textContent = state.hay;
   document.getElementById('maxHay').textContent = state.maxHay;
   document.getElementById('milk').textContent = state.milk;
   document.getElementById('speed').textContent = state.moveSpeed.toFixed(1);
+  
+  // ОБНОВЛЯЕМ ИНВЕНТАРЬ
+  var invBar = document.getElementById('inventory-bar');
+  var invFill = document.getElementById('inventory-fill');
+  var invText = document.getElementById('inventory-text');
+  
+  if (invBar && invFill && invText) {
+    var fillPercent = (state.hay / state.maxHay) * 100;
+    invFill.style.width = fillPercent + '%';
+    invText.textContent = state.hay + ' / ' + state.maxHay;
+  }
 }
 
 function updateStaminaUI() {
@@ -1041,10 +1063,12 @@ function updateCooldownUI() {
   var t = state.gatherCooldown * 1000;
   var cd = document.getElementById('cooldown');
   var cdf = document.getElementById('cooldown-fill');
-  if (el < t) {
-    cd.classList.add('show');
-    cdf.style.width = (el / t) * 100 + '%';
-  } else cd.classList.remove('show');
+  if (cd && cdf) {
+    if (el < t) {
+      cd.classList.add('show');
+      cdf.style.width = (el / t) * 100 + '%';
+    } else cd.classList.remove('show');
+  }
 }
 
 function animate() {
@@ -1116,15 +1140,16 @@ window.addEventListener('resize', function() {
 });
 
 // ============================================
-// АВТОЗАПУСК ИГРЫ (без логина!)
+// АВТОЗАПУСК
 // ============================================
 setLoad(100, loadSteps[6]);
 setTimeout(function() {
   loadingEl.classList.add('done');
   document.getElementById('hud').classList.add('show');
+  document.getElementById('inventory-bar').classList.add('show');
+  document.getElementById('hint').classList.add('show');
   document.getElementById('pcHint').classList.add('show');
   
-  // Определяем мобильное устройство
   var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   if (isTouch) {
     document.getElementById('moveJoystick').classList.add('show');
