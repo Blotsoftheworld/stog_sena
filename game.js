@@ -1,476 +1,43 @@
 // ============================================
-// PEERJS СЕРВЕРЫ (расширенный список)
+// АВТОРИЗАЦИЯ
 // ============================================
-var PEER_SERVERS = [
-  { host: '0.peerjs.com', port: 443, secure: true, path: '/' },
-  { host: 'peerjs.92k.de', port: 443, secure: true, path: '/' },
-  { host: 'peer.butterwire.com', port: 443, secure: true, path: '/' },
-  { host: 'peer.wallie.io', port: 443, secure: true, path: '/' },
-  { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' },
-  { host: 'peerjs.herokuapp.com', port: 443, secure: true, path: '/' },
-  { host: 'peerjs-server.onrender.com', port: 443, secure: true, path: '/' },
-  { host: 'peer.marcoklein.dev', port: 443, secure: true, path: '/' },
-  { host: 'peerjs.pages.dev', port: 443, secure: true, path: '/' },
-  { host: 'peerjs.eu', port: 443, secure: true, path: '/' },
-  { host: 'peerjs-server-production.up.railway.app', port: 443, secure: true, path: '/' },
-  { host: 'peerserver.onrender.com', port: 443, secure: true, path: '/' }
-];
+var loginScreen = document.getElementById('login-screen');
+var loginUsername = document.getElementById('login-username');
+var loginPassword = document.getElementById('login-password');
+var loginError = document.getElementById('login-error');
 
-var currentServerIndex = 0;
-var successServerIndex = -1;
-
-function createPeerWithFallback(peerId, onOpen, onError) {
-  if (currentServerIndex >= PEER_SERVERS.length) {
-    document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй VPN или позже.';
-    if (onError) onError(new Error('Все серверы недоступны'));
-    return null;
-  }
-
-  var server = PEER_SERVERS[currentServerIndex];
-  console.log('[MP] Пробуем сервер #' + currentServerIndex + ':', server.host);
-  document.getElementById('mp-status').textContent = 
-    '⏳ Сервер ' + (currentServerIndex + 1) + '/' + PEER_SERVERS.length + ': ' + server.host;
-
-  var options = {
-    debug: 1,
-    host: server.host,
-    port: server.port,
-    secure: server.secure,
-    path: server.path,
-    config: {
-      'iceServers': [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' },
-        { urls: 'stun:stun.services.mozilla.com' }
-      ]
-    }
-  };
-
-  var newPeer;
-  var success = false;
-  var timeoutId;
-
-  try {
-    newPeer = new Peer(peerId, options);
-  } catch (e) {
-    console.error('[MP] Ошибка создания Peer:', e);
-    currentServerIndex++;
-    createPeerWithFallback(peerId, onOpen, onError);
-    return null;
-  }
-
-  timeoutId = setTimeout(function() {
-    if (success) return;
-    console.log('[MP] ⏱ Таймаут', server.host);
-    try { newPeer.destroy(); } catch (e) {}
-    currentServerIndex++;
-    createPeerWithFallback(peerId, onOpen, onError);
-  }, 4000);
-
-  newPeer.on('open', function(id) {
-    clearTimeout(timeoutId);
-    success = true;
-    successServerIndex = currentServerIndex;
-    console.log('[MP] ✅ Подключено к', server.host, 'ID:', id);
-    if (onOpen) onOpen(newPeer, id);
-  });
-
-  newPeer.on('error', function(err) {
-    if (success) return;
-    console.log('[MP] ❌ Ошибка', server.host, ':', err.type);
-
-    var shouldTryNext =
-      err.type === 'network' ||
-      err.type === 'server-error' ||
-      err.type === 'socket-error' ||
-      err.type === 'socket-closed' ||
-      (err.message && (
-        err.message.indexOf('Lost connection') !== -1 ||
-        err.message.indexOf('Unable to connect') !== -1
-      ));
-
-    if (shouldTryNext) {
-      clearTimeout(timeoutId);
-      try { newPeer.destroy(); } catch (e) {}
-      currentServerIndex++;
-      createPeerWithFallback(peerId, onOpen, onError);
-    } else if (err.type === 'unavailable-id') {
-      clearTimeout(timeoutId);
-      try { newPeer.destroy(); } catch (e) {}
-      var newId = peerId + '-' + Math.random().toString(36).substring(2, 6);
-      createPeerWithFallback(newId, onOpen, onError);
-    } else if (err.type === 'peer-unavailable') {
-      if (onError) onError(err);
-    } else {
-      clearTimeout(timeoutId);
-      try { newPeer.destroy(); } catch (e) {}
-      currentServerIndex++;
-      createPeerWithFallback(peerId, onOpen, onError);
-    }
-  });
-
-  return newPeer;
-}
-
-// ============================================
-// МУЛЬТИПЛЕЕР
-// ============================================
-var peer = null;
-var isHost = false;
-var myRoomId = null;
-var myId = null;
-var myNickname = '';
-var myColor = '#4a90d9';
-var connections = {};
-var hostConnection = null;
-var remotePlayers = {};
-
-var PLAYER_COLORS = ['#4a90d9', '#d94a4a', '#4ad94a', '#d9d94a', '#d94ad9', '#4ad9d9', '#d97a4a', '#7a4ad9'];
-function randomColor() { return PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)]; }
-function generateRoomId() {
-  var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  var id = '';
-  for (var i = 0; i < 3; i++) {
-    for (var j = 0; j < 4; j++) id += chars[Math.floor(Math.random() * chars.length)];
-    if (i < 2) id += '-';
-  }
-  return id;
-}
-
-function hostRoom() {
-  isHost = true;
-  myRoomId = generateRoomId();
-  myId = 'host-' + myRoomId;
-  myColor = randomColor();
-  currentServerIndex = 0;
-  successServerIndex = -1;
-
-  peer = createPeerWithFallback(myId,
-    function(p, id) {
-      document.getElementById('my-room-id').textContent = myRoomId;
-      document.getElementById('room-id-box').style.display = 'block';
-      document.getElementById('host-btn').style.display = 'none';
-      document.getElementById('start-game-btn').style.display = 'block';
-      document.getElementById('mp-status').textContent = '✅ Комната создана!';
-      updateRoomBadge(myRoomId);
-
-      p.on('connection', function(conn) {
-        connections[conn.peer] = conn;
-        conn.on('open', function() {
-          conn.send({
-            type: 'welcome',
-            hostNickname: myNickname,
-            hostColor: myColor,
-            existingPlayers: Object.keys(connections).map(function(pid) {
-              if (pid === conn.peer) return null;
-              var pl = remotePlayers[pid];
-              return pl ? { id: pid, nickname: pl.data.nickname, color: pl.data.color, x: pl.data.x, y: pl.data.y, z: pl.data.z, yaw: pl.data.yaw } : null;
-            }).filter(Boolean)
-          });
-          broadcast({ type: 'player_joined', id: conn.peer }, conn.peer);
-          addChatMessage('system', conn.peer + ' подключился');
-          updatePlayersList();
-        });
-        conn.on('data', function(data) { handleNetworkData(data, conn.peer); });
-        conn.on('close', function() {
-          delete connections[conn.peer];
-          removeRemotePlayer(conn.peer);
-          broadcast({ type: 'player_left', id: conn.peer });
-          addChatMessage('system', conn.peer + ' отключился');
-          updatePlayersList();
-        });
-      });
-    },
-    function(err) {
-      document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй позже.';
-    }
-  );
-}
-
-function joinRoom(roomId) {
-  isHost = false;
-  myRoomId = roomId;
-  myId = 'p-' + Math.random().toString(36).substring(2, 10);
-  myColor = randomColor();
-  currentServerIndex = 0;
-  successServerIndex = -1;
-
-  peer = createPeerWithFallback(myId,
-    function(p, id) {
-      var conn = p.connect('host-' + roomId, { reliable: true });
-      hostConnection = conn;
-
-      var connectTimeout = setTimeout(function() {
-        document.getElementById('mp-status').textContent = '❌ Хост не отвечает';
-      }, 10000);
-
-      conn.on('open', function() {
-        clearTimeout(connectTimeout);
-        document.getElementById('mp-status').textContent = '✅ Подключено!';
-        conn.send({
-          type: 'hello',
-          nickname: myNickname, color: myColor,
-          x: player.position.x, y: player.position.y, z: player.position.z, yaw: player.yaw
-        });
-        addChatMessage('system', 'Подключено к ' + roomId);
-        updateRoomBadge(roomId);
-        setTimeout(startGameFromMP, 800);
-      });
-
-      conn.on('data', function(data) { handleNetworkData(data, 'host-' + roomId); });
-      conn.on('close', function() {
-        addChatMessage('system', '❌ Хост отключился');
-      });
-    },
-    function(err) {
-      if (err.type === 'peer-unavailable') {
-        document.getElementById('mp-status').textContent = '❌ Комната не найдена';
-      } else {
-        document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй позже.';
-      }
-    }
-  );
-}
-
-function handleNetworkData(data, fromId) {
-  if (!data || !data.type) return;
-  switch (data.type) {
-    case 'hello':
-      if (isHost) {
-        remotePlayers[fromId] = {
-          data: { nickname: data.nickname, color: data.color, x: data.x, y: data.y, z: data.z, yaw: data.yaw },
-          lastUpdate: performance.now()
-        };
-        ensureRemoteModel(fromId);
-        addChatMessage('system', data.nickname + ' присоединился');
-        updatePlayersList();
-      }
-      break;
-    case 'welcome':
-      if (!isHost) {
-        addRemotePlayerModel('host-' + myRoomId, data.hostNickname, data.hostColor, 0, 0, 0, 0);
-        remotePlayers['host-' + myRoomId] = { data: { nickname: data.hostNickname, color: data.hostColor, x: 0, y: 0, z: 0, yaw: 0 }, lastUpdate: performance.now() };
-        if (data.existingPlayers) {
-          data.existingPlayers.forEach(function(p) {
-            addRemotePlayerModel(p.id, p.nickname, p.color, p.x, p.y, p.z, p.yaw);
-            remotePlayers[p.id] = { data: { nickname: p.nickname, color: p.color, x: p.x, y: p.y, z: p.z, yaw: p.yaw }, lastUpdate: performance.now() };
-          });
-        }
-        updatePlayersList();
-      }
-      break;
-    case 'move':
-      if (!remotePlayers[fromId]) remotePlayers[fromId] = { data: {}, lastUpdate: 0 };
-      remotePlayers[fromId].data.x = data.x;
-      remotePlayers[fromId].data.y = data.y;
-      remotePlayers[fromId].data.z = data.z;
-      remotePlayers[fromId].data.yaw = data.yaw;
-      remotePlayers[fromId].lastUpdate = performance.now();
-      ensureRemoteModel(fromId);
-      if (isHost) broadcast({ type: 'move', id: fromId, x: data.x, y: data.y, z: data.z, yaw: data.yaw }, fromId);
-      break;
-    case 'player_left':
-      removeRemotePlayer(data.id);
-      updatePlayersList();
-      break;
-    case 'chat':
-      addChatMessage(data.nickname, data.text, data.color, fromId === myId);
-      if (isHost) broadcast({ type: 'chat', nickname: data.nickname, text: data.text, color: data.color, fromId: fromId }, fromId);
-      break;
-  }
-}
-
-function broadcast(data, exceptId) {
-  if (!isHost) return;
-  Object.keys(connections).forEach(function(pid) {
-    if (pid === exceptId) return;
-    try { connections[pid].send(data); } catch (e) {}
-  });
-}
-
-function sendToHost(data) {
-  if (isHost) return;
-  if (hostConnection && hostConnection.open) {
-    try { hostConnection.send(data); } catch (e) {}
-  }
-}
-
-function ensureRemoteModel(peerId) {
-  if (remotePlayers[peerId] && remotePlayers[peerId].model) return;
-  var p = remotePlayers[peerId];
-  if (!p) return;
-  addRemotePlayerModel(peerId, p.data.nickname, p.data.color, p.data.x, p.data.y, p.data.z, p.data.yaw);
-}
-
-function addRemotePlayerModel(peerId, nickname, color, x, y, z, yaw) {
-  if (remotePlayers[peerId] && remotePlayers[peerId].model) return;
-  var model = createPlayerModel(nickname, color);
-  model.position.set(x || 0, y || 0, z || 0);
-  if (yaw !== undefined) model.rotation.y = yaw;
-  scene.add(model);
-  if (!remotePlayers[peerId]) remotePlayers[peerId] = { data: {}, lastUpdate: 0 };
-  remotePlayers[peerId].model = model;
-  remotePlayers[peerId].data.nickname = nickname;
-  remotePlayers[peerId].data.color = color;
-}
-
-function removeRemotePlayer(peerId) {
-  var p = remotePlayers[peerId];
-  if (p && p.model) scene.remove(p.model);
-  delete remotePlayers[peerId];
-}
-
-function createPlayerModel(username, color) {
-  var group = new THREE.Group();
-  var bodyColor = new THREE.Color(color || 0x4a90d9);
-  var bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor });
-  var skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
-
-  var body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.35), bodyMat);
-  body.position.y = 1.2; body.castShadow = true; group.add(body);
-
-  var head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
-  head.position.y = 1.9; head.castShadow = true; group.add(head);
-
-  var hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), new THREE.MeshStandardMaterial({ color: 0x333333 }));
-  hair.position.y = 2.15; group.add(hair);
-
-  var legGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
-  var legMat = new THREE.MeshStandardMaterial({ color: 0x2a4a7a });
-  var ll = new THREE.Mesh(legGeo, legMat);
-  ll.position.set(-0.15, 0.45, 0); ll.castShadow = true; group.add(ll);
-  var rl = new THREE.Mesh(legGeo, legMat);
-  rl.position.set(0.15, 0.45, 0); rl.castShadow = true; group.add(rl);
-
-  var armGeo = new THREE.BoxGeometry(0.15, 0.5, 0.15);
-  var la = new THREE.Mesh(armGeo, bodyMat);
-  la.position.set(-0.4, 1.15, 0); la.castShadow = true; group.add(la);
-  var ra = new THREE.Mesh(armGeo, bodyMat);
-  ra.position.set(0.4, 1.15, 0); ra.castShadow = true; group.add(ra);
-
-  var label = makeLabel(username || 'Игрок');
-  label.position.y = 2.6;
-  label.scale.set(3, 0.7, 1);
-  group.add(label);
-  return group;
-}
-
-function updateRemotePlayers(dt) {
-  Object.keys(remotePlayers).forEach(function(pid) {
-    var p = remotePlayers[pid];
-    if (!p.model || !p.data) return;
-    if (p.data.x !== undefined) {
-      p.model.position.x += (p.data.x - p.model.position.x) * dt * 10;
-      p.model.position.y += ((p.data.y || 0) - p.model.position.y) * dt * 10;
-      p.model.position.z += (p.data.z - p.model.position.z) * dt * 10;
-    }
-    if (p.data.yaw !== undefined) {
-      var diff = p.data.yaw - p.model.rotation.y;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      p.model.rotation.y += diff * dt * 10;
-    }
-  });
-}
-
-var lastNetworkSend = 0;
-function sendMyPosition(dt) {
-  lastNetworkSend += dt;
-  if (lastNetworkSend < 0.05) return;
-  lastNetworkSend = 0;
-  var data = { type: 'move', x: player.position.x, y: player.position.y, z: player.position.z, yaw: player.yaw };
-  if (isHost) broadcast(data); else sendToHost(data);
-}
-
-function updatePlayersList() {
-  var list = document.getElementById('players-list');
-  if (!list) return;
-  var html = '<div class="player-item me"><div class="dot"></div><div class="name">' + myNickname + ' (ты)</div></div>';
-  Object.keys(remotePlayers).forEach(function(pid) {
-    var p = remotePlayers[pid];
-    if (p.data && p.data.nickname) {
-      html += '<div class="player-item"><div class="dot"></div><div class="name">' + p.data.nickname + '</div></div>';
-    }
-  });
-  list.innerHTML = html;
-}
-
-function addChatMessage(nickname, text, color, isMe, isSystem) {
-  var messages = document.getElementById('chat-messages');
-  if (!messages) return;
-  var div = document.createElement('div');
-  div.className = 'chat-msg' + (isSystem ? ' system' : '');
-  if (isSystem) div.textContent = text;
-  else {
-    var ns = document.createElement('span');
-    ns.className = 'nick' + (isMe ? ' me' : '');
-    if (color) ns.style.color = color;
-    ns.textContent = nickname + ': ';
-    div.appendChild(ns);
-    div.appendChild(document.createTextNode(text));
-  }
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
-  while (messages.children.length > 30) messages.removeChild(messages.firstChild);
-}
-
-function sendChat(text) {
-  if (!text.trim()) return;
-  addChatMessage(myNickname, text, myColor, true);
-  var data = { type: 'chat', nickname: myNickname, text: text, color: myColor, fromId: myId };
-  if (isHost) broadcast(data); else sendToHost(data);
-}
-
-function updateRoomBadge(roomId) {
-  document.getElementById('room-badge-id').textContent = roomId;
-  document.getElementById('room-badge').classList.add('show');
-}
-
-document.getElementById('room-badge').onclick = function() {
-  if (myRoomId) {
-    navigator.clipboard.writeText(myRoomId).then(function() { showHint('📋 Скопировано!'); });
-  }
+document.getElementById('login-btn').onclick = function() {
+  var u = loginUsername.value.trim();
+  var p = loginPassword.value;
+  var r = loginUser(u, p);
+  if (r.success) {
+    Object.assign(state, r.data);
+    state.stamina = state.staminaMax;
+    loginScreen.classList.add('hidden');
+    startGame();
+  } else loginError.textContent = r.error;
 };
 
-document.getElementById('tab-host').onclick = function() {
-  document.getElementById('tab-host').classList.add('active');
-  document.getElementById('tab-join').classList.remove('active');
-  document.getElementById('content-host').classList.add('active');
-  document.getElementById('content-join').classList.remove('active');
-};
-document.getElementById('tab-join').onclick = function() {
-  document.getElementById('tab-join').classList.add('active');
-  document.getElementById('tab-host').classList.remove('active');
-  document.getElementById('content-join').classList.add('active');
-  document.getElementById('content-host').classList.remove('active');
-};
-document.getElementById('host-btn').onclick = function() {
-  document.getElementById('mp-status').textContent = '⏳ Создаём...';
-  hostRoom();
-};
-document.getElementById('start-game-btn').onclick = startGameFromMP;
-document.getElementById('join-btn').onclick = function() {
-  var rid = document.getElementById('join-room-id').value.trim().toLowerCase();
-  if (!rid) { document.getElementById('mp-status').textContent = '❌ Введи ID'; return; }
-  document.getElementById('mp-status').textContent = '⏳ Подключаемся...';
-  joinRoom(rid);
+document.getElementById('register-btn').onclick = function() {
+  var u = loginUsername.value.trim();
+  var p = loginPassword.value;
+  var r = registerUser(u, p);
+  if (r.success) {
+    loginError.textContent = '✓ Аккаунт создан! Теперь войдите.';
+    loginError.style.color = '#4fc3f7';
+  } else loginError.textContent = r.error;
 };
 
-function startGameFromMP() {
-  document.getElementById('mp-screen').classList.remove('show');
+function startGame() {
   document.getElementById('loading').classList.remove('done');
   setLoad(100, 'Загрузка мира...');
   setTimeout(function() {
     document.getElementById('loading').classList.add('done');
-    document.getElementById('players-panel').classList.add('show');
-    document.getElementById('chat-box').classList.add('show');
     document.getElementById('hud').classList.add('show');
     document.getElementById('pcHint').classList.add('show');
     detectMobile();
     updateHUD();
     updateShopMenu();
-    updatePlayersList();
     animate();
     setInterval(saveUserData, 30000);
   }, 500);
@@ -487,37 +54,6 @@ function detectMobile() {
     document.getElementById('click-to-play').classList.add('show');
   }
 }
-
-// ============================================
-// АВТОРИЗАЦИЯ
-// ============================================
-var loginScreen = document.getElementById('login-screen');
-var loginUsername = document.getElementById('login-username');
-var loginPassword = document.getElementById('login-password');
-var loginError = document.getElementById('login-error');
-
-document.getElementById('login-btn').onclick = function() {
-  var u = loginUsername.value.trim();
-  var p = loginPassword.value;
-  var r = loginUser(u, p);
-  if (r.success) {
-    Object.assign(state, r.data);
-    state.stamina = state.staminaMax;
-    myNickname = u;
-    loginScreen.classList.add('hidden');
-    document.getElementById('mp-screen').classList.add('show');
-  } else loginError.textContent = r.error;
-};
-
-document.getElementById('register-btn').onclick = function() {
-  var u = loginUsername.value.trim();
-  var p = loginPassword.value;
-  var r = registerUser(u, p);
-  if (r.success) {
-    loginError.textContent = '✓ Аккаунт создан!';
-    loginError.style.color = '#4fc3f7';
-  } else loginError.textContent = r.error;
-};
 
 // ============================================
 // ЗАГРУЗКА
@@ -674,6 +210,7 @@ var WORLD_BOUND = 38;
 
 setLoad(5, loadSteps[0]);
 
+// ЗЕМЛЯ
 var ground = new THREE.Mesh(
   new THREE.PlaneGeometry(200, 200),
   new THREE.MeshStandardMaterial({ color: 0x4a7a2a, roughness: 1 })
@@ -683,6 +220,7 @@ ground.receiveShadow = true;
 scene.add(ground);
 setLoad(10, loadSteps[1]);
 
+// СТОГ СЕНА
 var haystackGroup = new THREE.Group();
 haystackGroup.position.set(0, 0, -15);
 scene.add(haystackGroup);
@@ -827,6 +365,7 @@ function updateHaystackLOD() {
 addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
 setLoad(65, loadSteps[3]);
 
+// ИГОЛКА
 var needle = new THREE.Group();
 var needleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6),
   new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.15 }));
@@ -862,6 +401,7 @@ function updateNeedlePosition(dt) {
   }
 }
 
+// АМБАР
 var barn = new THREE.Group();
 barn.position.set(0, 0, 22);
 scene.add(barn);
@@ -917,6 +457,7 @@ for (var fx2 = doorW / 2 + 0.3; fx2 <= BARN_W / 2 - 0.5; fx2 += 0.7) addCollider
 
 setLoad(80, loadSteps[4]);
 
+// КОРОВА
 var cow = new THREE.Group();
 cow.position.set(15, 0, 5);
 cow.rotation.y = -Math.PI / 4;
@@ -967,6 +508,7 @@ cow.add(cowSnout);
 addCollider(15, 5, 2.0);
 setLoad(90, loadSteps[5]);
 
+// ДЕРЕВЬЯ
 function makeTree(x, z) {
   var tree = new THREE.Group();
   tree.position.set(x, 0, z);
@@ -991,6 +533,7 @@ function makeTree(x, z) {
   addCollider(p[0], p[1], 0.7);
 });
 
+// ЗАБОР
 var fenceMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
 var fenceGeo = new THREE.BoxGeometry(0.25, 2, 0.25);
 for (var fi = -40; fi <= 40; fi += 4) {
@@ -1006,6 +549,7 @@ for (var fi = -40; fi <= 40; fi += 4) {
   });
 }
 
+// ТЕКСТ-СПРАЙТ
 function makeLabel(text) {
   var canvas = document.createElement('canvas');
   canvas.width = 512;
@@ -1052,7 +596,6 @@ var MOUSE_SENSITIVITY = 0.005;
 var TOUCH_SENSITIVITY = 0.010;
 var isLocked = false;
 var shopOpen = false;
-var chatFocused = false;
 
 var lookArea = document.getElementById('lookArea');
 var lookHint = document.getElementById('lookHint');
@@ -1064,8 +607,7 @@ function isUITarget(target) {
   var runBtn = document.getElementById('runBtn');
   var shootBtn = document.getElementById('shootBtn');
   return (moveJoystick && (target === moveJoystick || moveJoystick.contains(target))) ||
-         target === runBtn || target === shootBtn ||
-         target === document.getElementById('chat-input');
+         target === runBtn || target === shootBtn;
 }
 
 lookArea.addEventListener('touchstart', function(e) {
@@ -1100,7 +642,7 @@ var canvasEl = renderer.domElement;
 var pointerLocked = false;
 
 canvasEl.addEventListener('click', function() {
-  if (!pointerLocked && !touchLookActive && !shopOpen && !chatFocused) {
+  if (!pointerLocked && !touchLookActive && !shopOpen) {
     canvasEl.requestPointerLock();
   }
 });
@@ -1111,7 +653,7 @@ document.addEventListener('pointerlockchange', function() {
   var ctp = document.getElementById('click-to-play');
   if (pointerLocked) {
     if (ctp) ctp.classList.remove('show');
-  } else if (!state.foundNeedle && !shopOpen && !chatFocused && !document.getElementById('moveJoystick').classList.contains('show')) {
+  } else if (!state.foundNeedle && !shopOpen && !document.getElementById('moveJoystick').classList.contains('show')) {
     if (ctp) ctp.classList.add('show');
   }
 });
@@ -1160,9 +702,8 @@ moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.s
 document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
-// === КЛАВИАТУРА (защищена от undefined) ===
+// КЛАВИАТУРА
 document.addEventListener('keydown', function(e) {
-  if (chatFocused) return;
   var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
   if (!key) return;
 
@@ -1177,7 +718,6 @@ document.addEventListener('keydown', function(e) {
   if (e.shiftKey) keys.shift = true;
   if (key === 'e' || key === 'у') { pressEButton(); }
   if (key === 'z' || key === 'я' || key === 'p') { e.preventDefault(); toggleShop(); }
-  if (key === 't' || key === 'е') { e.preventDefault(); openChat(); }
 });
 
 document.addEventListener('keyup', function(e) {
@@ -1234,29 +774,9 @@ clickToPlay.addEventListener('click', function() {
   canvasEl.requestPointerLock();
 });
 
-function openChat() {
-  chatFocused = true;
-  document.exitPointerLock();
-  var input = document.getElementById('chat-input');
-  input.style.display = 'block';
-  input.focus();
-}
-function closeChat() {
-  chatFocused = false;
-  var input = document.getElementById('chat-input');
-  input.style.display = 'none';
-  input.value = '';
-  if (!state.foundNeedle && !shopOpen) canvasEl.requestPointerLock();
-}
-document.getElementById('chat-input').addEventListener('keydown', function(e) {
-  e.stopPropagation();
-  if (e.code === 'Enter') { sendChat(this.value); closeChat(); }
-  if (e.code === 'Escape') { closeChat(); }
-});
-
 var isMouseDownGather = false;
 canvasEl.addEventListener('mousedown', function(e) {
-  if (!pointerLocked || e.button !== 0 || shopOpen || chatFocused) return;
+  if (!pointerLocked || e.button !== 0 || shopOpen) return;
   if (state.foundNeedle) return;
   isMouseDownGather = true;
   tryGatherHay();
@@ -1265,7 +785,7 @@ document.addEventListener('mouseup', function() { isMouseDownGather = false; });
 
 canvasEl.addEventListener('touchstart', function(e) {
   if (e.target !== canvasEl) return;
-  if (shopOpen || chatFocused) return;
+  if (shopOpen) return;
   if (state.foundNeedle) return;
   if (isNearHaystack()) tryGatherHay();
 }, { passive: true });
@@ -1577,7 +1097,7 @@ var moveTime = 0;
 var visibilityTimer = 0;
 
 function updatePlayer(dt) {
-  if (shopOpen || state.foundNeedle || chatFocused) return;
+  if (shopOpen || state.foundNeedle) return;
 
   var inputX = joystickInput.x;
   var inputY = joystickInput.y;
@@ -1658,8 +1178,6 @@ function animate() {
   updateVacuum(dt);
   updateAutoGatherPassive(dt);
   updateNeedlePosition(dt);
-  updateRemotePlayers(dt);
-  sendMyPosition(dt);
 
   visibilityTimer += dt;
   if (visibilityTimer >= UPDATE_INTERVAL) {
