@@ -10,7 +10,6 @@
   body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
   canvas { display: block; }
 
-  /* ЛОГИН */
   #login-screen {
     position: fixed; inset: 0; z-index: 600;
     background: linear-gradient(180deg, #1a1005, #000);
@@ -44,7 +43,6 @@
   #login-box button:hover { transform: scale(1.02); }
   #login-error { color: #ff6b6b; text-align: center; margin-top: 15px; font-size: 14px; }
 
-  /* МУЛЬТИПЛЕЕР */
   #mp-screen {
     position: fixed; inset: 0; z-index: 590;
     background: linear-gradient(180deg, #0a1a2a, #000);
@@ -106,28 +104,20 @@
     font-family: monospace; word-break: break-all;
   }
 
-  /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
-  #lookArea {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    touch-action: none; z-index: 12;
-  }
+  #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     color: rgba(255, 255, 255, 0.15);
     font-size: 14px; text-align: center;
-    pointer-events: none; user-select: none;
-    z-index: 8;
+    pointer-events: none; user-select: none; z-index: 8;
   }
   #moveJoystick {
-    position: absolute;
-    bottom: 30px; left: 30px;
+    position: absolute; bottom: 30px; left: 30px;
     width: 130px; height: 130px;
     background: rgba(255, 255, 255, 0.15);
     border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    touch-action: none; z-index: 20;
+    border-radius: 50%; touch-action: none; z-index: 20;
     display: none;
   }
   #moveJoystick.show { display: block; }
@@ -136,17 +126,15 @@
     transform: translate(-50%, -50%);
     width: 55px; height: 55px;
     background: rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    pointer-events: none;
+    border-radius: 50%; pointer-events: none;
   }
   #runBtn {
-    position: absolute;
-    bottom: 30px; right: 30px;
+    position: absolute; bottom: 30px; right: 30px;
     width: 80px; height: 80px;
     background: rgba(100, 200, 255, 0.25);
     border: 3px solid rgba(100, 200, 255, 0.6);
-    border-radius: 50%;
-    color: white; font-size: 15px; font-weight: bold;
+    border-radius: 50%; color: white;
+    font-size: 15px; font-weight: bold;
     display: none; align-items: center; justify-content: center;
     touch-action: none; z-index: 25;
     transition: background 0.1s, transform 0.1s;
@@ -154,13 +142,12 @@
   #runBtn.show { display: flex; }
   #runBtn.active { background: rgba(100, 200, 255, 0.6); transform: scale(1.1); }
   #shootBtn {
-    position: absolute;
-    bottom: 130px; right: 30px;
+    position: absolute; bottom: 130px; right: 30px;
     width: 80px; height: 80px;
     background: rgba(255, 50, 50, 0.3);
     border: 3px solid rgba(255, 100, 100, 0.6);
-    border-radius: 50%;
-    color: white; font-size: 28px; font-weight: bold;
+    border-radius: 50%; color: white;
+    font-size: 28px; font-weight: bold;
     display: none; align-items: center; justify-content: center;
     touch-action: none; z-index: 25;
     transition: background 0.1s, transform 0.1s;
@@ -168,8 +155,7 @@
   #shootBtn.show { display: flex; }
   #shootBtn.active { background: rgba(255, 50, 50, 0.7); transform: scale(0.95); }
   #stamina-bar-mobile {
-    position: absolute;
-    bottom: 175px; left: 30px;
+    position: absolute; bottom: 175px; left: 30px;
     width: 130px; height: 8px;
     background: rgba(0, 0, 0, 0.4);
     border-radius: 4px; overflow: hidden;
@@ -182,8 +168,6 @@
     background: linear-gradient(90deg, #00FF88, #00CC66);
     transition: width 0.1s; border-radius: 4px;
   }
-
-  /* ПК подсказка */
   #pcHint {
     position: absolute; top: 15px; left: 50%;
     transform: translateX(-50%);
@@ -206,7 +190,6 @@
   }
   @media (max-width: 700px) { #pcHint { display: none !important; } }
 
-  /* HUD */
   #hud {
     position: fixed; top: 15px; left: 15px; color: #fff;
     background: rgba(20, 15, 10, 0.75);
@@ -214,15 +197,13 @@
     font-size: 13px; line-height: 1.7;
     border: 1px solid rgba(255, 215, 0, 0.35);
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    pointer-events: none;
-    z-index: 15;
+    pointer-events: none; z-index: 15;
     display: none;
   }
   #hud.show { display: block; }
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
 
-  /* СПИСОК ИГРОКОВ */
   #players-panel {
     position: fixed; top: 80px; right: 15px;
     background: rgba(10, 10, 10, 0.85);
@@ -232,8 +213,7 @@
     color: #fff; font-size: 12px;
     min-width: 150px; max-height: 200px;
     overflow-y: auto;
-    pointer-events: none;
-    z-index: 20;
+    pointer-events: none; z-index: 20;
     display: none;
   }
   #players-panel.show { display: block; }
@@ -254,13 +234,11 @@
   .player-item.me .name { color: #ffd700; font-weight: bold; }
   .player-item .name { color: #ddd; }
 
-  /* КОМНАТА */
   #room-badge {
     position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
     background: rgba(10, 10, 10, 0.85);
     border: 2px solid #ffd700;
-    border-radius: 10px;
-    padding: 5px 14px;
+    border-radius: 10px; padding: 5px 14px;
     color: #ffd700; font-size: 12px;
     z-index: 25; font-family: monospace;
     cursor: pointer; transition: 0.2s;
@@ -268,7 +246,6 @@
   }
   #room-badge.show { display: block; }
 
-  /* ЧАТ */
   #chat-box {
     position: fixed; bottom: 200px; left: 15px;
     width: 260px; max-width: 60vw;
@@ -282,10 +259,7 @@
     flex-direction: column; gap: 4px;
   }
   #chat-box.show { display: flex; }
-  #chat-messages {
-    overflow-y: auto; max-height: 100px;
-    font-size: 11px; line-height: 1.4;
-  }
+  #chat-messages { overflow-y: auto; max-height: 100px; font-size: 11px; line-height: 1.4; }
   .chat-msg { margin-bottom: 2px; }
   .chat-msg .nick { color: #ffd700; font-weight: bold; }
   .chat-msg .nick.me { color: #4fc3f7; }
@@ -300,7 +274,6 @@
   #chat-hint { color: #888; font-size: 10px; text-align: center; padding-top: 2px; }
   #chat-hint b { color: #ffd700; }
 
-  /* ПОПАПЫ */
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup {
     position: absolute; color: #ffd700; font-size: 22px; font-weight: bold;
@@ -312,7 +285,6 @@
     100% { transform: translate(-50%, -110px); opacity: 0; }
   }
 
-  /* СООБЩЕНИЯ */
   #hint {
     position: fixed; bottom: 220px; left: 50%; transform: translateX(-50%);
     color: #fff; background: rgba(10, 10, 10, 0.85);
@@ -324,7 +296,6 @@
   }
   #hint.show { display: block; }
 
-  /* МАГАЗИН */
   #shop-menu {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     display: none; align-items: center; justify-content: center;
@@ -367,7 +338,6 @@
     font-size: 15px; font-weight: bold; cursor: pointer;
   }
 
-  /* ЗАГРУЗКА */
   #loading {
     position: fixed; inset: 0; z-index: 500;
     background: linear-gradient(180deg, #1a1005, #000);
@@ -391,7 +361,6 @@
   #loading .percent { margin-top: 15px; font-size: 20px; font-weight: bold; color: #ffd700; }
   #loading .status { margin-top: 8px; font-size: 13px; color: #aaa; }
 
-  /* ПОБЕДА */
   #message {
     position: fixed; inset: 0; background: rgba(0,0,0,0.92);
     display: none; align-items: center; justify-content: center;
@@ -412,7 +381,6 @@
     font-size: 17px; font-weight: bold; cursor: pointer;
   }
 
-  /* КЛИК-ТУ-ПЛЕЙ */
   #click-to-play {
     position: fixed; inset: 0;
     background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98));
@@ -443,7 +411,6 @@
 </head>
 <body>
 
-<!-- ЛОГИН -->
 <div id="login-screen">
   <h1>🧵 Иголка в стоге сена</h1>
   <div class="subtitle">Онлайн-ферма</div>
@@ -456,7 +423,6 @@
   </div>
 </div>
 
-<!-- МУЛЬТИПЛЕЕР -->
 <div id="mp-screen">
   <h1>🌐 Мультиплеер</h1>
   <div id="mp-box">
@@ -480,7 +446,6 @@
   </div>
 </div>
 
-<!-- ЗАГРУЗКА -->
 <div id="loading">
   <div class="title">🧵 Иголка в стоге сена</div>
   <div class="sub">Подготовка фермы...</div>
@@ -489,7 +454,6 @@
   <div class="status" id="loading-status">Инициализация...</div>
 </div>
 
-<!-- МОБИЛЬНОЕ УПРАВЛЕНИЕ -->
 <div id="lookArea">
   <div id="lookHint">Свайп для обзора</div>
 </div>
@@ -498,7 +462,6 @@
 <div id="runBtn">RUN</div>
 <div id="shootBtn">E</div>
 
-<!-- ПК ПОДСКАЗКА -->
 <div id="pcHint">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> движение | 
   <kbd>Мышь</kbd> обзор | 
@@ -508,7 +471,6 @@
   <kbd>T</kbd> чат
 </div>
 
-<!-- HUD -->
 <div id="room-badge">🏠 <span id="room-badge-id">-</span></div>
 
 <div id="hud">
@@ -533,7 +495,6 @@
 <div id="hint"></div>
 <div id="popups"></div>
 
-<!-- МАГАЗИН -->
 <div id="shop-menu">
   <div id="shop-window">
     <h2>🏠 АМБАР</h2>
