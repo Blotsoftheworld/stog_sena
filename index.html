@@ -10,6 +10,7 @@
   body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
   canvas { display: block; }
 
+  /* ЛОГИН */
   #login-screen {
     position: fixed; inset: 0; z-index: 600;
     background: linear-gradient(180deg, #1a1005, #000);
@@ -43,67 +44,7 @@
   #login-box button:hover { transform: scale(1.02); }
   #login-error { color: #ff6b6b; text-align: center; margin-top: 15px; font-size: 14px; }
 
-  #mp-screen {
-    position: fixed; inset: 0; z-index: 590;
-    background: linear-gradient(180deg, #0a1a2a, #000);
-    display: none; align-items: center; justify-content: center;
-    flex-direction: column; color: #4fc3f7;
-    padding: 20px;
-  }
-  #mp-screen.show { display: flex; }
-  #mp-screen h1 { font-size: 28px; margin-bottom: 20px; text-shadow: 0 0 20px #4fc3f7; text-align: center; }
-  #mp-box {
-    background: rgba(20, 30, 40, 0.95);
-    border: 3px solid #4fc3f7;
-    border-radius: 20px; padding: 25px 30px;
-    box-shadow: 0 0 50px rgba(79, 195, 247, 0.3);
-    width: 90%; max-width: 480px;
-  }
-  #mp-box .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-  #mp-box .tab {
-    flex: 1; padding: 12px; text-align: center;
-    background: rgba(0,0,0,0.4); border: 2px solid #555;
-    border-radius: 10px; cursor: pointer;
-    color: #888; font-weight: bold; transition: 0.2s;
-    font-size: 14px;
-  }
-  #mp-box .tab.active {
-    background: rgba(79, 195, 247, 0.2);
-    border-color: #4fc3f7; color: #fff;
-  }
-  #mp-box .content { display: none; }
-  #mp-box .content.active { display: block; }
-  #mp-box input {
-    width: 100%; padding: 14px 18px; margin-bottom: 15px;
-    background: rgba(0,0,0,0.6); border: 2px solid #555;
-    border-radius: 10px; color: #fff; font-size: 16px;
-    outline: none;
-  }
-  #mp-box input:focus { border-color: #4fc3f7; }
-  #mp-box button {
-    width: 100%; padding: 15px;
-    background: linear-gradient(180deg, #1976d2, #0d47a1);
-    border: none; border-radius: 12px; color: #fff;
-    font-size: 16px; font-weight: bold; cursor: pointer;
-    transition: 0.2s;
-  }
-  #mp-box button:hover { transform: scale(1.02); }
-  #mp-box button:disabled { background: #333; cursor: not-allowed; }
-  #mp-status { color: #aaa; text-align: center; margin-top: 15px; font-size: 13px; min-height: 20px; }
-  #room-id-box {
-    background: rgba(255, 215, 0, 0.1);
-    border: 2px solid #ffd700;
-    border-radius: 10px;
-    padding: 12px; margin-bottom: 15px;
-    text-align: center;
-  }
-  #room-id-box .label { color: #aaa; font-size: 12px; margin-bottom: 5px; }
-  #room-id-box .id {
-    color: #ffd700; font-size: 18px; font-weight: bold;
-    letter-spacing: 2px; user-select: text;
-    font-family: monospace; word-break: break-all;
-  }
-
+  /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint {
     position: absolute; top: 50%; left: 50%;
@@ -190,6 +131,7 @@
   }
   @media (max-width: 700px) { #pcHint { display: none !important; } }
 
+  /* HUD */
   #hud {
     position: fixed; top: 15px; left: 15px; color: #fff;
     background: rgba(20, 15, 10, 0.75);
@@ -204,76 +146,7 @@
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
 
-  #players-panel {
-    position: fixed; top: 80px; right: 15px;
-    background: rgba(10, 10, 10, 0.85);
-    border: 2px solid rgba(79, 195, 247, 0.5);
-    border-radius: 12px;
-    padding: 8px 12px;
-    color: #fff; font-size: 12px;
-    min-width: 150px; max-height: 200px;
-    overflow-y: auto;
-    pointer-events: none; z-index: 20;
-    display: none;
-  }
-  #players-panel.show { display: block; }
-  #players-panel h3 {
-    color: #4fc3f7; font-size: 12px; margin-bottom: 5px;
-    border-bottom: 1px solid rgba(79, 195, 247, 0.3);
-    padding-bottom: 4px;
-  }
-  .player-item {
-    display: flex; align-items: center; gap: 6px;
-    padding: 2px 0; font-size: 11px;
-  }
-  .player-item .dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #4fc3f7; box-shadow: 0 0 6px #4fc3f7;
-  }
-  .player-item.me .dot { background: #ffd700; box-shadow: 0 0 6px #ffd700; }
-  .player-item.me .name { color: #ffd700; font-weight: bold; }
-  .player-item .name { color: #ddd; }
-
-  #room-badge {
-    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-    background: rgba(10, 10, 10, 0.85);
-    border: 2px solid #ffd700;
-    border-radius: 10px; padding: 5px 14px;
-    color: #ffd700; font-size: 12px;
-    z-index: 25; font-family: monospace;
-    cursor: pointer; transition: 0.2s;
-    display: none;
-  }
-  #room-badge.show { display: block; }
-
-  #chat-box {
-    position: fixed; bottom: 200px; left: 15px;
-    width: 260px; max-width: 60vw;
-    background: rgba(10, 10, 10, 0.8);
-    border: 2px solid rgba(255, 215, 0, 0.3);
-    border-radius: 12px;
-    padding: 8px 10px;
-    color: #fff; font-size: 12px;
-    z-index: 30;
-    display: none;
-    flex-direction: column; gap: 4px;
-  }
-  #chat-box.show { display: flex; }
-  #chat-messages { overflow-y: auto; max-height: 100px; font-size: 11px; line-height: 1.4; }
-  .chat-msg { margin-bottom: 2px; }
-  .chat-msg .nick { color: #ffd700; font-weight: bold; }
-  .chat-msg .nick.me { color: #4fc3f7; }
-  .chat-msg.system { color: #aaa; font-style: italic; }
-  #chat-input {
-    width: 100%; padding: 6px 8px;
-    background: rgba(0,0,0,0.6); border: 1px solid #555;
-    border-radius: 8px; color: #fff; font-size: 12px;
-    outline: none; display: none;
-  }
-  #chat-input:focus { border-color: #ffd700; }
-  #chat-hint { color: #888; font-size: 10px; text-align: center; padding-top: 2px; }
-  #chat-hint b { color: #ffd700; }
-
+  /* ПОПАПЫ */
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup {
     position: absolute; color: #ffd700; font-size: 22px; font-weight: bold;
@@ -296,6 +169,7 @@
   }
   #hint.show { display: block; }
 
+  /* МАГАЗИН */
   #shop-menu {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     display: none; align-items: center; justify-content: center;
@@ -338,6 +212,7 @@
     font-size: 15px; font-weight: bold; cursor: pointer;
   }
 
+  /* ЗАГРУЗКА */
   #loading {
     position: fixed; inset: 0; z-index: 500;
     background: linear-gradient(180deg, #1a1005, #000);
@@ -361,6 +236,7 @@
   #loading .percent { margin-top: 15px; font-size: 20px; font-weight: bold; color: #ffd700; }
   #loading .status { margin-top: 8px; font-size: 13px; color: #aaa; }
 
+  /* ПОБЕДА */
   #message {
     position: fixed; inset: 0; background: rgba(0,0,0,0.92);
     display: none; align-items: center; justify-content: center;
@@ -413,36 +289,13 @@
 
 <div id="login-screen">
   <h1>🧵 Иголка в стоге сена</h1>
-  <div class="subtitle">Онлайн-ферма</div>
+  <div class="subtitle">Найди иголку в стоге сена!</div>
   <div id="login-box">
     <input type="text" id="login-username" placeholder="👤 Никнейм" maxlength="16">
     <input type="password" id="login-password" placeholder="🔑 Пароль" maxlength="30">
     <button id="login-btn">🎮 Войти</button>
     <button id="register-btn" style="background: linear-gradient(180deg, #c0392b, #8b1e0f);">📝 Регистрация</button>
     <div id="login-error"></div>
-  </div>
-</div>
-
-<div id="mp-screen">
-  <h1>🌐 Мультиплеер</h1>
-  <div id="mp-box">
-    <div class="tabs">
-      <div class="tab active" id="tab-host">🏠 Создать</div>
-      <div class="tab" id="tab-join">🔗 Войти</div>
-    </div>
-    <div class="content active" id="content-host">
-      <div id="room-id-box" style="display:none;">
-        <div class="label">ID комнаты (отправь другу):</div>
-        <div class="id" id="my-room-id">...</div>
-      </div>
-      <button id="host-btn">🏠 Создать комнату</button>
-      <button id="start-game-btn" style="display:none; margin-top: 10px; background: linear-gradient(180deg, #4a8f3a, #2d5a23);">▶️ Начать игру</button>
-    </div>
-    <div class="content" id="content-join">
-      <input type="text" id="join-room-id" placeholder="ID комнаты друга" maxlength="36">
-      <button id="join-btn">🔗 Подключиться</button>
-    </div>
-    <div id="mp-status">Выбери действие выше</div>
   </div>
 </div>
 
@@ -467,28 +320,14 @@
   <kbd>Мышь</kbd> обзор | 
   <kbd>Shift</kbd> бег | 
   <kbd>E</kbd> действие | 
-  <kbd>Z</kbd> магазин | 
-  <kbd>T</kbd> чат
+  <kbd>Z</kbd> магазин
 </div>
-
-<div id="room-badge">🏠 <span id="room-badge-id">-</span></div>
 
 <div id="hud">
   <div class="row"><span>🌾 Сено:</span> <b id="hay">0</b>/<b id="maxHay">25</b></div>
   <div class="row"><span>🥛 Молоко:</span> <b id="milk">0</b></div>
   <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>$</div>
   <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
-</div>
-
-<div id="players-panel">
-  <h3>👥 Онлайн</h3>
-  <div id="players-list"></div>
-</div>
-
-<div id="chat-box">
-  <div id="chat-messages"></div>
-  <input type="text" id="chat-input" placeholder="Написать..." maxlength="100">
-  <div id="chat-hint">Кнопка <b>T</b> — чат</div>
 </div>
 
 <div id="cooldown"><div id="cooldown-fill"></div></div>
@@ -567,7 +406,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
