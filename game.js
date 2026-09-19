@@ -1,5 +1,91 @@
 // ============================================
-// МУЛЬТИПЛЕЕР (PeerJS)
+// PEERJS СЕРВЕРЫ (автопереключение)
+// ============================================
+var PEER_SERVERS = [
+  { host: '0.peerjs.com', port: 443, secure: true, path: '/' },
+  { host: 'peerjs.92k.de', port: 443, secure: true, path: '/' },
+  { host: 'peer.butterwire.com', port: 443, secure: true, path: '/' },
+  { host: 'peer.wallie.io', port: 443, secure: true, path: '/' },
+  { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' }
+];
+
+var currentServerIndex = 0;
+
+function createPeerWithFallback(peerId, onOpen, onError) {
+  var server = PEER_SERVERS[currentServerIndex];
+  console.log('[MP] Пробуем сервер:', server.host);
+  document.getElementById('mp-status').textContent = '⏳ Пробуем сервер: ' + server.host;
+
+  var options = {
+    debug: 1,
+    host: server.host,
+    port: server.port,
+    secure: server.secure,
+    path: server.path,
+    config: {
+      'iceServers': [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+      ]
+    }
+  };
+
+  var newPeer;
+  try {
+    newPeer = new Peer(peerId, options);
+  } catch (e) {
+    console.error('[MP] Ошибка создания Peer:', e);
+    tryNextServer(peerId, onOpen, onError);
+    return null;
+  }
+
+  var timeoutId = setTimeout(function() {
+    console.log('[MP] Таймаут сервера', server.host);
+    try { newPeer.destroy(); } catch (e) {}
+    tryNextServer(peerId, onOpen, onError);
+  }, 5000);
+
+  newPeer.on('open', function(id) {
+    clearTimeout(timeoutId);
+    console.log('[MP] ✅ Подключено к', server.host, 'ID:', id);
+    if (onOpen) onOpen(newPeer, id);
+  });
+
+  newPeer.on('error', function(err) {
+    console.log('[MP] Ошибка сервера', server.host, ':', err.type, err.message);
+    if (err.type === 'network' || err.type === 'server-error' ||
+        err.type === 'socket-error' || err.type === 'socket-closed' ||
+        (err.message && err.message.indexOf('Lost connection') !== -1)) {
+      clearTimeout(timeoutId);
+      try { newPeer.destroy(); } catch (e) {}
+      tryNextServer(peerId, onOpen, onError);
+    } else if (err.type === 'unavailable-id') {
+      // ID занят — даём новый
+      var newId = peerId + '-' + Math.random().toString(36).substring(2, 6);
+      try { newPeer.destroy(); } catch (e) {}
+      currentServerIndex = 0;
+      createPeerWithFallback(newId, onOpen, onError);
+    } else if (onError) {
+      onError(err);
+    }
+  });
+
+  return newPeer;
+}
+
+function tryNextServer(peerId, onOpen, onError) {
+  currentServerIndex = (currentServerIndex + 1) % PEER_SERVERS.length;
+  if (currentServerIndex === 0) {
+    document.getElementById('mp-status').textContent = '❌ Все серверы PeerJS недоступны. Попробуй VPN.';
+    if (onError) onError(new Error('Все серверы недоступны'));
+    return;
+  }
+  createPeerWithFallback(peerId, onOpen, onError);
+}
+
+// ============================================
+// МУЛЬТИПЛЕЕР
 // ============================================
 var peer = null;
 var isHost = false;
@@ -23,63 +109,53 @@ function generateRoomId() {
   return id;
 }
 
-var PEER_OPTIONS = {
-  debug: 1,
-  host: 'peerjs.92k.de',
-  port: 443,
-  secure: true,
-  path: '/'
-};
-
 function hostRoom() {
   isHost = true;
   myRoomId = generateRoomId();
   myId = 'host-' + myRoomId;
   myColor = randomColor();
-  
-  peer = new Peer(myId, PEER_OPTIONS);
-  
-  peer.on('open', function(id) {
-    document.getElementById('my-room-id').textContent = myRoomId;
-    document.getElementById('room-id-box').style.display = 'block';
-    document.getElementById('host-btn').style.display = 'none';
-    document.getElementById('start-game-btn').style.display = 'block';
-    document.getElementById('mp-status').textContent = '✅ Комната создана!';
-    updateRoomBadge(myRoomId);
-  });
-  
-  peer.on('connection', function(conn) {
-    connections[conn.peer] = conn;
-    conn.on('open', function() {
-      conn.send({
-        type: 'welcome',
-        hostNickname: myNickname,
-        hostColor: myColor,
-        existingPlayers: Object.keys(connections).map(function(pid) {
-          if (pid === conn.peer) return null;
-          var p = remotePlayers[pid];
-          return p ? { id: pid, nickname: p.data.nickname, color: p.data.color, x: p.data.x, y: p.data.y, z: p.data.z, yaw: p.data.yaw } : null;
-        }).filter(Boolean)
+  currentServerIndex = 0;
+
+  peer = createPeerWithFallback(myId,
+    function(p, id) {
+      document.getElementById('my-room-id').textContent = myRoomId;
+      document.getElementById('room-id-box').style.display = 'block';
+      document.getElementById('host-btn').style.display = 'none';
+      document.getElementById('start-game-btn').style.display = 'block';
+      document.getElementById('mp-status').textContent = '✅ Комната создана!';
+      updateRoomBadge(myRoomId);
+
+      p.on('connection', function(conn) {
+        connections[conn.peer] = conn;
+        conn.on('open', function() {
+          conn.send({
+            type: 'welcome',
+            hostNickname: myNickname,
+            hostColor: myColor,
+            existingPlayers: Object.keys(connections).map(function(pid) {
+              if (pid === conn.peer) return null;
+              var pl = remotePlayers[pid];
+              return pl ? { id: pid, nickname: pl.data.nickname, color: pl.data.color, x: pl.data.x, y: pl.data.y, z: pl.data.z, yaw: pl.data.yaw } : null;
+            }).filter(Boolean)
+          });
+          broadcast({ type: 'player_joined', id: conn.peer }, conn.peer);
+          addChatMessage('system', conn.peer + ' подключился');
+          updatePlayersList();
+        });
+        conn.on('data', function(data) { handleNetworkData(data, conn.peer); });
+        conn.on('close', function() {
+          delete connections[conn.peer];
+          removeRemotePlayer(conn.peer);
+          broadcast({ type: 'player_left', id: conn.peer });
+          addChatMessage('system', conn.peer + ' отключился');
+          updatePlayersList();
+        });
       });
-      broadcast({ type: 'player_joined', id: conn.peer }, conn.peer);
-      addChatMessage('system', conn.peer + ' подключился');
-      updatePlayersList();
-    });
-    conn.on('data', function(data) { handleNetworkData(data, conn.peer); });
-    conn.on('close', function() {
-      delete connections[conn.peer];
-      removeRemotePlayer(conn.peer);
-      broadcast({ type: 'player_left', id: conn.peer });
-      addChatMessage('system', conn.peer + ' отключился');
-      updatePlayersList();
-    });
-  });
-  
-  peer.on('error', function(err) {
-    console.error('[MP]', err);
-    if (err.type === 'unavailable-id') { hostRoom(); }
-    else document.getElementById('mp-status').textContent = '❌ ' + err.message;
-  });
+    },
+    function(err) {
+      document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй позже.';
+    }
+  );
 }
 
 function joinRoom(roomId) {
@@ -87,34 +163,43 @@ function joinRoom(roomId) {
   myRoomId = roomId;
   myId = 'p-' + Math.random().toString(36).substring(2, 10);
   myColor = randomColor();
-  
-  peer = new Peer(myId, PEER_OPTIONS);
-  
-  peer.on('open', function() {
-    var conn = peer.connect('host-' + roomId, { reliable: true });
-    hostConnection = conn;
-    conn.on('open', function() {
-      document.getElementById('mp-status').textContent = '✅ Подключено!';
-      conn.send({
-        type: 'hello',
-        nickname: myNickname, color: myColor,
-        x: player.position.x, y: player.position.y, z: player.position.z, yaw: player.yaw
+  currentServerIndex = 0;
+
+  peer = createPeerWithFallback(myId,
+    function(p, id) {
+      var conn = p.connect('host-' + roomId, { reliable: true });
+      hostConnection = conn;
+
+      var connectTimeout = setTimeout(function() {
+        document.getElementById('mp-status').textContent = '❌ Хост не отвечает';
+      }, 10000);
+
+      conn.on('open', function() {
+        clearTimeout(connectTimeout);
+        document.getElementById('mp-status').textContent = '✅ Подключено!';
+        conn.send({
+          type: 'hello',
+          nickname: myNickname, color: myColor,
+          x: player.position.x, y: player.position.y, z: player.position.z, yaw: player.yaw
+        });
+        addChatMessage('system', 'Подключено к ' + roomId);
+        updateRoomBadge(roomId);
+        setTimeout(startGameFromMP, 800);
       });
-      addChatMessage('system', 'Подключено к ' + roomId);
-      updateRoomBadge(roomId);
-      setTimeout(startGameFromMP, 800);
-    });
-    conn.on('data', function(data) { handleNetworkData(data, 'host-' + roomId); });
-    conn.on('close', function() {
-      addChatMessage('system', '❌ Хост отключился');
-    });
-  });
-  
-  peer.on('error', function(err) {
-    console.error('[MP]', err);
-    if (err.type === 'peer-unavailable') document.getElementById('mp-status').textContent = '❌ Комната не найдена';
-    else document.getElementById('mp-status').textContent = '❌ ' + err.message;
-  });
+
+      conn.on('data', function(data) { handleNetworkData(data, 'host-' + roomId); });
+      conn.on('close', function() {
+        addChatMessage('system', '❌ Хост отключился');
+      });
+    },
+    function(err) {
+      if (err.type === 'peer-unavailable') {
+        document.getElementById('mp-status').textContent = '❌ Комната не найдена';
+      } else {
+        document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй позже.';
+      }
+    }
+  );
 }
 
 function handleNetworkData(data, fromId) {
@@ -210,29 +295,29 @@ function createPlayerModel(username, color) {
   var bodyColor = new THREE.Color(color || 0x4a90d9);
   var bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor });
   var skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
-  
+
   var body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.9, 0.35), bodyMat);
   body.position.y = 1.2; body.castShadow = true; group.add(body);
-  
+
   var head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
   head.position.y = 1.9; head.castShadow = true; group.add(head);
-  
+
   var hair = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.15, 0.52), new THREE.MeshStandardMaterial({ color: 0x333333 }));
   hair.position.y = 2.15; group.add(hair);
-  
+
   var legGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
   var legMat = new THREE.MeshStandardMaterial({ color: 0x2a4a7a });
   var ll = new THREE.Mesh(legGeo, legMat);
   ll.position.set(-0.15, 0.45, 0); ll.castShadow = true; group.add(ll);
   var rl = new THREE.Mesh(legGeo, legMat);
   rl.position.set(0.15, 0.45, 0); rl.castShadow = true; group.add(rl);
-  
+
   var armGeo = new THREE.BoxGeometry(0.15, 0.5, 0.15);
   var la = new THREE.Mesh(armGeo, bodyMat);
   la.position.set(-0.4, 1.15, 0); la.castShadow = true; group.add(la);
   var ra = new THREE.Mesh(armGeo, bodyMat);
   ra.position.set(0.4, 1.15, 0); ra.castShadow = true; group.add(ra);
-  
+
   var label = makeLabel(username || 'Игрок');
   label.position.y = 2.6;
   label.scale.set(3, 0.7, 1);
@@ -241,7 +326,6 @@ function createPlayerModel(username, color) {
 }
 
 function updateRemotePlayers(dt) {
-  var now = performance.now();
   Object.keys(remotePlayers).forEach(function(pid) {
     var p = remotePlayers[pid];
     if (!p.model || !p.data) return;
@@ -308,9 +392,8 @@ function sendChat(text) {
 }
 
 function updateRoomBadge(roomId) {
-  var badge = document.getElementById('room-badge');
   document.getElementById('room-badge-id').textContent = roomId;
-  badge.classList.add('show');
+  document.getElementById('room-badge').classList.add('show');
 }
 
 document.getElementById('room-badge').onclick = function() {
@@ -349,14 +432,29 @@ function startGameFromMP() {
   setLoad(100, 'Загрузка мира...');
   setTimeout(function() {
     document.getElementById('loading').classList.add('done');
-    document.getElementById('players-panel').style.display = 'block';
+    document.getElementById('players-panel').classList.add('show');
     document.getElementById('chat-box').classList.add('show');
+    document.getElementById('hud').classList.add('show');
+    document.getElementById('pcHint').classList.add('show');
+    detectMobile();
     updateHUD();
     updateShopMenu();
     updatePlayersList();
     animate();
     setInterval(saveUserData, 30000);
   }, 500);
+}
+
+function detectMobile() {
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouch) {
+    document.getElementById('moveJoystick').classList.add('show');
+    document.getElementById('runBtn').classList.add('show');
+    document.getElementById('shootBtn').classList.add('show');
+    document.getElementById('stamina-bar-mobile').classList.add('show');
+  } else {
+    document.getElementById('click-to-play').classList.add('show');
+  }
 }
 
 // ============================================
@@ -506,18 +604,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.BasicShadowMap;
-document.getElementById('gameCanvas') || document.body.appendChild(renderer.domElement);
-
-// Убираем возможный конфликт — если canvas уже есть, используем его
-var gameCanvas = document.getElementById('gameCanvas');
-if (gameCanvas) {
-  renderer.dispose();
-  renderer = new THREE.WebGLRenderer({ canvas: gameCanvas, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.BasicShadowMap;
-}
+document.body.appendChild(renderer.domElement);
 
 var VIEW_DISTANCE = 80;
 var UPDATE_INTERVAL = 0.1;
@@ -921,11 +1008,9 @@ function makeLabel(text) {
 var stackLabel = makeLabel('🌾 СТОГ — клик');
 stackLabel.position.set(0, HAYSTACK_HEIGHT + 1.2, 0);
 haystackGroup.add(stackLabel);
-
 var cowLabel = makeLabel('🐄 КОРОВА — [E]');
 cowLabel.position.set(0, 4.8, 0);
 cow.add(cowLabel);
-
 var barnLabel = makeLabel('🏠 АМБАР — [E]');
 barnLabel.position.set(0, BARN_H + 3.5, -BARN_D / 2);
 barn.add(barnLabel);
@@ -939,9 +1024,10 @@ var player = {
 };
 
 // ============================================
-// УПРАВЛЕНИЕ (НОВОЕ)
+// УПРАВЛЕНИЕ
 // ============================================
-var keys = {};
+var keys = { w: false, a: false, s: false, d: false,
+  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false, shift: false };
 var MOUSE_SENSITIVITY = 0.005;
 var TOUCH_SENSITIVITY = 0.010;
 var isLocked = false;
@@ -958,7 +1044,7 @@ function isUITarget(target) {
   var moveJoystick = document.getElementById('moveJoystick');
   var runBtn = document.getElementById('runBtn');
   var shootBtn = document.getElementById('shootBtn');
-  return target === moveJoystick || moveJoystick.contains(target) ||
+  return (moveJoystick && (target === moveJoystick || moveJoystick.contains(target))) ||
          target === runBtn || target === shootBtn ||
          target === document.getElementById('chat-input');
 }
@@ -992,21 +1078,26 @@ lookArea.addEventListener('touchend', function() { touchLookActive = false; });
 lookArea.addEventListener('touchcancel', function() { touchLookActive = false; });
 
 // === ПК ОБЗОР ===
-var gameCanvasEl = renderer.domElement;
+var canvasEl = renderer.domElement;
 var pointerLocked = false;
-gameCanvasEl.addEventListener('click', function() {
+
+canvasEl.addEventListener('click', function() {
   if (!pointerLocked && !touchLookActive && !shopOpen && !chatFocused) {
-    gameCanvasEl.requestPointerLock();
+    canvasEl.requestPointerLock();
   }
 });
+
 document.addEventListener('pointerlockchange', function() {
-  pointerLocked = document.pointerLockElement === gameCanvasEl;
+  pointerLocked = document.pointerLockElement === canvasEl;
+  isLocked = pointerLocked;
+  var ctp = document.getElementById('click-to-play');
   if (pointerLocked) {
-    document.getElementById('click-to-play').classList.add('hidden');
-  } else if (!state.foundNeedle && !shopOpen && !chatFocused) {
-    document.getElementById('click-to-play').classList.remove('hidden');
+    if (ctp) ctp.classList.remove('show');
+  } else if (!state.foundNeedle && !shopOpen && !chatFocused && document.getElementById('moveJoystick').classList.contains('show') === false) {
+    if (ctp) ctp.classList.add('show');
   }
 });
+
 document.addEventListener('mousemove', function(e) {
   if (!pointerLocked) return;
   player.yaw -= e.movementX * MOUSE_SENSITIVITY;
@@ -1060,10 +1151,12 @@ moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.s
 document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
-// === КЛАВИАТУРА ===
+// === КЛАВИАТУРА (ИСПРАВЛЕН БАГ toLowerCase) ===
 document.addEventListener('keydown', function(e) {
   if (chatFocused) return;
-  var key = e.key.toLowerCase();
+  var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
+  if (!key) return;
+
   if (key === 'w' || key === 'ц') keys.w = true;
   if (key === 'a' || key === 'ф') keys.a = true;
   if (key === 's' || key === 'ы') keys.s = true;
@@ -1077,8 +1170,11 @@ document.addEventListener('keydown', function(e) {
   if (key === 'z' || key === 'я' || key === 'p') { e.preventDefault(); toggleShop(); }
   if (key === 't' || key === 'е') { e.preventDefault(); openChat(); }
 });
+
 document.addEventListener('keyup', function(e) {
-  var key = e.key.toLowerCase();
+  var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
+  if (!key) return;
+
   if (key === 'w' || key === 'ц') keys.w = false;
   if (key === 'a' || key === 'ф') keys.a = false;
   if (key === 's' || key === 'ы') keys.s = false;
@@ -1129,7 +1225,7 @@ shootBtn.addEventListener('mousedown', pressEButton);
 // === КЛИК ПО ЭКРАНУ ===
 var clickToPlay = document.getElementById('click-to-play');
 clickToPlay.addEventListener('click', function() {
-  gameCanvasEl.requestPointerLock();
+  canvasEl.requestPointerLock();
 });
 
 // === ЧАТ ===
@@ -1145,9 +1241,7 @@ function closeChat() {
   var input = document.getElementById('chat-input');
   input.style.display = 'none';
   input.value = '';
-  if (!state.foundNeedle && !shopOpen && !pointerLocked) {
-    gameCanvasEl.requestPointerLock();
-  }
+  if (!state.foundNeedle && !shopOpen) canvasEl.requestPointerLock();
 }
 document.getElementById('chat-input').addEventListener('keydown', function(e) {
   e.stopPropagation();
@@ -1155,14 +1249,18 @@ document.getElementById('chat-input').addEventListener('keydown', function(e) {
   if (e.code === 'Escape') { closeChat(); }
 });
 
-// === СБОР СЕНА (клик мышкой/тапом) ===
-gameCanvasEl.addEventListener('mousedown', function(e) {
+// === СБОР СЕНА ===
+var isMouseDownGather = false;
+canvasEl.addEventListener('mousedown', function(e) {
   if (!pointerLocked || e.button !== 0 || shopOpen || chatFocused) return;
   if (state.foundNeedle) return;
+  isMouseDownGather = true;
   tryGatherHay();
 });
-gameCanvasEl.addEventListener('touchstart', function(e) {
-  if (e.target !== gameCanvasEl) return;
+document.addEventListener('mouseup', function() { isMouseDownGather = false; });
+
+canvasEl.addEventListener('touchstart', function(e) {
+  if (e.target !== canvasEl) return;
   if (shopOpen || chatFocused) return;
   if (state.foundNeedle) return;
   if (isNearHaystack()) tryGatherHay();
@@ -1182,7 +1280,7 @@ function tryGatherHay() {
   var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
   if (d > HAYSTACK_RADIUS + 10) { showHint('❌ Далеко от стога!'); return; }
   if (state.hay >= state.maxHay) { showHint('🎒 Инвентарь полон!'); return; }
-  
+
   var hayPerGather = 1, toolUsed = '';
   if (state.vacuumActive) { hayPerGather = 8; toolUsed = 'vacuum'; spawnVacuumParticles(); }
   else if (state.hasFork && now - state.lastForkTime >= state.forkCooldown * 1000) {
@@ -1191,15 +1289,15 @@ function tryGatherHay() {
   else if (state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown * 1000) {
     hayPerGather = 15; state.lastDynamiteTime = now; toolUsed = 'dynamite'; spawnExplosion();
   }
-  
+
   state.lastGatherTime = now;
   var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
   state.hay += actualHay;
   state.totalHay += actualHay;
-  
+
   var luckBonus = (state.luckLvl - 1) * 0.0015 * actualHay;
   if (Math.random() < 0.003 + luckBonus) { findNeedle(); return; }
-  
+
   if (toolUsed !== 'vacuum') spawnStalkParticle();
   var txt = '+' + actualHay + ' 🌾';
   if (toolUsed === 'fork') txt += ' 🗡️';
@@ -1210,7 +1308,7 @@ function tryGatherHay() {
   updateShopMenu();
 }
 
-// === ЭФФЕКТЫ ===
+// ЭФФЕКТЫ
 function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i * 50); }
 function spawnExplosion() {
   for (var i = 0; i < 20; i++) {
@@ -1241,7 +1339,7 @@ function spawnVacuumParticles() {
   }
 }
 
-// === ВЗАИМОДЕЙСТВИЕ ===
+// ВЗАИМОДЕЙСТВИЕ
 function interact() {
   if (shopOpen || state.foundNeedle) return;
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
@@ -1319,11 +1417,8 @@ function updateParticles(dt) {
   }
 }
 
-// ============================================
 // МАГАЗИН
-// ============================================
 var shopMenu = document.getElementById('shop-menu');
-var shopToggle = document.getElementById('shop-toggle');
 
 function toggleShop() {
   var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
@@ -1335,7 +1430,7 @@ function toggleShop() {
     updateShopMenu();
   } else {
     shopMenu.classList.remove('open');
-    if (!state.foundNeedle && !pointerLocked) gameCanvasEl.requestPointerLock();
+    if (!state.foundNeedle) canvasEl.requestPointerLock();
   }
 }
 
@@ -1348,33 +1443,33 @@ function updateShopMenu() {
   document.getElementById('gatherLvl').textContent = state.gatherLvl;
   document.getElementById('invLvl').textContent = state.invLvl;
   document.getElementById('luckLvl').textContent = state.luckLvl;
-  
+
   var sp = PRICES.speed[state.speedLvl - 1];
   var gp = PRICES.gather[state.gatherLvl - 1];
   var ip = PRICES.inv[state.invLvl - 1];
   var lp = PRICES.luck[state.luckLvl - 1];
-  
+
   document.getElementById('speedPrice').textContent = sp ? sp + '$' : 'MAX';
   document.getElementById('gatherPrice').textContent = gp ? gp + '$' : 'MAX';
   document.getElementById('invPrice').textContent = ip ? ip + '$' : 'MAX';
   document.getElementById('luckPrice').textContent = lp ? lp + '$' : 'MAX';
-  
+
   document.getElementById('buySpeed').disabled = !sp || state.money < sp;
   document.getElementById('buyGather').disabled = !gp || state.money < gp;
   document.getElementById('buyInv').disabled = !ip || state.money < ip;
   document.getElementById('buyLuck').disabled = !lp || state.money < lp;
-  
+
   document.getElementById('sellMilkCount').textContent = state.milk;
   document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '$';
   document.getElementById('sellMilk').disabled = state.milk === 0;
-  
+
   document.getElementById('buyFork').textContent = state.hasFork ? '✓' : 'Купить';
   document.getElementById('buyFork').disabled = state.hasFork || state.money < PRICES.fork[0];
   document.getElementById('buyDynamite').textContent = state.hasDynamite ? '✓' : 'Купить';
   document.getElementById('buyDynamite').disabled = state.hasDynamite || state.money < PRICES.dynamite[0];
   document.getElementById('buyVacuum').textContent = state.hasVacuum ? '✓' : 'Купить';
   document.getElementById('buyVacuum').disabled = state.hasVacuum || state.money < PRICES.vacuum[0];
-  
+
   document.getElementById('autoGatherLvl').textContent = state.autoGatherLvl;
   var agp = PRICES.autoGather[state.autoGatherLvl];
   document.getElementById('autoGatherPrice').textContent = agp ? agp + '$' : 'MAX';
@@ -1479,33 +1574,29 @@ function resolveCollisions(newPos) {
   return newPos;
 }
 
-// ============================================
 // ИГРОВОЙ ЦИКЛ
-// ============================================
 var clock = new THREE.Clock();
 var moveTime = 0;
 var visibilityTimer = 0;
 
 function updatePlayer(dt) {
   if (shopOpen || state.foundNeedle || chatFocused) return;
-  
-  // Ввод: джойстик + клавиатура
+
   var inputX = joystickInput.x;
   var inputY = joystickInput.y;
-  
+
   var pcX = 0, pcY = 0;
   if (keys.w || keys.arrowup) pcY -= 1;
   if (keys.s || keys.arrowdown) pcY += 1;
   if (keys.a || keys.arrowleft) pcX -= 1;
   if (keys.d || keys.arrowright) pcX += 1;
-  
+
   inputX += pcX;
   inputY += pcY;
-  
+
   var isMoving = Math.abs(inputX) > 0.01 || Math.abs(inputY) > 0.01;
   var isRunning = (keys.shift || isRunningTouch) && state.stamina > 0 && isMoving;
-  
-  // Стамина
+
   if (isRunning) {
     state.stamina -= state.staminaDrain * dt;
     if (state.stamina < 0) state.stamina = 0;
@@ -1514,33 +1605,31 @@ function updatePlayer(dt) {
     if (state.stamina > state.staminaMax) state.stamina = state.staminaMax;
   }
   updateStaminaUI();
-  
+
   if (isMoving) {
-    // Нормализация
     var mag = Math.sqrt(inputX * inputX + inputY * inputY);
     if (mag > 1) { inputX /= mag; inputY /= mag; }
-    
+
     var speedMult = isRunning ? 1.8 : 1;
-    var speed = state.moveSpeed * speedMult * 0.5; // ускоряем чуть
-    
+    var speed = state.moveSpeed * speedMult * 0.5;
+
     var cos = Math.cos(player.yaw);
     var sin = Math.sin(player.yaw);
-    
-    // inputY: -1 = вперёд, inputX: 1 = вправо
+
     var moveX = inputX * cos + inputY * sin;
     var moveZ = -inputX * sin + inputY * cos;
-    
+
     var tryX = new THREE.Vector3(player.position.x + moveX * speed * dt, player.position.y, player.position.z);
     resolveCollisions(tryX);
     player.position.x = tryX.x;
-    
+
     var tryZ = new THREE.Vector3(player.position.x, player.position.y, player.position.z + moveZ * speed * dt);
     resolveCollisions(tryZ);
     player.position.z = tryZ.z;
-    
+
     moveTime += dt * speed;
   }
-  
+
   var bob = isMoving ? Math.sin(moveTime * 2) * 0.05 : 0;
   camera.position.copy(player.position);
   camera.position.y += bob;
@@ -1564,7 +1653,7 @@ function updateCooldownUI() {
 function animate() {
   requestAnimationFrame(animate);
   var dt = Math.min(clock.getDelta(), 0.1);
-  
+
   updatePlayer(dt);
   updateParticles(dt);
   updateCooldownUI();
@@ -1574,18 +1663,18 @@ function animate() {
   updateNeedlePosition(dt);
   updateRemotePlayers(dt);
   sendMyPosition(dt);
-  
+
   visibilityTimer += dt;
   if (visibilityTimer >= UPDATE_INTERVAL) {
     visibilityTimer = 0;
     updateVisibility();
     updateHaystackLOD();
   }
-  
+
   sun.position.set(player.position.x + 40, 60, player.position.z + 30);
   sun.target.position.set(player.position.x, 0, player.position.z);
   sun.target.updateMatrixWorld();
-  
+
   renderer.render(scene, camera);
 }
 
@@ -1596,12 +1685,6 @@ function updateAutoGather(dt) {
   if (state.hay >= state.maxHay) return;
   tryGatherHay();
 }
-
-var isMouseDownGather = false;
-gameCanvasEl.addEventListener('mousedown', function(e) {
-  if (e.button === 0 && !shopOpen) isMouseDownGather = true;
-});
-document.addEventListener('mouseup', function() { isMouseDownGather = false; });
 
 function updateAutoGatherPassive(dt) {
   if (state.autoGatherLvl === 0 || shopOpen || state.foundNeedle) return;
@@ -1628,7 +1711,6 @@ function updateVacuum(dt) {
   }
   var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT / 2, 0)));
   if (d > HAYSTACK_RADIUS + 15) { state.vacuumActive = false; return; }
-  // Активируется при клике/тапе — сделано через кнопку E, но здесь проверяем
   state.vacuumActive = isMouseDownGather;
 }
 
