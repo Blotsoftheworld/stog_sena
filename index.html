@@ -10,40 +10,6 @@
   body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
   canvas { display: block; }
 
-  /* ЛОГИН */
-  #login-screen {
-    position: fixed; inset: 0; z-index: 600;
-    background: linear-gradient(180deg, #1a1005, #000);
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; color: #ffd700;
-  }
-  #login-screen.hidden { display: none; }
-  #login-screen h1 { font-size: 32px; text-shadow: 0 0 30px #ffd700; margin-bottom: 8px; text-align: center; padding: 0 20px; }
-  #login-screen .subtitle { font-size: 14px; color: #aaa; margin-bottom: 30px; }
-  #login-box {
-    background: rgba(30, 20, 10, 0.95);
-    border: 3px solid #ffd700;
-    border-radius: 20px; padding: 30px 40px;
-    box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
-    width: 90%; max-width: 380px;
-  }
-  #login-box input {
-    width: 100%; padding: 14px 18px; margin-bottom: 15px;
-    background: rgba(0,0,0,0.6); border: 2px solid #555;
-    border-radius: 10px; color: #fff; font-size: 16px;
-    outline: none; transition: 0.3s;
-  }
-  #login-box input:focus { border-color: #ffd700; }
-  #login-box button {
-    width: 100%; padding: 15px; margin-top: 10px;
-    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
-    border: none; border-radius: 12px; color: #fff;
-    font-size: 18px; font-weight: bold; cursor: pointer;
-    transition: 0.2s;
-  }
-  #login-box button:hover { transform: scale(1.02); }
-  #login-error { color: #ff6b6b; text-align: center; margin-top: 15px; font-size: 14px; }
-
   /* МОБИЛЬНОЕ УПРАВЛЕНИЕ */
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint {
@@ -286,18 +252,6 @@
 </style>
 </head>
 <body>
-
-<div id="login-screen">
-  <h1>🧵 Иголка в стоге сена</h1>
-  <div class="subtitle">Найди иголку в стоге сена!</div>
-  <div id="login-box">
-    <input type="text" id="login-username" placeholder="👤 Никнейм" maxlength="16">
-    <input type="password" id="login-password" placeholder="🔑 Пароль" maxlength="30">
-    <button id="login-btn">🎮 Войти</button>
-    <button id="register-btn" style="background: linear-gradient(180deg, #c0392b, #8b1e0f);">📝 Регистрация</button>
-    <div id="login-error"></div>
-  </div>
-</div>
 
 <div id="loading">
   <div class="title">🧵 Иголка в стоге сена</div>
