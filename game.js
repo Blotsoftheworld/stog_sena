@@ -1,61 +1,4 @@
 // ============================================
-// АВТОРИЗАЦИЯ
-// ============================================
-var loginScreen = document.getElementById('login-screen');
-var loginUsername = document.getElementById('login-username');
-var loginPassword = document.getElementById('login-password');
-var loginError = document.getElementById('login-error');
-
-document.getElementById('login-btn').onclick = function() {
-  var u = loginUsername.value.trim();
-  var p = loginPassword.value;
-  var r = loginUser(u, p);
-  if (r.success) {
-    Object.assign(state, r.data);
-    state.stamina = state.staminaMax;
-    loginScreen.classList.add('hidden');
-    startGame();
-  } else loginError.textContent = r.error;
-};
-
-document.getElementById('register-btn').onclick = function() {
-  var u = loginUsername.value.trim();
-  var p = loginPassword.value;
-  var r = registerUser(u, p);
-  if (r.success) {
-    loginError.textContent = '✓ Аккаунт создан! Теперь войдите.';
-    loginError.style.color = '#4fc3f7';
-  } else loginError.textContent = r.error;
-};
-
-function startGame() {
-  document.getElementById('loading').classList.remove('done');
-  setLoad(100, 'Загрузка мира...');
-  setTimeout(function() {
-    document.getElementById('loading').classList.add('done');
-    document.getElementById('hud').classList.add('show');
-    document.getElementById('pcHint').classList.add('show');
-    detectMobile();
-    updateHUD();
-    updateShopMenu();
-    animate();
-    setInterval(saveUserData, 30000);
-  }, 500);
-}
-
-function detectMobile() {
-  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  if (isTouch) {
-    document.getElementById('moveJoystick').classList.add('show');
-    document.getElementById('runBtn').classList.add('show');
-    document.getElementById('shootBtn').classList.add('show');
-    document.getElementById('stamina-bar-mobile').classList.add('show');
-  } else {
-    document.getElementById('click-to-play').classList.add('show');
-  }
-}
-
-// ============================================
 // ЗАГРУЗКА
 // ============================================
 var loadingEl = document.getElementById('loading');
@@ -67,69 +10,6 @@ function setLoad(p, s) {
   loadingFill.style.width = p + '%';
   loadingPercent.textContent = Math.floor(p) + '%';
   if (s) loadingStatus.textContent = s;
-}
-
-// ============================================
-// АККАУНТЫ
-// ============================================
-var currentUser = null;
-function getAccounts() {
-  var d = localStorage.getItem('haystack_accounts');
-  return d ? JSON.parse(d) : {};
-}
-function saveAccounts(a) { localStorage.setItem('haystack_accounts', JSON.stringify(a)); }
-function hashPassword(p) {
-  var h = 0;
-  for (var i = 0; i < p.length; i++) { h = ((h << 5) - h) + p.charCodeAt(i); h = h & h; }
-  return h.toString(16);
-}
-function registerUser(u, p) {
-  var a = getAccounts();
-  if (a[u]) return { success: false, error: 'Ник занят!' };
-  if (u.length < 3) return { success: false, error: 'Ник мин. 3 символа!' };
-  if (p.length < 4) return { success: false, error: 'Пароль мин. 4 символа!' };
-  a[u] = {
-    password: hashPassword(p),
-    money: 0, hay: 0, milk: 0, totalHay: 0, totalMilkSold: 0,
-    maxHay: 25, moveSpeed: 5.0, gatherCooldown: 0.8,
-    foundNeedle: false, speedLvl: 1, gatherLvl: 1, invLvl: 1, luckLvl: 1,
-    hasFork: false, hasDynamite: false, hasVacuum: false,
-    autoGatherLvl: 0, staminaMax: 10
-  };
-  saveAccounts(a);
-  return { success: true };
-}
-function loginUser(u, p) {
-  var a = getAccounts();
-  if (!a[u]) return { success: false, error: 'Пользователь не найден!' };
-  if (a[u].password !== hashPassword(p)) return { success: false, error: 'Неверный пароль!' };
-  currentUser = u;
-  return { success: true, data: a[u] };
-}
-function saveUserData() {
-  if (!currentUser) return;
-  var a = getAccounts();
-  if (a[currentUser]) {
-    a[currentUser].money = state.money;
-    a[currentUser].hay = state.hay;
-    a[currentUser].milk = state.milk;
-    a[currentUser].totalHay = state.totalHay;
-    a[currentUser].totalMilkSold = state.totalMilkSold;
-    a[currentUser].maxHay = state.maxHay;
-    a[currentUser].moveSpeed = state.moveSpeed;
-    a[currentUser].gatherCooldown = state.gatherCooldown;
-    a[currentUser].foundNeedle = state.foundNeedle;
-    a[currentUser].speedLvl = state.speedLvl;
-    a[currentUser].gatherLvl = state.gatherLvl;
-    a[currentUser].invLvl = state.invLvl;
-    a[currentUser].luckLvl = state.luckLvl;
-    a[currentUser].hasFork = state.hasFork;
-    a[currentUser].hasDynamite = state.hasDynamite;
-    a[currentUser].hasVacuum = state.hasVacuum;
-    a[currentUser].autoGatherLvl = state.autoGatherLvl;
-    a[currentUser].staminaMax = state.staminaMax;
-    saveAccounts(a);
-  }
 }
 
 // ============================================
@@ -1235,5 +1115,27 @@ window.addEventListener('resize', function() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// ============================================
+// АВТОЗАПУСК ИГРЫ (без логина!)
+// ============================================
 setLoad(100, loadSteps[6]);
-setTimeout(function() { loadingEl.classList.add('done'); }, 800);
+setTimeout(function() {
+  loadingEl.classList.add('done');
+  document.getElementById('hud').classList.add('show');
+  document.getElementById('pcHint').classList.add('show');
+  
+  // Определяем мобильное устройство
+  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isTouch) {
+    document.getElementById('moveJoystick').classList.add('show');
+    document.getElementById('runBtn').classList.add('show');
+    document.getElementById('shootBtn').classList.add('show');
+    document.getElementById('stamina-bar-mobile').classList.add('show');
+  } else {
+    document.getElementById('click-to-play').classList.add('show');
+  }
+  
+  updateHUD();
+  updateShopMenu();
+  animate();
+}, 800);
