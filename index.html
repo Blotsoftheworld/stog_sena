@@ -112,7 +112,43 @@
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
 
-  /* ПОПАПЫ */
+  /* ИНВЕНТАРЬ */
+  #inventory-bar {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    width: 340px; max-width: 80vw; height: 26px;
+    background: rgba(10, 10, 10, 0.85);
+    border-radius: 13px;
+    border: 2px solid rgba(255, 215, 0, 0.7);
+    overflow: hidden;
+    display: none;
+    z-index: 18;
+  }
+  #inventory-bar.show { display: block; }
+  #inventory-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d);
+    transition: width 0.25s;
+  }
+  #inventory-text {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    text-align: center; color: #fff; font-size: 14px; line-height: 22px;
+    text-shadow: 2px 2px 4px #000; font-weight: bold;
+  }
+
+  /* ПОДСКАЗКА СНИЗУ */
+  #hint {
+    position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
+    color: #fff; background: rgba(10, 10, 10, 0.85);
+    padding: 10px 22px; border-radius: 12px;
+    font-size: 14px; text-align: center;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    white-space: nowrap; z-index: 18;
+    display: none;
+  }
+  #hint.show { display: block; }
+  #hint b { color: #ffd700; }
+
+  /* ПРЫГАЮЩИЙ ТЕКСТ */
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup {
     position: absolute; color: #ffd700; font-size: 22px; font-weight: bold;
@@ -123,17 +159,6 @@
     0% { transform: translate(-50%, 0); opacity: 1; }
     100% { transform: translate(-50%, -110px); opacity: 0; }
   }
-
-  #hint {
-    position: fixed; bottom: 220px; left: 50%; transform: translateX(-50%);
-    color: #fff; background: rgba(10, 10, 10, 0.85);
-    padding: 8px 20px; border-radius: 12px;
-    font-size: 13px; text-align: center;
-    border: 1px solid rgba(255, 215, 0, 0.4);
-    white-space: nowrap; z-index: 18;
-    display: none;
-  }
-  #hint.show { display: block; }
 
   /* МАГАЗИН */
   #shop-menu {
@@ -240,7 +265,7 @@
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   #cooldown {
-    position: fixed; bottom: 190px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%);
     width: 250px; height: 6px; background: rgba(0,0,0,0.75);
     border-radius: 4px; overflow: hidden; display: none;
     z-index: 18;
@@ -284,8 +309,14 @@
   <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
 </div>
 
+<!-- ИНВЕНТАРЬ -->
+<div id="inventory-bar">
+  <div id="inventory-fill"></div>
+  <div id="inventory-text">0 / 25</div>
+</div>
+
 <div id="cooldown"><div id="cooldown-fill"></div></div>
-<div id="hint"></div>
+<div id="hint"><b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин</div>
 <div id="popups"></div>
 
 <div id="shop-menu">
