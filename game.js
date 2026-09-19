@@ -1,20 +1,35 @@
 // ============================================
-// PEERJS СЕРВЕРЫ (автопереключение)
+// PEERJS СЕРВЕРЫ (расширенный список)
 // ============================================
 var PEER_SERVERS = [
   { host: '0.peerjs.com', port: 443, secure: true, path: '/' },
   { host: 'peerjs.92k.de', port: 443, secure: true, path: '/' },
   { host: 'peer.butterwire.com', port: 443, secure: true, path: '/' },
   { host: 'peer.wallie.io', port: 443, secure: true, path: '/' },
-  { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' }
+  { host: 'peerjs-server.herokuapp.com', port: 443, secure: true, path: '/' },
+  { host: 'peerjs.herokuapp.com', port: 443, secure: true, path: '/' },
+  { host: 'peerjs-server.onrender.com', port: 443, secure: true, path: '/' },
+  { host: 'peer.marcoklein.dev', port: 443, secure: true, path: '/' },
+  { host: 'peerjs.pages.dev', port: 443, secure: true, path: '/' },
+  { host: 'peerjs.eu', port: 443, secure: true, path: '/' },
+  { host: 'peerjs-server-production.up.railway.app', port: 443, secure: true, path: '/' },
+  { host: 'peerserver.onrender.com', port: 443, secure: true, path: '/' }
 ];
 
 var currentServerIndex = 0;
+var successServerIndex = -1;
 
 function createPeerWithFallback(peerId, onOpen, onError) {
+  if (currentServerIndex >= PEER_SERVERS.length) {
+    document.getElementById('mp-status').textContent = '❌ Все серверы недоступны. Попробуй VPN или позже.';
+    if (onError) onError(new Error('Все серверы недоступны'));
+    return null;
+  }
+
   var server = PEER_SERVERS[currentServerIndex];
-  console.log('[MP] Пробуем сервер:', server.host);
-  document.getElementById('mp-status').textContent = '⏳ Пробуем сервер: ' + server.host;
+  console.log('[MP] Пробуем сервер #' + currentServerIndex + ':', server.host);
+  document.getElementById('mp-status').textContent = 
+    '⏳ Сервер ' + (currentServerIndex + 1) + '/' + PEER_SERVERS.length + ': ' + server.host;
 
   var options = {
     debug: 1,
@@ -26,62 +41,76 @@ function createPeerWithFallback(peerId, onOpen, onError) {
       'iceServers': [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        { urls: 'stun:stun.services.mozilla.com' }
       ]
     }
   };
 
   var newPeer;
+  var success = false;
+  var timeoutId;
+
   try {
     newPeer = new Peer(peerId, options);
   } catch (e) {
     console.error('[MP] Ошибка создания Peer:', e);
-    tryNextServer(peerId, onOpen, onError);
+    currentServerIndex++;
+    createPeerWithFallback(peerId, onOpen, onError);
     return null;
   }
 
-  var timeoutId = setTimeout(function() {
-    console.log('[MP] Таймаут сервера', server.host);
+  timeoutId = setTimeout(function() {
+    if (success) return;
+    console.log('[MP] ⏱ Таймаут', server.host);
     try { newPeer.destroy(); } catch (e) {}
-    tryNextServer(peerId, onOpen, onError);
-  }, 5000);
+    currentServerIndex++;
+    createPeerWithFallback(peerId, onOpen, onError);
+  }, 4000);
 
   newPeer.on('open', function(id) {
     clearTimeout(timeoutId);
+    success = true;
+    successServerIndex = currentServerIndex;
     console.log('[MP] ✅ Подключено к', server.host, 'ID:', id);
     if (onOpen) onOpen(newPeer, id);
   });
 
   newPeer.on('error', function(err) {
-    console.log('[MP] Ошибка сервера', server.host, ':', err.type, err.message);
-    if (err.type === 'network' || err.type === 'server-error' ||
-        err.type === 'socket-error' || err.type === 'socket-closed' ||
-        (err.message && err.message.indexOf('Lost connection') !== -1)) {
+    if (success) return;
+    console.log('[MP] ❌ Ошибка', server.host, ':', err.type);
+
+    var shouldTryNext =
+      err.type === 'network' ||
+      err.type === 'server-error' ||
+      err.type === 'socket-error' ||
+      err.type === 'socket-closed' ||
+      (err.message && (
+        err.message.indexOf('Lost connection') !== -1 ||
+        err.message.indexOf('Unable to connect') !== -1
+      ));
+
+    if (shouldTryNext) {
       clearTimeout(timeoutId);
       try { newPeer.destroy(); } catch (e) {}
-      tryNextServer(peerId, onOpen, onError);
+      currentServerIndex++;
+      createPeerWithFallback(peerId, onOpen, onError);
     } else if (err.type === 'unavailable-id') {
-      // ID занят — даём новый
-      var newId = peerId + '-' + Math.random().toString(36).substring(2, 6);
+      clearTimeout(timeoutId);
       try { newPeer.destroy(); } catch (e) {}
-      currentServerIndex = 0;
+      var newId = peerId + '-' + Math.random().toString(36).substring(2, 6);
       createPeerWithFallback(newId, onOpen, onError);
-    } else if (onError) {
-      onError(err);
+    } else if (err.type === 'peer-unavailable') {
+      if (onError) onError(err);
+    } else {
+      clearTimeout(timeoutId);
+      try { newPeer.destroy(); } catch (e) {}
+      currentServerIndex++;
+      createPeerWithFallback(peerId, onOpen, onError);
     }
   });
 
   return newPeer;
-}
-
-function tryNextServer(peerId, onOpen, onError) {
-  currentServerIndex = (currentServerIndex + 1) % PEER_SERVERS.length;
-  if (currentServerIndex === 0) {
-    document.getElementById('mp-status').textContent = '❌ Все серверы PeerJS недоступны. Попробуй VPN.';
-    if (onError) onError(new Error('Все серверы недоступны'));
-    return;
-  }
-  createPeerWithFallback(peerId, onOpen, onError);
 }
 
 // ============================================
@@ -115,6 +144,7 @@ function hostRoom() {
   myId = 'host-' + myRoomId;
   myColor = randomColor();
   currentServerIndex = 0;
+  successServerIndex = -1;
 
   peer = createPeerWithFallback(myId,
     function(p, id) {
@@ -164,6 +194,7 @@ function joinRoom(roomId) {
   myId = 'p-' + Math.random().toString(36).substring(2, 10);
   myColor = randomColor();
   currentServerIndex = 0;
+  successServerIndex = -1;
 
   peer = createPeerWithFallback(myId,
     function(p, id) {
@@ -643,7 +674,6 @@ var WORLD_BOUND = 38;
 
 setLoad(5, loadSteps[0]);
 
-// ЗЕМЛЯ
 var ground = new THREE.Mesh(
   new THREE.PlaneGeometry(200, 200),
   new THREE.MeshStandardMaterial({ color: 0x4a7a2a, roughness: 1 })
@@ -653,7 +683,6 @@ ground.receiveShadow = true;
 scene.add(ground);
 setLoad(10, loadSteps[1]);
 
-// СТОГ
 var haystackGroup = new THREE.Group();
 haystackGroup.position.set(0, 0, -15);
 scene.add(haystackGroup);
@@ -798,7 +827,6 @@ function updateHaystackLOD() {
 addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
 setLoad(65, loadSteps[3]);
 
-// ИГОЛКА
 var needle = new THREE.Group();
 var needleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6),
   new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.15 }));
@@ -834,13 +862,10 @@ function updateNeedlePosition(dt) {
   }
 }
 
-// АМБАР
 var barn = new THREE.Group();
 barn.position.set(0, 0, 22);
 scene.add(barn);
 var redMat = new THREE.MeshStandardMaterial({ color: 0xa8241c, roughness: 0.85 });
-var redDarkMat = new THREE.MeshStandardMaterial({ color: 0x7a1810, roughness: 0.9 });
-var whiteTrimMat = new THREE.MeshStandardMaterial({ color: 0xf0ede5, roughness: 0.8 });
 var roofMat = new THREE.MeshStandardMaterial({ color: 0x3a2415, roughness: 0.9 });
 var BARN_W = 12, BARN_D = 10, BARN_H = 6.5, WALL_T = 0.4, doorW = 4.5;
 
@@ -892,13 +917,11 @@ for (var fx2 = doorW / 2 + 0.3; fx2 <= BARN_W / 2 - 0.5; fx2 += 0.7) addCollider
 
 setLoad(80, loadSteps[4]);
 
-// КОРОВА
 var cow = new THREE.Group();
 cow.position.set(15, 0, 5);
 cow.rotation.y = -Math.PI / 4;
 scene.add(cow);
 var cowBodyMat = new THREE.MeshStandardMaterial({ color: 0xf8f6f0, roughness: 0.85 });
-var cowSpotMat = new THREE.MeshStandardMaterial({ color: 0x1a1510, roughness: 0.9 });
 var cowPinkMat = new THREE.MeshStandardMaterial({ color: 0xe8a0a8, roughness: 0.8 });
 
 var bodyCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 1.6, 16), cowBodyMat);
@@ -944,7 +967,6 @@ cow.add(cowSnout);
 addCollider(15, 5, 2.0);
 setLoad(90, loadSteps[5]);
 
-// ДЕРЕВЬЯ
 function makeTree(x, z) {
   var tree = new THREE.Group();
   tree.position.set(x, 0, z);
@@ -969,7 +991,6 @@ function makeTree(x, z) {
   addCollider(p[0], p[1], 0.7);
 });
 
-// ЗАБОР
 var fenceMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
 var fenceGeo = new THREE.BoxGeometry(0.25, 2, 0.25);
 for (var fi = -40; fi <= 40; fi += 4) {
@@ -985,7 +1006,6 @@ for (var fi = -40; fi <= 40; fi += 4) {
   });
 }
 
-// ТЕКСТ-СПРАЙТ
 function makeLabel(text) {
   var canvas = document.createElement('canvas');
   canvas.width = 512;
@@ -1034,7 +1054,6 @@ var isLocked = false;
 var shopOpen = false;
 var chatFocused = false;
 
-// === ОБЗОР: СВАЙП ===
 var lookArea = document.getElementById('lookArea');
 var lookHint = document.getElementById('lookHint');
 var touchLookActive = false;
@@ -1077,7 +1096,6 @@ lookArea.addEventListener('touchmove', function(e) {
 lookArea.addEventListener('touchend', function() { touchLookActive = false; });
 lookArea.addEventListener('touchcancel', function() { touchLookActive = false; });
 
-// === ПК ОБЗОР ===
 var canvasEl = renderer.domElement;
 var pointerLocked = false;
 
@@ -1093,7 +1111,7 @@ document.addEventListener('pointerlockchange', function() {
   var ctp = document.getElementById('click-to-play');
   if (pointerLocked) {
     if (ctp) ctp.classList.remove('show');
-  } else if (!state.foundNeedle && !shopOpen && !chatFocused && document.getElementById('moveJoystick').classList.contains('show') === false) {
+  } else if (!state.foundNeedle && !shopOpen && !chatFocused && !document.getElementById('moveJoystick').classList.contains('show')) {
     if (ctp) ctp.classList.add('show');
   }
 });
@@ -1105,21 +1123,15 @@ document.addEventListener('mousemove', function(e) {
   player.pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, player.pitch));
 });
 
-// === ДЖОЙСТИК ===
 var moveJoystick = document.getElementById('moveJoystick');
 var moveKnob = document.getElementById('moveKnob');
 var moveActive = false;
 var joystickInput = { x: 0, y: 0 };
 
-function handleMoveStart(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  moveActive = true;
-}
+function handleMoveStart(e) { e.preventDefault(); e.stopPropagation(); moveActive = true; }
 function handleMoveMove(e) {
   if (!moveActive) return;
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   var touch = e.touches ? e.touches[0] : e;
   var rect = moveJoystick.getBoundingClientRect();
   var cx = rect.left + rect.width / 2;
@@ -1128,10 +1140,7 @@ function handleMoveMove(e) {
   var dy = touch.clientY - cy;
   var maxDist = rect.width / 2 - 25;
   var dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist > maxDist) {
-    dx = (dx / dist) * maxDist;
-    dy = (dy / dist) * maxDist;
-  }
+  if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
   moveKnob.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
   joystickInput.x = dx / maxDist;
   joystickInput.y = dy / maxDist;
@@ -1151,7 +1160,7 @@ moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.s
 document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
-// === КЛАВИАТУРА (ИСПРАВЛЕН БАГ toLowerCase) ===
+// === КЛАВИАТУРА (защищена от undefined) ===
 document.addEventListener('keydown', function(e) {
   if (chatFocused) return;
   var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
@@ -1186,7 +1195,6 @@ document.addEventListener('keyup', function(e) {
   if (!e.shiftKey) keys.shift = false;
 });
 
-// === КНОПКА RUN ===
 var runBtn = document.getElementById('runBtn');
 var staminaFillMobile = document.getElementById('staminaFill-mobile');
 var isRunningTouch = false;
@@ -1210,7 +1218,6 @@ runBtn.addEventListener('mousedown', startRunTouch);
 runBtn.addEventListener('mouseup', stopRunTouch);
 runBtn.addEventListener('mouseleave', stopRunTouch);
 
-// === КНОПКА E ===
 var shootBtn = document.getElementById('shootBtn');
 
 function pressEButton(e) {
@@ -1222,13 +1229,11 @@ function pressEButton(e) {
 shootBtn.addEventListener('touchstart', pressEButton, { passive: false });
 shootBtn.addEventListener('mousedown', pressEButton);
 
-// === КЛИК ПО ЭКРАНУ ===
 var clickToPlay = document.getElementById('click-to-play');
 clickToPlay.addEventListener('click', function() {
   canvasEl.requestPointerLock();
 });
 
-// === ЧАТ ===
 function openChat() {
   chatFocused = true;
   document.exitPointerLock();
@@ -1249,7 +1254,6 @@ document.getElementById('chat-input').addEventListener('keydown', function(e) {
   if (e.code === 'Escape') { closeChat(); }
 });
 
-// === СБОР СЕНА ===
 var isMouseDownGather = false;
 canvasEl.addEventListener('mousedown', function(e) {
   if (!pointerLocked || e.button !== 0 || shopOpen || chatFocused) return;
@@ -1271,9 +1275,6 @@ function isNearHaystack() {
   return d < HAYSTACK_RADIUS + 10;
 }
 
-// ============================================
-// СБОР СЕНА
-// ============================================
 function tryGatherHay() {
   var now = performance.now();
   if (now - state.lastGatherTime < state.gatherCooldown * 1000) return;
@@ -1308,7 +1309,6 @@ function tryGatherHay() {
   updateShopMenu();
 }
 
-// ЭФФЕКТЫ
 function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i * 50); }
 function spawnExplosion() {
   for (var i = 0; i < 20; i++) {
@@ -1339,7 +1339,6 @@ function spawnVacuumParticles() {
   }
 }
 
-// ВЗАИМОДЕЙСТВИЕ
 function interact() {
   if (shopOpen || state.foundNeedle) return;
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
@@ -1417,7 +1416,6 @@ function updateParticles(dt) {
   }
 }
 
-// МАГАЗИН
 var shopMenu = document.getElementById('shop-menu');
 
 function toggleShop() {
@@ -1574,7 +1572,6 @@ function resolveCollisions(newPos) {
   return newPos;
 }
 
-// ИГРОВОЙ ЦИКЛ
 var clock = new THREE.Clock();
 var moveTime = 0;
 var visibilityTimer = 0;
