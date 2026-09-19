@@ -1,15 +1,69 @@
 // ============================================
-// ЗАГРУЗКА
+// ЗАГРУЗКА (5 СЕКУНД)
 // ============================================
 var loadingEl = document.getElementById('loading');
 var loadingFill = document.getElementById('loading-fill');
 var loadingPercent = document.getElementById('loading-percent');
 var loadingStatus = document.getElementById('loading-status');
-var loadSteps = ['Инициализация...', 'Земля...', 'Колоски...', 'Амбар...', 'Корова...', 'Иголка...', 'Готово!'];
+
+var LOADING_DURATION = 5000;
+var loadingStart = performance.now();
+
+var statusMessages = [
+  'Инициализация сцены...',
+  'Создание земли...',
+  'Посадка колосков...',
+  'Строительство амбара...',
+  'Приведение коровы...',
+  'Прячем иголку...',
+  'Почти готово...',
+  'Загрузка завершена!'
+];
+
 function setLoad(p, s) {
   loadingFill.style.width = p + '%';
   loadingPercent.textContent = Math.floor(p) + '%';
   if (s) loadingStatus.textContent = s;
+}
+
+function animateLoading() {
+  var now = performance.now();
+  var elapsed = now - loadingStart;
+  var progress = Math.min(elapsed / LOADING_DURATION, 1);
+  var eased = 1 - Math.pow(1 - progress, 2);
+  var percent = Math.floor(eased * 100);
+  
+  loadingFill.style.width = percent + '%';
+  loadingPercent.textContent = percent + '%';
+  
+  var stepIndex = Math.floor(progress * (statusMessages.length - 1));
+  loadingStatus.textContent = statusMessages[stepIndex];
+  
+  if (progress < 1) {
+    requestAnimationFrame(animateLoading);
+  } else {
+    setTimeout(function() {
+      loadingEl.classList.add('done');
+      document.getElementById('hud').classList.add('show');
+      document.getElementById('inventory-bar').classList.add('show');
+      document.getElementById('hint').classList.add('show');
+      document.getElementById('pcHint').classList.add('show');
+      
+      var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      if (isTouch) {
+        document.getElementById('moveJoystick').classList.add('show');
+        document.getElementById('runBtn').classList.add('show');
+        document.getElementById('shootBtn').classList.add('show');
+        document.getElementById('stamina-bar-mobile').classList.add('show');
+      } else {
+        document.getElementById('click-to-play').classList.add('show');
+      }
+      
+      updateHUD();
+      updateShopMenu();
+      animate();
+    }, 500);
+  }
 }
 
 // ============================================
@@ -88,8 +142,6 @@ var colliders = [];
 function addCollider(x, z, r) { colliders.push({ x: x, z: z, r: r }); }
 var WORLD_BOUND = 38;
 
-setLoad(5, loadSteps[0]);
-
 // ЗЕМЛЯ
 var ground = new THREE.Mesh(
   new THREE.PlaneGeometry(200, 200),
@@ -98,9 +150,10 @@ var ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
-setLoad(10, loadSteps[1]);
 
+// ============================================
 // СТОГ СЕНА
+// ============================================
 var haystackGroup = new THREE.Group();
 haystackGroup.position.set(0, 0, -15);
 scene.add(haystackGroup);
@@ -177,10 +230,8 @@ var coreMass = new THREE.Mesh(
 coreMass.position.y = HAYSTACK_HEIGHT * 0.47;
 haystackGroup.add(coreMass);
 
-setLoad(25, loadSteps[2]);
-
-var layer1Stalks = [], layer2Stalks = [], layer3Stalks = [], skirtStalks = [];
-
+// Слой 1
+var layer1Stalks = [];
 for (var i1 = 0; i1 < 100; i1++) {
   var hp1 = Math.pow(Math.random(), 0.9);
   var ang1 = Math.random() * Math.PI * 2;
@@ -189,8 +240,9 @@ for (var i1 = 0; i1 < 100; i1++) {
     (Math.random() - 0.5) * 0.8, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.8, 0.85 + Math.random() * 0.3);
 }
 haystackGroup.children.slice(-100).forEach(function(s) { if (s.isMesh) layer1Stalks.push(s); });
-setLoad(35);
 
+// Слой 2
+var layer2Stalks = [];
 for (var i2 = 0; i2 < 130; i2++) {
   var hp2 = Math.pow(Math.random(), 0.9);
   var ang2 = Math.random() * Math.PI * 2;
@@ -199,8 +251,9 @@ for (var i2 = 0; i2 < 130; i2++) {
     (Math.random() - 0.5) * 1.0, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 1.0, 0.9 + Math.random() * 0.35);
 }
 haystackGroup.children.slice(-130).forEach(function(s) { if (s.isMesh) layer2Stalks.push(s); });
-setLoad(45);
 
+// Слой 3
+var layer3Stalks = [];
 for (var i3 = 0; i3 < 160; i3++) {
   var hp3 = Math.pow(Math.random(), 0.9);
   var ang3 = Math.random() * Math.PI * 2;
@@ -210,8 +263,8 @@ for (var i3 = 0; i3 < 160; i3++) {
     (Math.random() - 0.5) * 0.6, outAngle + (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.6, 0.95 + Math.random() * 0.4);
 }
 haystackGroup.children.slice(-160).forEach(function(s) { if (s.isMesh) layer3Stalks.push(s); });
-setLoad(55);
 
+// Слой 4 — верхушка
 for (var i4 = 0; i4 < 80; i4++) {
   var hp4 = 0.65 + Math.random() * 0.35;
   var ang4 = Math.random() * Math.PI * 2;
@@ -225,6 +278,9 @@ for (var tipI = 0; tipI < 20; tipI++) {
   addStalk(haystackGroup, Math.cos(tang) * tr, HAYSTACK_HEIGHT * (0.97 + Math.random() * 0.06), Math.sin(tang) * tr,
     (Math.random() - 0.5) * 0.5, tang, (Math.random() - 0.5) * 0.5, 0.7 + Math.random() * 0.3);
 }
+
+// Юбка
+var skirtStalks = [];
 for (var sk = 0; sk < 60; sk++) {
   var sang = (sk / 60) * Math.PI * 2 + Math.random() * 0.1;
   var sr = HAYSTACK_RADIUS * (0.98 + Math.random() * 0.1);
@@ -243,9 +299,10 @@ function updateHaystackLOD() {
 }
 
 addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
-setLoad(65, loadSteps[3]);
 
+// ============================================
 // ИГОЛКА
+// ============================================
 var needle = new THREE.Group();
 var needleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 6),
   new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.9, roughness: 0.15 }));
@@ -281,7 +338,9 @@ function updateNeedlePosition(dt) {
   }
 }
 
+// ============================================
 // АМБАР
+// ============================================
 var barn = new THREE.Group();
 barn.position.set(0, 0, 22);
 scene.add(barn);
@@ -335,9 +394,9 @@ for (var bz = -BARN_D / 2 + 0.5; bz <= BARN_D / 2 - 0.5; bz += 1) {
 for (var fx = -BARN_W / 2 + 0.5; fx <= -doorW / 2 - 0.3; fx += 0.7) addCollider(fx, 22 - BARN_D / 2, 0.55);
 for (var fx2 = doorW / 2 + 0.3; fx2 <= BARN_W / 2 - 0.5; fx2 += 0.7) addCollider(fx2, 22 - BARN_D / 2, 0.55);
 
-setLoad(80, loadSteps[4]);
-
+// ============================================
 // КОРОВА
+// ============================================
 var cow = new THREE.Group();
 cow.position.set(15, 0, 5);
 cow.rotation.y = -Math.PI / 4;
@@ -386,9 +445,10 @@ cow.add(cowSnout);
   cow.add(hoof);
 });
 addCollider(15, 5, 2.0);
-setLoad(90, loadSteps[5]);
 
+// ============================================
 // ДЕРЕВЬЯ
+// ============================================
 function makeTree(x, z) {
   var tree = new THREE.Group();
   tree.position.set(x, 0, z);
@@ -413,7 +473,9 @@ function makeTree(x, z) {
   addCollider(p[0], p[1], 0.7);
 });
 
+// ============================================
 // ЗАБОР
+// ============================================
 var fenceMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 });
 var fenceGeo = new THREE.BoxGeometry(0.25, 2, 0.25);
 for (var fi = -40; fi <= 40; fi += 4) {
@@ -429,7 +491,9 @@ for (var fi = -40; fi <= 40; fi += 4) {
   });
 }
 
+// ============================================
 // ТЕКСТ-СПРАЙТ
+// ============================================
 function makeLabel(text) {
   var canvas = document.createElement('canvas');
   canvas.width = 512;
@@ -545,6 +609,7 @@ document.addEventListener('mousemove', function(e) {
   player.pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, player.pitch));
 });
 
+// === ДЖОЙСТИК ===
 var moveJoystick = document.getElementById('moveJoystick');
 var moveKnob = document.getElementById('moveKnob');
 var moveActive = false;
@@ -582,7 +647,7 @@ moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.s
 document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
-// КЛАВИАТУРА
+// === КЛАВИАТУРА ===
 document.addEventListener('keydown', function(e) {
   var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
   if (!key) return;
@@ -615,6 +680,7 @@ document.addEventListener('keyup', function(e) {
   if (!e.shiftKey) keys.shift = false;
 });
 
+// === КНОПКА RUN ===
 var runBtn = document.getElementById('runBtn');
 var staminaFillMobile = document.getElementById('staminaFill-mobile');
 var isRunningTouch = false;
@@ -638,7 +704,7 @@ runBtn.addEventListener('mousedown', startRunTouch);
 runBtn.addEventListener('mouseup', stopRunTouch);
 runBtn.addEventListener('mouseleave', stopRunTouch);
 
-// === КНОПКА E — ИСПРАВЛЕНО ===
+// === КНОПКА E ===
 var shootBtn = document.getElementById('shootBtn');
 
 function pressEButton(e) {
@@ -647,7 +713,7 @@ function pressEButton(e) {
     shootBtn.classList.add('active');
     setTimeout(function() { shootBtn.classList.remove('active'); }, 120);
   }
-  interact(); // ГЛАВНОЕ — вызываем функцию взаимодействия
+  interact();
 }
 if (shootBtn) {
   shootBtn.addEventListener('touchstart', pressEButton, { passive: false });
@@ -680,6 +746,9 @@ function isNearHaystack() {
   return d < HAYSTACK_RADIUS + 10;
 }
 
+// ============================================
+// СБОР СЕНА
+// ============================================
 function tryGatherHay() {
   var now = performance.now();
   if (now - state.lastGatherTime < state.gatherCooldown * 1000) return;
@@ -714,6 +783,9 @@ function tryGatherHay() {
   updateShopMenu();
 }
 
+// ============================================
+// ЭФФЕКТЫ ИНСТРУМЕНТОВ
+// ============================================
 function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i * 50); }
 function spawnExplosion() {
   for (var i = 0; i < 20; i++) {
@@ -744,7 +816,9 @@ function spawnVacuumParticles() {
   }
 }
 
-// === ВЗАИМОДЕЙСТВИЕ С КОРОВОЙ / АМБАРОМ ===
+// ============================================
+// ВЗАИМОДЕЙСТВИЕ (E)
+// ============================================
 function interact() {
   if (shopOpen || state.foundNeedle) return;
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
@@ -763,6 +837,9 @@ function interact() {
   if (dBarn < 12) toggleShop();
 }
 
+// ============================================
+// ИГОЛКА
+// ============================================
 function findNeedle() {
   state.foundNeedle = true;
   needle.visible = true;
@@ -775,6 +852,9 @@ function findNeedle() {
   }, 500);
 }
 
+// ============================================
+// ЭФФЕКТЫ
+// ============================================
 function showPopup(text, x, y) {
   var p = document.createElement('div');
   p.className = 'popup';
@@ -794,7 +874,6 @@ function showHint(text) {
   clearTimeout(hintTimeout);
   hintTimeout = setTimeout(function() {
     hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин';
-    hint.classList.remove('show');
   }, 2500);
 }
 
@@ -826,6 +905,9 @@ function updateParticles(dt) {
   }
 }
 
+// ============================================
+// МАГАЗИН
+// ============================================
 var shopMenu = document.getElementById('shop-menu');
 
 function toggleShop() {
@@ -946,7 +1028,9 @@ document.getElementById('buyAutoGather').onclick = function() {
   updateShopMenu();
 };
 
-// === HUD ОБНОВЛЕНИЕ — ИНВЕНТАРЬ ТЕПЕРЬ ОБНОВЛЯЕТСЯ ===
+// ============================================
+// HUD
+// ============================================
 function updateHUD() {
   document.getElementById('money').textContent = state.money;
   document.getElementById('hay').textContent = state.hay;
@@ -954,7 +1038,6 @@ function updateHUD() {
   document.getElementById('milk').textContent = state.milk;
   document.getElementById('speed').textContent = state.moveSpeed.toFixed(1);
   
-  // ОБНОВЛЯЕМ ИНВЕНТАРЬ
   var invBar = document.getElementById('inventory-bar');
   var invFill = document.getElementById('inventory-fill');
   var invText = document.getElementById('inventory-text');
@@ -976,6 +1059,9 @@ function updateStaminaUI() {
   }
 }
 
+// ============================================
+// КОЛЛИЗИИ
+// ============================================
 function resolveCollisions(newPos) {
   for (var i = 0; i < colliders.length; i++) {
     var c = colliders[i];
@@ -994,6 +1080,9 @@ function resolveCollisions(newPos) {
   return newPos;
 }
 
+// ============================================
+// ИГРОВОЙ ЦИКЛ
+// ============================================
 var clock = new THREE.Clock();
 var moveTime = 0;
 var visibilityTimer = 0;
@@ -1140,27 +1229,6 @@ window.addEventListener('resize', function() {
 });
 
 // ============================================
-// АВТОЗАПУСК
+// СТАРТ
 // ============================================
-setLoad(100, loadSteps[6]);
-setTimeout(function() {
-  loadingEl.classList.add('done');
-  document.getElementById('hud').classList.add('show');
-  document.getElementById('inventory-bar').classList.add('show');
-  document.getElementById('hint').classList.add('show');
-  document.getElementById('pcHint').classList.add('show');
-  
-  var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  if (isTouch) {
-    document.getElementById('moveJoystick').classList.add('show');
-    document.getElementById('runBtn').classList.add('show');
-    document.getElementById('shootBtn').classList.add('show');
-    document.getElementById('stamina-bar-mobile').classList.add('show');
-  } else {
-    document.getElementById('click-to-play').classList.add('show');
-  }
-  
-  updateHUD();
-  updateShopMenu();
-  animate();
-}, 800);
+animateLoading();
