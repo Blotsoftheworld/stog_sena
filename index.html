@@ -2,13 +2,37 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1005">
 <title>🧵 Иголка в стоге сена 3D</title>
 <link rel="icon" href="data:,">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-  body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
-  canvas { display: block; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #000;
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1;
+  }
 
   #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
   #tutorial.show { display: flex; }
@@ -28,13 +52,17 @@
   #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
 
   @media (max-width: 700px) {
-    #tutorial-box { padding: 25px 20px; border-radius: 18px; }
-    #tutorial-icon { font-size: 48px; margin-bottom: 10px; }
-    #tutorial-title { font-size: 20px; margin-bottom: 12px; }
-    #tutorial-text { font-size: 14px; line-height: 1.6; margin-bottom: 18px; min-height: 80px; }
+    #tutorial { padding: 12px; }
+    #tutorial-box { padding: 22px 18px; border-radius: 18px; border-width: 3px; }
+    #tutorial-icon { font-size: 44px; margin-bottom: 8px; }
+    #tutorial-title { font-size: 18px; margin-bottom: 10px; }
+    #tutorial-text { font-size: 13px; line-height: 1.5; margin-bottom: 15px; min-height: 70px; }
+    #tutorial-text kbd { font-size: 11px; padding: 1px 5px; }
     #tutorial-buttons { flex-direction: column-reverse; gap: 8px; }
-    #tutorial-next { padding: 12px 16px; font-size: 15px; }
-    #tutorial-skip { padding: 10px 16px; font-size: 13px; }
+    #tutorial-next { padding: 12px 14px; font-size: 14px; }
+    #tutorial-skip { padding: 10px 14px; font-size: 12px; }
+    #tutorial-dots { gap: 6px; margin-bottom: 15px; }
+    .tutorial-dot { width: 8px; height: 8px; }
   }
 
   #rotate-screen { position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1005, #000); display: none; align-items: center; justify-content: center; flex-direction: column; color: #ffd700; padding: 30px; text-align: center; }
@@ -60,12 +88,20 @@
   }
   #loading > * { position: relative; z-index: 2; }
   #loading.done { opacity: 0; pointer-events: none; }
-  #loading .title { font-size: 42px; font-weight: bold; text-shadow: 0 0 40px #ffd700, 0 4px 12px #000; margin-bottom: 15px; }
-  #loading .sub { font-size: 16px; color: #ddd; margin-bottom: 40px; }
+  #loading .title { font-size: 42px; font-weight: bold; text-shadow: 0 0 40px #ffd700, 0 4px 12px #000; margin-bottom: 15px; text-align: center; padding: 0 15px; }
+  #loading .sub { font-size: 16px; color: #ddd; margin-bottom: 40px; text-align: center; padding: 0 15px; }
   #loading .bar-outer { width: 400px; max-width: 80vw; height: 26px; background: rgba(0,0,0,0.6); border: 3px solid #ffd700; border-radius: 14px; overflow: hidden; }
   #loading .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.1s linear; }
   #loading .percent { margin-top: 20px; font-size: 28px; font-weight: bold; color: #ffd700; }
   #loading .status { margin-top: 12px; font-size: 14px; color: #ccc; }
+
+  @media (max-width: 700px) {
+    #loading .title { font-size: 28px; }
+    #loading .sub { font-size: 13px; margin-bottom: 25px; }
+    #loading .bar-outer { height: 22px; }
+    #loading .percent { font-size: 22px; margin-top: 15px; }
+    #loading .status { font-size: 12px; }
+  }
 
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: rgba(255,255,255,0.15); font-size: 14px; text-align: center; pointer-events: none; z-index: 8; }
@@ -87,12 +123,16 @@
   #pcHint { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.6); font-size: 12px; text-align: center; pointer-events: none; z-index: 10; line-height: 1.6; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 10px; white-space: nowrap; display: none; }
   #pcHint.show { display: block; }
   #pcHint kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-weight: bold; color: white; font-size: 11px; }
-  @media (max-width: 700px) { #pcHint { display: none !important; } }
 
   #hud { position: fixed; top: 15px; left: 15px; color: #fff; background: rgba(20,15,10,0.75); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; border: 1px solid rgba(255,215,0,0.35); box-shadow: 0 8px 32px rgba(0,0,0,0.6); pointer-events: none; z-index: 15; display: none; }
   #hud.show { display: block; }
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
+
+  @media (max-width: 700px) {
+    #hud { padding: 8px 12px; font-size: 11px; line-height: 1.5; top: 8px; left: 8px; border-radius: 10px; }
+    #hud .row { gap: 12px; }
+  }
 
   #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
   #inventory-bar.show { display: block; }
@@ -145,24 +185,25 @@
 
   @media (max-width: 700px) {
     #mission-panel {
-      top: 10px;
-      right: 10px;
+      top: 8px;
+      right: 8px;
       left: auto;
       bottom: auto;
       max-width: 55vw;
-      min-width: 180px;
-      padding: 8px 12px;
+      min-width: 170px;
+      padding: 7px 10px;
       border-width: 2px;
-      border-radius: 12px;
+      border-radius: 10px;
     }
-    #mission-title { font-size: 10px; margin-bottom: 4px; gap: 4px; }
-    #mission-title .step-badge { width: 16px; height: 16px; font-size: 10px; }
-    #mission-text { font-size: 12px; margin-bottom: 6px; line-height: 1.3; }
-    #mission-progress { height: 4px; }
-    #mission-complete { padding: 20px 25px; }
-    #mission-complete .icon { font-size: 40px; }
-    #mission-complete .title { font-size: 16px; }
-    #mission-complete .desc { font-size: 12px; }
+    #mission-title { font-size: 10px; margin-bottom: 3px; gap: 3px; letter-spacing: 0.5px; }
+    #mission-title .step-badge { width: 15px; height: 15px; font-size: 9px; }
+    #mission-text { font-size: 11px; margin-bottom: 5px; line-height: 1.3; }
+    #mission-text kbd { font-size: 10px; padding: 0 3px; }
+    #mission-progress { height: 3px; }
+    #mission-complete { padding: 18px 22px; }
+    #mission-complete .icon { font-size: 36px; }
+    #mission-complete .title { font-size: 15px; }
+    #mission-complete .desc { font-size: 11px; }
   }
 
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
@@ -185,12 +226,33 @@
   .shop-item button .price { display: block; color: #ffd700; font-size: 11px; margin-top: 2px; }
   #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
 
+  @media (max-width: 700px) {
+    #shop-window { padding: 14px; border-radius: 14px; border-width: 3px; }
+    #shop-window h2 { font-size: 18px; margin-bottom: 6px; }
+    .money-row { font-size: 13px; margin-bottom: 10px; }
+    .money-row b { font-size: 16px; }
+    .shop-item { padding: 9px; gap: 8px; border-radius: 10px; margin-bottom: 7px; }
+    .shop-item .name { font-size: 12px; }
+    .shop-item .desc { font-size: 10px; }
+    .shop-item .lvl { font-size: 10px; }
+    .shop-item button { padding: 8px 10px; font-size: 11px; min-width: 75px; }
+    .shop-item button .price { font-size: 10px; }
+    #shop-close { padding: 10px 28px; font-size: 14px; }
+  }
+
   #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
   #message.show { display: flex; }
   #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; }
   #message-box h1 { color: #ffd700; font-size: 32px; margin-bottom: 20px; }
   #message-box p { font-size: 17px; margin: 10px 0; }
   #message-box button { margin-top: 25px; padding: 14px 40px; background: #ffd700; color: #000; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+
+  @media (max-width: 700px) {
+    #message-box { padding: 25px 20px; border-radius: 18px; border-width: 3px; }
+    #message-box h1 { font-size: 22px; margin-bottom: 14px; }
+    #message-box p { font-size: 14px; }
+    #message-box button { padding: 12px 30px; font-size: 14px; }
+  }
 
   #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
   #click-to-play.show { display: flex; }
@@ -224,13 +286,16 @@
   #phone-bubble::before { content: '📞'; position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 24px; }
 
   @media (max-width: 700px) {
-    #phone-call-box { padding: 30px 25px; border-radius: 22px; }
-    #phone-icon { font-size: 60px; margin-bottom: 15px; }
-    #phone-caller { font-size: 18px; }
-    #phone-number { font-size: 13px; margin-bottom: 20px; }
-    #phone-text { font-size: 13px; margin-bottom: 20px; min-height: 50px; }
-    #phone-answer, #phone-decline { padding: 12px 16px; font-size: 14px; }
-    #phone-bubble { top: 60px; right: 10px; max-width: 70vw; font-size: 12px; padding: 12px 16px; }
+    #phone-call { padding: 12px; }
+    #phone-call-box { padding: 22px 18px; border-radius: 20px; border-width: 3px; }
+    #phone-icon { font-size: 50px; margin-bottom: 12px; }
+    #phone-caller { font-size: 16px; margin-bottom: 5px; }
+    #phone-number { font-size: 12px; margin-bottom: 15px; letter-spacing: 1px; }
+    #phone-text { font-size: 12px; margin-bottom: 18px; min-height: 45px; line-height: 1.4; }
+    #phone-answer, #phone-decline { padding: 11px 12px; font-size: 13px; border-width: 2px; }
+    #phone-buttons { gap: 8px; }
+    #phone-bubble { top: 55px; right: 8px; max-width: 72vw; font-size: 11px; padding: 10px 14px; border-radius: 14px 14px 14px 4px; }
+    #phone-bubble::before { left: -28px; font-size: 18px; }
   }
 
   #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -251,9 +316,23 @@
   #admin-close:hover { background: linear-gradient(180deg, #888, #555); }
   .admin-hint { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
 
+  /* Скрываем десктопные подсказки на мобильных */
   @media (max-width: 900px), (pointer: coarse) {
     #pcHint { display: none !important; }
     #hint { display: none !important; }
+  }
+
+  /* Компактные кнопки управления на маленьких экранах */
+  @media (max-width: 700px) {
+    #moveJoystick { width: 110px; height: 110px; bottom: 20px; left: 20px; }
+    #moveKnob { width: 48px; height: 48px; }
+    #runBtn { width: 68px; height: 68px; bottom: 20px; right: 20px; font-size: 13px; }
+    #jumpBtn { width: 68px; height: 68px; bottom: 105px; right: 105px; font-size: 12px; }
+    #shootBtn { width: 68px; height: 68px; bottom: 105px; right: 20px; font-size: 24px; }
+    #stamina-bar-mobile { bottom: 145px; left: 20px; width: 110px; height: 6px; }
+    #inventory-bar { bottom: 90px; height: 22px; }
+    #inventory-text { font-size: 12px; line-height: 18px; }
+    #cooldown { bottom: 120px; width: 200px; }
   }
 </style>
 </head>
@@ -305,7 +384,7 @@
 <div id="hud">
   <div class="row"><span>🌾 Сено:</span> <b id="hay">0</b>/<b id="maxHay">25</b></div>
   <div class="row"><span>🥛 Молоко:</span> <b id="milk">0</b></div>
-  <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>$</div>
+  <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>₽</div>
   <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
 </div>
 
@@ -335,29 +414,29 @@
 <div id="shop-menu">
   <div id="shop-window">
     <h2>🏠 АМБАР</h2>
-    <div class="money-row">💰 <b id="shop-money">0</b>$ | 🥛 <b id="shop-milk">0</b></div>
+    <div class="money-row">💰 <b id="shop-money">0</b>₽ | 🥛 <b id="shop-milk">0</b></div>
 
     <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
-      <div class="info"><div class="name">🥛 Продать молоко</div><div class="desc">1 литр = 5$</div><div class="lvl">У тебя: <b id="sellMilkCount">0</b> л</div></div>
-      <button id="sellMilk">Продать<span class="price" id="sellMilkPrice">0$</span></button>
+      <div class="info"><div class="name">🥛 Продать молоко</div><div class="desc">1 литр = 50₽</div><div class="lvl">У тебя: <b id="sellMilkCount">0</b> л</div></div>
+      <button id="sellMilk">Продать<span class="price" id="sellMilkPrice">0₽</span></button>
     </div>
-    <div class="shop-item"><div class="info"><div class="name">⚡ Скорость</div><div class="desc">Быстрее бег</div><div class="lvl">Ур: <b id="speedLvl">1</b></div></div><button id="buySpeed">Купить<span class="price" id="speedPrice">20$</span></button></div>
-    <div class="shop-item"><div class="info"><div class="name">💪 Скорость сбора</div><div class="desc">Меньше кулдаун</div><div class="lvl">Ур: <b id="gatherLvl">1</b></div></div><button id="buyGather">Купить<span class="price" id="gatherPrice">30$</span></button></div>
-    <div class="shop-item"><div class="info"><div class="name">🎒 Инвентарь</div><div class="desc">Больше сена</div><div class="lvl">Ур: <b id="invLvl">1</b></div></div><button id="buyInv">Купить<span class="price" id="invPrice">50$</span></button></div>
-    <div class="shop-item"><div class="info"><div class="name">🔍 Удача</div><div class="desc">Шанс иголки</div><div class="lvl">Ур: <b id="luckLvl">1</b></div></div><button id="buyLuck">Купить<span class="price" id="luckPrice">100$</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">⚡ Скорость</div><div class="desc">Быстрее бег</div><div class="lvl">Ур: <b id="speedLvl">1</b></div></div><button id="buySpeed">Купить<span class="price" id="speedPrice">200₽</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">💪 Скорость сбора</div><div class="desc">Меньше кулдаун</div><div class="lvl">Ур: <b id="gatherLvl">1</b></div></div><button id="buyGather">Купить<span class="price" id="gatherPrice">300₽</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">🎒 Инвентарь</div><div class="desc">Больше сена</div><div class="lvl">Ур: <b id="invLvl">1</b></div></div><button id="buyInv">Купить<span class="price" id="invPrice">500₽</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">🔍 Удача</div><div class="desc">Шанс иголки</div><div class="lvl">Ур: <b id="luckLvl">1</b></div></div><button id="buyLuck">Купить<span class="price" id="luckPrice">1000₽</span></button></div>
     <div class="shop-item" style="border-color: rgba(139,90,43,0.5);">
       <div class="info"><div class="name">🗡️ Вилы</div><div class="desc">+5 сена к сбору</div><div class="lvl">Разово</div></div>
-      <button id="buyFork">Купить<span class="price" id="forkPrice">500$</span></button>
+      <button id="buyFork">Купить<span class="price" id="forkPrice">5000₽</span></button>
     </div>
     <div class="shop-item" style="border-color: rgba(255,100,0,0.5);">
       <div class="info"><div class="name">💥 Динамит</div><div class="desc">+15 сена к сбору</div><div class="lvl">Разово</div></div>
-      <button id="buyDynamite">Купить<span class="price" id="dynamitePrice">1200$</span></button>
+      <button id="buyDynamite">Купить<span class="price" id="dynamitePrice">12000₽</span></button>
     </div>
     <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
       <div class="info"><div class="name">🌀 Пылесос</div><div class="desc">Автосбор рядом со стогом</div><div class="lvl">Разово</div></div>
-      <button id="buyVacuum">Купить<span class="price" id="vacuumPrice">2500$</span></button>
+      <button id="buyVacuum">Купить<span class="price" id="vacuumPrice">25000₽</span></button>
     </div>
-    <div class="shop-item" style="border-color: rgba(150,100,255,0.5);"><div class="info"><div class="name">⚙️ Автосборщик</div><div class="desc">Сам собирает</div><div class="lvl">Ур: <b id="autoGatherLvl">0</b></div></div><button id="buyAutoGather">Купить<span class="price" id="autoGatherPrice">150$</span></button></div>
+    <div class="shop-item" style="border-color: rgba(150,100,255,0.5);"><div class="info"><div class="name">⚙️ Автосборщик</div><div class="desc">Сам собирает</div><div class="lvl">Ур: <b id="autoGatherLvl">0</b></div></div><button id="buyAutoGather">Купить<span class="price" id="autoGatherPrice">1500₽</span></button></div>
 
     <button id="shop-close">Закрыть</button>
   </div>
@@ -367,7 +446,7 @@
   <div id="message-box">
     <h1>🎉 ПОБЕДА! 🎉</h1>
     <p>Ты нашёл иголку! 🧵</p>
-    <p>💰 Заработано: <b id="final-money">0</b>$</p>
+    <p>💰 Заработано: <b id="final-money">0</b>₽</p>
     <p>🥛 Молока: <b id="final-milk">0</b> л</p>
     <p>🌾 Сена: <b id="final-hay">0</b></p>
     <button onclick="location.reload()">Играть снова</button>
@@ -397,7 +476,7 @@
       <h3>💰 Ресурсы</h3>
       <div class="admin-row">
         <label>Деньги:</label>
-        <input type="number" id="admin-money" value="0" step="100">
+        <input type="number" id="admin-money" value="0" step="1000">
         <button class="admin-btn" onclick="adminSet('money')">OK</button>
       </div>
       <div class="admin-row">
@@ -429,7 +508,7 @@
     <div class="admin-section">
       <h3>🎁 Быстрые действия</h3>
       <div class="admin-row">
-        <button class="admin-btn" onclick="adminQuick('money')">💰 +10000$</button>
+        <button class="admin-btn" onclick="adminQuick('money')">💰 +100000₽</button>
         <button class="admin-btn" onclick="adminQuick('all')">🎁 Всё</button>
       </div>
       <div class="admin-row">
@@ -468,8 +547,9 @@
   <div style="
     color:#ffd700; font-size:42px; font-weight:bold;
     text-shadow:0 0 40px #ffd700; margin-bottom:20px;
+    padding: 0 15px;
   ">🧵 Иголка в стоге сена</div>
-  <div style="color:#ccc; font-size:16px; margin-bottom:35px;">
+  <div style="color:#ccc; font-size:16px; margin-bottom:35px; padding: 0 15px;">
     Собирай сено, корми корову — и найди иголку!
   </div>
   <button id="start-game-btn-inner" style="
@@ -489,6 +569,38 @@ if (typeof THREE === 'undefined') {
   throw new Error('Three.js not loaded');
 }
 
+// ============================================
+// 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ
+// ============================================
+function goFullscreen() {
+  var el = document.documentElement;
+  if (el.requestFullscreen) {
+    el.requestFullscreen().catch(function(e) { console.log('Fullscreen error:', e); });
+  } else if (el.webkitRequestFullscreen) {
+    el.webkitRequestFullscreen();
+  } else if (el.mozRequestFullScreen) {
+    el.mozRequestFullScreen();
+  } else if (el.msRequestFullscreen) {
+    el.msRequestFullscreen();
+  }
+}
+
+var fullscreenTried = false;
+function tryFullscreenOnce() {
+  if (fullscreenTried) return;
+  fullscreenTried = true;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    goFullscreen();
+  }
+  document.removeEventListener('click', tryFullscreenOnce);
+  document.removeEventListener('touchstart', tryFullscreenOnce);
+}
+document.addEventListener('click', tryFullscreenOnce);
+document.addEventListener('touchstart', tryFullscreenOnce, { passive: true });
+
+// ============================================
+// ОБЩИЕ ПЕРЕМЕННЫЕ
+// ============================================
 var particles = [];
 var colliders = [];
 function addCollider(x, z, r) { colliders.push({ x: x, z: z, r: r }); }
@@ -506,8 +618,6 @@ function checkOrientation() {
   rotateScreen.classList.remove('show');
   return true;
 }
-window.addEventListener('resize', checkOrientation);
-window.addEventListener('orientationchange', function() { setTimeout(checkOrientation, 100); });
 
 var loadingEl = document.getElementById('loading');
 var loadingFill = document.getElementById('loading-fill');
@@ -541,7 +651,7 @@ function animateLoading() {
     loadingEl.classList.add('done');
     document.getElementById('hud').classList.add('show');
     document.getElementById('inventory-bar').classList.add('show');
-    document.getElementById('pcHint').classList.add('show');
+    if (!isMobileDevice) document.getElementById('pcHint').classList.add('show');
     if (isMobileDevice) {
       document.getElementById('moveJoystick').classList.add('show');
       document.getElementById('runBtn').classList.add('show');
@@ -580,6 +690,11 @@ function startLoading() {
 }
 
 function initGame() {
+  setTimeout(handleResize, 50);
+  setTimeout(handleResize, 200);
+  setTimeout(handleResize, 500);
+  setTimeout(handleResize, 1000);
+
   if (checkOrientation()) startLoading();
   else {
     loadingEl.style.display = 'none';
@@ -676,77 +791,46 @@ var state = {
   stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0
 };
 
+// Цены в рублях
 var PRICES = {
-  speed: [20,40,80,160,320,640,1280],
-  gather: [30,60,120,240,480,960,1920],
-  inv: [50,100,200,400,800,1600,3200],
-  luck: [100,250,600,1500,4000],
-  fork: [500], dynamite: [1200], vacuum: [2500],
-  autoGather: [150,400,1000,2500,6000]
+  speed: [200,400,800,1600,3200,6400,12800],
+  gather: [300,600,1200,2400,4800,9600,19200],
+  inv: [500,1000,2000,4000,8000,16000,32000],
+  luck: [1000,2500,6000,15000,40000],
+  fork: [5000], dynamite: [12000], vacuum: [25000],
+  autoGather: [1500,4000,10000,25000,60000]
 };
-var MILK_PRICE = 5;
+var MILK_PRICE = 50;
 
 // ============================================
 // 🎯 СИСТЕМА МИССИЙ
 // ============================================
 var missions = [
-  {
-    id: 'goto_haystack', icon: '🌾', title: 'МИССИЯ 1',
-    text: 'Подойди к <b>стогу сена</b>',
+  { id: 'goto_haystack', icon: '🌾', title: 'МИССИЯ 1', text: 'Подойди к <b>стогу сена</b>',
     check: function() {
       var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
       return d < HAYSTACK_RADIUS + 4;
-    },
-    complete: 'Ты у стога сена!'
-  },
-  {
-    id: 'gather_hay', icon: '✋', title: 'МИССИЯ 2',
-    text: 'Собери <b>5 сена</b> из стога <kbd>ЛКМ</kbd> или <kbd>🌾</kbd>',
-    check: function() { return state.hay >= 5; },
-    complete: 'Ты собрал 5 сена!'
-  },
-  {
-    id: 'goto_cow', icon: '🐄', title: 'МИССИЯ 3',
-    text: 'Подойди к <b>корове</b>',
+    }, complete: 'Ты у стога сена!' },
+  { id: 'gather_hay', icon: '✋', title: 'МИССИЯ 2', text: 'Собери <b>5 сена</b> из стога <kbd>ЛКМ</kbd> или <kbd>🌾</kbd>',
+    check: function() { return state.hay >= 5; }, complete: 'Ты собрал 5 сена!' },
+  { id: 'goto_cow', icon: '🐄', title: 'МИССИЯ 3', text: 'Подойди к <b>корове</b>',
     check: function() {
       var d = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
       return d < 5;
-    },
-    complete: 'Ты нашёл корову!'
-  },
-  {
-    id: 'feed_cow', icon: '🥛', title: 'МИССИЯ 4',
-    text: 'Накорми корову: нажми <kbd>E</kbd> рядом с ней',
-    check: function() { return state.milk > 0; },
-    complete: 'Корова дала молоко!'
-  },
-  {
-    id: 'goto_barn', icon: '🏠', title: 'МИССИЯ 5',
-    text: 'Подойди к <b>амбару</b>',
+    }, complete: 'Ты нашёл корову!' },
+  { id: 'feed_cow', icon: '🥛', title: 'МИССИЯ 4', text: 'Накорми корову: нажми <kbd>E</kbd> рядом с ней',
+    check: function() { return state.milk > 0; }, complete: 'Корова дала молоко!' },
+  { id: 'goto_barn', icon: '🏠', title: 'МИССИЯ 5', text: 'Подойди к <b>амбару</b>',
     check: function() {
       var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
       return d < 9;
-    },
-    complete: 'Ты у амбара!'
-  },
-  {
-    id: 'open_shop', icon: '💰', title: 'МИССИЯ 6',
-    text: 'Открой магазин: нажми <kbd>E</kbd> или <kbd>Z</kbd>',
-    check: function() { return shopOpen; },
-    complete: 'Магазин открыт!'
-  },
-  {
-    id: 'sell_milk', icon: '🥛', title: 'МИССИЯ 7',
-    text: 'Продай <b>молоко</b> в амбаре',
-    check: function() { return state.totalMilkSold > 0; },
-    complete: 'Молоко продано!'
-  },
-  {
-    id: 'find_needle', icon: '🧵', title: 'ГЛАВНАЯ ЦЕЛЬ',
-    text: 'Найди <b>иголку в стоге сена</b>!',
-    check: function() { return state.foundNeedle; },
-    complete: 'Иголка найдена!'
-  }
+    }, complete: 'Ты у амбара!' },
+  { id: 'open_shop', icon: '💰', title: 'МИССИЯ 6', text: 'Открой магазин: нажми <kbd>E</kbd> или <kbd>Z</kbd>',
+    check: function() { return shopOpen; }, complete: 'Магазин открыт!' },
+  { id: 'sell_milk', icon: '🥛', title: 'МИССИЯ 7', text: 'Продай <b>молоко</b> в амбаре',
+    check: function() { return state.totalMilkSold > 0; }, complete: 'Молоко продано!' },
+  { id: 'find_needle', icon: '🧵', title: 'ГЛАВНАЯ ЦЕЛЬ', text: 'Найди <b>иголку в стоге сена</b>!',
+    check: function() { return state.foundNeedle; }, complete: 'Иголка найдена!' }
 ];
 
 var currentMission = 0;
@@ -761,9 +845,7 @@ var missionVisible = false;
 var missionCycleTimer = null;
 var missionHiddenTimer = null;
 
-function startMissionCycle() {
-  showMissionBriefly();
-}
+function startMissionCycle() { showMissionBriefly(); }
 
 function showMissionBriefly() {
   if (currentMission >= missions.length) return;
@@ -799,9 +881,7 @@ function checkMissions() {
   if (!tutorialCompleted) return;
   if (currentMission >= missions.length) return;
   var m = missions[currentMission];
-  if (m.check()) {
-    completeMission();
-  }
+  if (m.check()) completeMission();
 }
 
 function completeMission() {
@@ -821,9 +901,7 @@ function completeMission() {
   missionVisible = false;
 
   if (currentMission < missions.length) {
-    setTimeout(function() {
-      showMissionBriefly();
-    }, 1500);
+    setTimeout(function() { showMissionBriefly(); }, 1500);
   } else {
     setTimeout(function() {
       missionTitleTextEl.textContent = 'ГОТОВО';
@@ -832,9 +910,7 @@ function completeMission() {
       missionProgressFill.style.width = '100%';
       missionPanelEl.classList.add('show');
       missionVisible = true;
-      setTimeout(function() {
-        missionPanelEl.classList.remove('show');
-      }, 10000);
+      setTimeout(function() { missionPanelEl.classList.remove('show'); }, 10000);
     }, 900);
   }
 }
@@ -848,7 +924,7 @@ scene.fog = new THREE.Fog(0x5aa8e0, 45, 150);
 
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 300);
 
-var renderer = new THREE.WebGLRenderer({ antialias: true });
+var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
@@ -1643,6 +1719,7 @@ var pointerLocked = false;
 
 function safePointerLock() {
   if (!tutorialCompleted) return;
+  if (isMobileDevice) return;
   if (!document.hasFocus()) return;
   try { if (canvasEl) canvasEl.requestPointerLock(); } catch (e) {}
 }
@@ -1791,9 +1868,9 @@ function adminSet(what) {
 
 function adminQuick(action) {
   if (action === 'money') {
-    state.money += 10000;
+    state.money += 100000;
   } else if (action === 'all') {
-    state.money += 10000;
+    state.money += 100000;
     state.hay = state.maxHay;
     state.milk += 100;
     state.speedLvl = 7;
@@ -2077,19 +2154,18 @@ function updateShopMenu() {
   var gp = PRICES.gather[state.gatherLvl - 1];
   var ip = PRICES.inv[state.invLvl - 1];
   var lp = PRICES.luck[state.luckLvl - 1];
-  document.getElementById('speedPrice').textContent = sp ? sp + '$' : 'MAX';
-  document.getElementById('gatherPrice').textContent = gp ? gp + '$' : 'MAX';
-  document.getElementById('invPrice').textContent = ip ? ip + '$' : 'MAX';
-  document.getElementById('luckPrice').textContent = lp ? lp + '$' : 'MAX';
+  document.getElementById('speedPrice').textContent = sp ? sp + '₽' : 'MAX';
+  document.getElementById('gatherPrice').textContent = gp ? gp + '₽' : 'MAX';
+  document.getElementById('invPrice').textContent = ip ? ip + '₽' : 'MAX';
+  document.getElementById('luckPrice').textContent = lp ? lp + '₽' : 'MAX';
   document.getElementById('buySpeed').disabled = !sp || state.money < sp;
   document.getElementById('buyGather').disabled = !gp || state.money < gp;
   document.getElementById('buyInv').disabled = !ip || state.money < ip;
   document.getElementById('buyLuck').disabled = !lp || state.money < lp;
   document.getElementById('sellMilkCount').textContent = state.milk;
-  document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '$';
+  document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '₽';
   document.getElementById('sellMilk').disabled = state.milk === 0;
 
-  // Вилы
   var forkBtn = document.getElementById('buyFork');
   var forkPriceEl = document.getElementById('forkPrice');
   if (state.hasFork) {
@@ -2099,10 +2175,9 @@ function updateShopMenu() {
   } else {
     forkBtn.childNodes[0].nodeValue = 'Купить';
     forkBtn.disabled = state.money < PRICES.fork[0];
-    forkPriceEl.textContent = PRICES.fork[0] + '$';
+    forkPriceEl.textContent = PRICES.fork[0] + '₽';
   }
 
-  // Динамит
   var dynBtn = document.getElementById('buyDynamite');
   var dynPriceEl = document.getElementById('dynamitePrice');
   if (state.hasDynamite) {
@@ -2112,10 +2187,9 @@ function updateShopMenu() {
   } else {
     dynBtn.childNodes[0].nodeValue = 'Купить';
     dynBtn.disabled = state.money < PRICES.dynamite[0];
-    dynPriceEl.textContent = PRICES.dynamite[0] + '$';
+    dynPriceEl.textContent = PRICES.dynamite[0] + '₽';
   }
 
-  // Пылесос
   var vacBtn = document.getElementById('buyVacuum');
   var vacPriceEl = document.getElementById('vacuumPrice');
   if (state.hasVacuum) {
@@ -2125,12 +2199,12 @@ function updateShopMenu() {
   } else {
     vacBtn.childNodes[0].nodeValue = 'Купить';
     vacBtn.disabled = state.money < PRICES.vacuum[0];
-    vacPriceEl.textContent = PRICES.vacuum[0] + '$';
+    vacPriceEl.textContent = PRICES.vacuum[0] + '₽';
   }
 
   document.getElementById('autoGatherLvl').textContent = state.autoGatherLvl;
   var agp = PRICES.autoGather[state.autoGatherLvl];
-  document.getElementById('autoGatherPrice').textContent = agp ? agp + '$' : 'MAX';
+  document.getElementById('autoGatherPrice').textContent = agp ? agp + '₽' : 'MAX';
   document.getElementById('buyAutoGather').disabled = !agp || state.money < agp;
 }
 
@@ -2139,7 +2213,7 @@ document.getElementById('sellMilk').onclick = function() {
   var e = state.milk * MILK_PRICE;
   state.money += e;
   state.totalMilkSold += state.milk;
-  showPopup('+' + e + '$', window.innerWidth/2, window.innerHeight/2);
+  showPopup('+' + e + '₽', window.innerWidth/2, window.innerHeight/2);
   state.milk = 0;
   updateHUD(); updateShopMenu();
 };
@@ -2380,11 +2454,27 @@ function updateVisibility() {
   }
 }
 
-window.addEventListener('resize', function() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+function handleResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', function() {
+  setTimeout(handleResize, 150);
+  setTimeout(handleResize, 400);
+  setTimeout(checkOrientation, 100);
 });
+document.addEventListener('fullscreenchange', function() { setTimeout(handleResize, 100); });
+document.addEventListener('webkitfullscreenchange', function() { setTimeout(handleResize, 100); });
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', handleResize);
+  window.visualViewport.addEventListener('scroll', handleResize);
+}
 
 var tutorialSteps = [
   { icon: '🎮', title: 'Добро пожаловать!', text: 'Цель — <b>найти иголку в стоге сена</b><br><br>Собирай сено, корми корову, продавай молоко!' },
