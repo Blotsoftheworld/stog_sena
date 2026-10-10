@@ -101,7 +101,6 @@
   #tutorial-skip:hover { background: rgba(0,0,0,0.6); color: #fff; }
   #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Адаптация по ширине */
   @media (max-width: 700px) {
     #tutorial { padding: 12px; }
     #tutorial-box { padding: 22px 18px; border-radius: 18px; border-width: 3px; }
@@ -116,7 +115,6 @@
     .tutorial-dot { width: 8px; height: 8px; }
   }
 
-  /* Адаптация по высоте (альбомная ориентация телефона) */
   @media (max-height: 500px) and (orientation: landscape) {
     #tutorial { padding: 8px; align-items: center; }
     #tutorial-box { padding: 14px 18px; max-height: calc(100vh - 16px); border-radius: 14px; border-width: 2px; max-width: 620px; }
@@ -190,6 +188,41 @@
   #shootBtn { position: absolute; bottom: 130px; right: 30px; width: 80px; height: 80px; background: rgba(255,50,50,0.3); border: 3px solid rgba(255,100,100,0.6); border-radius: 50%; color: white; font-size: 28px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 25; }
   #shootBtn.show { display: flex; }
   #shootBtn.active { background: rgba(255,50,50,0.7); transform: scale(0.95); }
+
+  /* 🛠️ Кнопка переключения инструментов */
+  #toolBtn {
+    position: absolute;
+    bottom: 210px;
+    right: 30px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,200,80,0.35);
+    border: 3px solid rgba(255,215,0,0.8);
+    border-radius: 50%;
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    z-index: 25;
+    flex-direction: column;
+    line-height: 1;
+    text-shadow: 0 2px 4px #000;
+  }
+  #toolBtn.show { display: flex; }
+  #toolBtn.active { background: rgba(255,200,80,0.75); transform: scale(0.95); }
+  #toolBtn .tool-emoji { font-size: 30px; }
+  #toolBtn .tool-name {
+    font-size: 9px;
+    font-weight: bold;
+    color: #ffd700;
+    margin-top: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
   #stamina-bar-mobile { position: absolute; bottom: 175px; left: 30px; width: 130px; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; z-index: 20; pointer-events: none; display: none; }
   #stamina-bar-mobile.show { display: block; }
   #staminaFill-mobile { width: 100%; height: 100%; background: linear-gradient(90deg, #00FF88, #00CC66); transition: width 0.1s; border-radius: 4px; }
@@ -197,19 +230,48 @@
   #pcHint.show { display: block; }
   #pcHint kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-weight: bold; color: white; font-size: 11px; }
 
-  #hud { position: fixed; top: 15px; left: 15px; color: #fff; background: rgba(20,15,10,0.75); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; border: 1px solid rgba(255,215,0,0.35); box-shadow: 0 8px 32px rgba(0,0,0,0.6); pointer-events: none; z-index: 15; display: none; }
+  #hud { position: fixed; top: 15px; left: 15px; color: #fff; background: rgba(20,15,10,0.8); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; border: 1px solid rgba(255,215,0,0.35); box-shadow: 0 8px 32px rgba(0,0,0,0.6); pointer-events: none; z-index: 15; display: none; }
   #hud.show { display: block; }
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
 
+  /* 📱 Увеличенный HUD на телефоне */
   @media (max-width: 700px) {
-    #hud { padding: 8px 12px; font-size: 11px; line-height: 1.5; top: 8px; left: 8px; border-radius: 10px; }
-    #hud .row { gap: 12px; }
+    #hud {
+      padding: 12px 16px;
+      font-size: 15px;
+      line-height: 1.7;
+      top: 10px;
+      left: 10px;
+      border-radius: 12px;
+      border-width: 2px;
+      min-width: 170px;
+    }
+    #hud .row { gap: 16px; }
   }
 
   @media (max-height: 500px) and (orientation: landscape) {
-    #hud { padding: 6px 10px; font-size: 10px; line-height: 1.4; top: 6px; left: 6px; }
-    #hud .row { gap: 10px; }
+    #hud {
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.6;
+      top: 8px;
+      left: 8px;
+      min-width: 160px;
+    }
+    #hud .row { gap: 14px; }
+  }
+
+  @media (max-height: 420px) and (orientation: landscape) {
+    #hud {
+      padding: 8px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      top: 6px;
+      left: 6px;
+      min-width: 150px;
+    }
+    #hud .row { gap: 12px; }
   }
 
   #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
@@ -221,7 +283,7 @@
   #hint.show { display: block; }
   #hint b { color: #ffd700; }
 
-  /* Mission panel */
+  /* Mission panel — увеличен на телефоне */
   #mission-panel {
     position: fixed; top: 15px; right: 65px; z-index: 30;
     background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95));
@@ -245,6 +307,51 @@
   #mission-progress { height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; }
   #mission-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ade80, #7cf05c); transition: width 0.4s; border-radius: 3px; }
 
+  /* 📱 Увеличенная панель миссий на телефоне */
+  @media (max-width: 700px) {
+    #mission-panel {
+      top: 10px;
+      right: 10px;
+      left: auto;
+      bottom: auto;
+      max-width: 62vw;
+      min-width: 200px;
+      padding: 12px 14px;
+      border-width: 3px;
+      border-radius: 14px;
+    }
+    #mission-title { font-size: 12px; margin-bottom: 6px; gap: 5px; letter-spacing: 0.8px; }
+    #mission-title .step-badge { width: 20px; height: 20px; font-size: 11px; }
+    #mission-text { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
+    #mission-text kbd { font-size: 12px; padding: 1px 4px; }
+    #mission-progress { height: 5px; }
+    #mission-complete { padding: 20px 26px; }
+    #mission-complete .icon { font-size: 40px; }
+    #mission-complete .title { font-size: 17px; }
+    #mission-complete .desc { font-size: 12px; }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    #mission-panel {
+      top: 10px;
+      right: 10px;
+      max-width: 300px;
+      min-width: 200px;
+      padding: 10px 12px;
+      border-width: 2px;
+      border-radius: 12px;
+    }
+    #mission-title { font-size: 11px; margin-bottom: 5px; }
+    #mission-title .step-badge { width: 18px; height: 18px; font-size: 10px; }
+    #mission-text { font-size: 13px; margin-bottom: 6px; line-height: 1.35; }
+    #mission-text kbd { font-size: 11px; }
+    #mission-progress { height: 4px; }
+    #mission-complete { padding: 16px 22px; }
+    #mission-complete .icon { font-size: 34px; margin-bottom: 6px; }
+    #mission-complete .title { font-size: 14px; }
+    #mission-complete .desc { font-size: 11px; }
+  }
+
   /* Mission complete popup */
   #mission-complete {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
@@ -260,47 +367,6 @@
   #mission-complete .icon { font-size: 50px; margin-bottom: 10px; }
   #mission-complete .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
   #mission-complete .desc { font-size: 14px; opacity: 0.9; }
-
-  @media (max-width: 700px) {
-    #mission-panel {
-      top: 55px;
-      right: 8px;
-      left: auto;
-      bottom: auto;
-      max-width: 60vw;
-      min-width: 170px;
-      padding: 7px 10px;
-      border-width: 2px;
-      border-radius: 10px;
-    }
-    #mission-title { font-size: 10px; margin-bottom: 3px; gap: 3px; letter-spacing: 0.5px; }
-    #mission-title .step-badge { width: 15px; height: 15px; font-size: 9px; }
-    #mission-text { font-size: 11px; margin-bottom: 5px; line-height: 1.3; }
-    #mission-text kbd { font-size: 10px; padding: 0 3px; }
-    #mission-progress { height: 3px; }
-    #mission-complete { padding: 18px 22px; }
-    #mission-complete .icon { font-size: 36px; }
-    #mission-complete .title { font-size: 15px; }
-    #mission-complete .desc { font-size: 11px; }
-  }
-
-  @media (max-height: 500px) and (orientation: landscape) {
-    #mission-panel {
-      top: 50px;
-      right: 6px;
-      max-width: 240px;
-      min-width: 150px;
-      padding: 6px 9px;
-    }
-    #mission-title { font-size: 9px; margin-bottom: 2px; }
-    #mission-title .step-badge { width: 13px; height: 13px; font-size: 8px; }
-    #mission-text { font-size: 10px; margin-bottom: 4px; }
-    #mission-progress { height: 3px; }
-    #mission-complete { padding: 14px 20px; }
-    #mission-complete .icon { font-size: 30px; margin-bottom: 6px; }
-    #mission-complete .title { font-size: 13px; }
-    #mission-complete .desc { font-size: 10px; }
-  }
 
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
@@ -336,7 +402,6 @@
     #shop-close { padding: 10px 28px; font-size: 14px; }
   }
 
-  /* 🎯 Адаптация магазина по высоте (альбомная ориентация телефона) */
   @media (max-height: 500px) and (orientation: landscape) {
     #shop-menu { padding: 8px; }
     #shop-window { padding: 10px 14px; border-radius: 12px; border-width: 2px; max-width: 90vw; max-height: calc(100vh - 16px); }
@@ -417,7 +482,6 @@
     #phone-bubble::before { left: -28px; font-size: 18px; }
   }
 
-  /* 🎯 Адаптация звонка по высоте (альбомная ориентация телефона) */
   @media (max-height: 500px) and (orientation: landscape) {
     #phone-call { padding: 8px; }
     #phone-call-box { padding: 14px 22px; border-radius: 16px; border-width: 2px; max-height: calc(100vh - 16px); max-width: 520px; }
@@ -474,6 +538,9 @@
     #runBtn { width: 68px; height: 68px; bottom: 20px; right: 20px; font-size: 13px; }
     #jumpBtn { width: 68px; height: 68px; bottom: 105px; right: 105px; font-size: 12px; }
     #shootBtn { width: 68px; height: 68px; bottom: 105px; right: 20px; font-size: 24px; }
+    #toolBtn { width: 68px; height: 68px; bottom: 180px; right: 20px; }
+    #toolBtn .tool-emoji { font-size: 26px; }
+    #toolBtn .tool-name { font-size: 8px; }
     #stamina-bar-mobile { bottom: 145px; left: 20px; width: 110px; height: 6px; }
     #inventory-bar { bottom: 90px; height: 22px; }
     #inventory-text { font-size: 12px; line-height: 18px; }
@@ -487,6 +554,9 @@
     #runBtn { width: 58px; height: 58px; bottom: 12px; right: 12px; font-size: 11px; }
     #jumpBtn { width: 58px; height: 58px; bottom: 88px; right: 88px; font-size: 10px; }
     #shootBtn { width: 58px; height: 58px; bottom: 88px; right: 12px; font-size: 20px; }
+    #toolBtn { width: 58px; height: 58px; bottom: 152px; right: 12px; }
+    #toolBtn .tool-emoji { font-size: 22px; }
+    #toolBtn .tool-name { font-size: 7px; }
     #stamina-bar-mobile { bottom: 118px; left: 12px; width: 95px; height: 5px; }
     #inventory-bar { bottom: 78px; height: 20px; }
     #inventory-text { font-size: 11px; line-height: 16px; }
@@ -548,6 +618,7 @@
 <div id="runBtn">RUN</div>
 <div id="jumpBtn">JUMP</div>
 <div id="shootBtn">E</div>
+<div id="toolBtn"><span class="tool-emoji">✋</span><span class="tool-name">РУКА</span></div>
 
 <div id="pcHint">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> движение |
@@ -555,6 +626,7 @@
   <kbd>Shift</kbd> бег |
   <kbd>Space</kbd> прыжок |
   <kbd>E</kbd> действие |
+  <kbd>Q</kbd> инструмент |
   <kbd>Z</kbd> магазин
 </div>
 
@@ -563,6 +635,7 @@
   <div class="row"><span>🥛 Молоко:</span> <b id="milk">0</b></div>
   <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>₽</div>
   <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
+  <div class="row"><span>🛠️ Инструмент:</span> <b id="toolName">✋ Рука</b></div>
 </div>
 
 <!-- Mission panel -->
@@ -585,7 +658,7 @@
 </div>
 
 <div id="cooldown"><div id="cooldown-fill"></div></div>
-<div id="hint"><b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин</div>
+<div id="hint"><b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Q</b> — инструмент | <b>Z</b> — магазин</div>
 <div id="popups"></div>
 
 <div id="shop-menu">
@@ -887,10 +960,12 @@ function animateLoading() {
       document.getElementById('runBtn').classList.add('show');
       document.getElementById('jumpBtn').classList.add('show');
       document.getElementById('shootBtn').classList.add('show');
+      document.getElementById('toolBtn').classList.add('show');
       document.getElementById('stamina-bar-mobile').classList.add('show');
     }
     updateHUD();
     updateShopMenu();
+    updateToolButton();
 
     if (!gameStarted) {
       gameStarted = true;
@@ -1019,7 +1094,8 @@ var state = {
   dynamiteCooldown: 8.0, lastDynamiteTime: 0,
   vacuumActive: false, vacuumTimer: 0,
   autoGatherLvl: 0, autoGatherTimer: 0,
-  stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0
+  stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0,
+  currentTool: 'hand'  // 'hand' | 'fork' | 'dynamite' | 'vacuum'
 };
 
 var PRICES = {
@@ -1913,9 +1989,11 @@ function isUITarget(target) {
   var runBtn = document.getElementById('runBtn');
   var jumpBtn = document.getElementById('jumpBtn');
   var shootBtn = document.getElementById('shootBtn');
+  var toolBtn = document.getElementById('toolBtn');
   var fsBtn = document.getElementById('fullscreen-btn');
   return (moveJoystick && (target === moveJoystick || moveJoystick.contains(target))) ||
-         target === runBtn || target === jumpBtn || target === shootBtn || target === fsBtn;
+         target === runBtn || target === jumpBtn || target === shootBtn ||
+         target === toolBtn || fsBtn;
 }
 
 lookArea.addEventListener('touchstart', function(e) {
@@ -2080,6 +2158,7 @@ document.addEventListener('keydown', function(e) {
   if (e.shiftKey) keys.shift = true;
   if (key === ' ' || key === 'spacebar' || e.code === 'Space') { e.preventDefault(); jump(); }
   if (key === 'e' || key === 'у') pressEButton();
+  if (key === 'q' || key === 'й') { e.preventDefault(); cycleTool(); }
   if (key === 'z' || key === 'я' || key === 'p') { e.preventDefault(); toggleShop(); }
   if (key === 'f' || key === 'а') { e.preventDefault(); toggleFullscreen(); }
 });
@@ -2175,11 +2254,13 @@ function adminQuick(action) {
   }
   updateHUD();
   updateShopMenu();
+  updateToolButton();
   toggleAdmin();
 }
 
 var runBtn = document.getElementById('runBtn');
 var jumpBtn = document.getElementById('jumpBtn');
+var toolBtn = document.getElementById('toolBtn');
 var staminaFillMobile = document.getElementById('staminaFill-mobile');
 var isRunningTouch = false;
 
@@ -2207,6 +2288,67 @@ function handleJump(e) {
 }
 jumpBtn.addEventListener('touchstart', handleJump, { passive: false });
 jumpBtn.addEventListener('mousedown', handleJump);
+
+// ============================================
+// 🛠️ ПЕРЕКЛЮЧЕНИЕ ИНСТРУМЕНТОВ
+// ============================================
+var TOOLS = [
+  { id: 'hand', emoji: '✋', name: 'РУКА', tooltip: 'Рука' },
+  { id: 'fork', emoji: '🍴', name: 'ВИЛЫ', tooltip: 'Вилы' },
+  { id: 'dynamite', emoji: '💥', name: 'ДИНАМ.', tooltip: 'Динамит' },
+  { id: 'vacuum', emoji: '🌀', name: 'ПЫЛЕС.', tooltip: 'Пылесос' }
+];
+
+function cycleTool() {
+  var available = [];
+  for (var i = 0; i < TOOLS.length; i++) {
+    var t = TOOLS[i];
+    if (t.id === 'hand') available.push(t);
+    else if (t.id === 'fork' && state.hasFork) available.push(t);
+    else if (t.id === 'dynamite' && state.hasDynamite) available.push(t);
+    else if (t.id === 'vacuum' && state.hasVacuum) available.push(t);
+  }
+  if (available.length <= 1) {
+    if (state.currentTool !== 'hand') {
+      state.currentTool = 'hand';
+      updateToolButton();
+    }
+    showHint('Купи инструменты в амбаре!');
+    return;
+  }
+  var curIdx = 0;
+  for (var k = 0; k < available.length; k++) {
+    if (available[k].id === state.currentTool) { curIdx = k; break; }
+  }
+  var nextIdx = (curIdx + 1) % available.length;
+  state.currentTool = available[nextIdx].id;
+  updateToolButton();
+  showHint('Инструмент: ' + available[nextIdx].tooltip);
+}
+
+function updateToolButton() {
+  if (!toolBtn) return;
+  var tool = null;
+  for (var i = 0; i < TOOLS.length; i++) {
+    if (TOOLS[i].id === state.currentTool) { tool = TOOLS[i]; break; }
+  }
+  if (!tool) tool = TOOLS[0];
+  var emojiEl = toolBtn.querySelector('.tool-emoji');
+  var nameEl = toolBtn.querySelector('.tool-name');
+  if (emojiEl) emojiEl.textContent = tool.emoji;
+  if (nameEl) nameEl.textContent = tool.name;
+  var hudToolName = document.getElementById('toolName');
+  if (hudToolName) hudToolName.textContent = tool.emoji + ' ' + tool.tooltip;
+}
+
+function handleToolTap(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  toolBtn.classList.add('active');
+  setTimeout(function() { toolBtn.classList.remove('active'); }, 120);
+  cycleTool();
+}
+toolBtn.addEventListener('touchstart', handleToolTap, { passive: false });
+toolBtn.addEventListener('mousedown', handleToolTap);
 
 var shootBtn = document.getElementById('shootBtn');
 
@@ -2266,14 +2408,24 @@ function tryGatherHay() {
   var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
   if (d > HAYSTACK_RADIUS + 10) { showHint('Далеко от стога!'); return; }
   if (state.hay >= state.maxHay) { showHint('Инвентарь полон!'); return; }
-  var hayPerGather = 1, toolUsed = '';
-  if (state.vacuumActive) { hayPerGather = 8; toolUsed = 'vacuum'; spawnVacuumParticles(); }
-  else if (state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
-    hayPerGather = 5; state.lastForkTime = now; toolUsed = 'fork'; spawnForkParticle();
+
+  // Определяем инструмент
+  var hayPerGather = 1, toolUsed = state.currentTool;
+  if (toolUsed === 'vacuum' && state.hasVacuum) {
+    hayPerGather = 8;
+    spawnVacuumParticles();
+  } else if (toolUsed === 'fork' && state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
+    hayPerGather = 5; state.lastForkTime = now;
+    spawnForkParticle();
+  } else if (toolUsed === 'dynamite' && state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
+    hayPerGather = 15; state.lastDynamiteTime = now;
+    spawnExplosion();
+  } else {
+    // Если инструмент недоступен или на кулдауне — рука
+    toolUsed = 'hand';
+    hayPerGather = 1;
   }
-  else if (state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
-    hayPerGather = 15; state.lastDynamiteTime = now; toolUsed = 'dynamite'; spawnExplosion();
-  }
+
   state.lastGatherTime = now;
   var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
   state.hay += actualHay;
@@ -2282,9 +2434,9 @@ function tryGatherHay() {
   if (Math.random() < 0.003 + luckBonus) { findNeedle(); return; }
   if (toolUsed !== 'vacuum') spawnStalkParticle();
   var txt = '+' + actualHay + ' сена';
-  if (toolUsed === 'fork') txt += ' +вилы';
-  if (toolUsed === 'dynamite') txt += ' +динамит';
-  if (toolUsed === 'vacuum') txt += ' +пылесос';
+  if (toolUsed === 'fork') txt += ' 🍴';
+  if (toolUsed === 'dynamite') txt += ' 💥';
+  if (toolUsed === 'vacuum') txt += ' 🌀';
   showPopup(txt, window.innerWidth/2, window.innerHeight/2 - 50);
   updateHUD();
   updateShopMenu();
@@ -2369,7 +2521,7 @@ function showHint(text) {
   hint.classList.add('show');
   clearTimeout(hintTimeout);
   hintTimeout = setTimeout(function() {
-    hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин';
+    hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Q</b> — инструмент | <b>Z</b> — магазин';
   }, 2500);
 }
 
@@ -2522,20 +2674,23 @@ document.getElementById('buyLuck').onclick = function() {
 document.getElementById('buyFork').onclick = function() {
   if (state.hasFork || state.money < PRICES.fork[0]) return;
   state.money -= PRICES.fork[0]; state.hasFork = true;
-  showHint('Вилы куплены!');
+  showHint('Вилы куплены! Переключи кнопкой 🍴');
   updateShopMenu();
+  updateToolButton();
 };
 document.getElementById('buyDynamite').onclick = function() {
   if (state.hasDynamite || state.money < PRICES.dynamite[0]) return;
   state.money -= PRICES.dynamite[0]; state.hasDynamite = true;
-  showHint('Динамит куплен!');
+  showHint('Динамит куплен! Переключи кнопкой 💥');
   updateShopMenu();
+  updateToolButton();
 };
 document.getElementById('buyVacuum').onclick = function() {
   if (state.hasVacuum || state.money < PRICES.vacuum[0]) return;
   state.money -= PRICES.vacuum[0]; state.hasVacuum = true;
-  showHint('Пылесос куплен!');
+  showHint('Пылесос куплен! Переключи кнопкой 🌀');
   updateShopMenu();
+  updateToolButton();
 };
 document.getElementById('buyAutoGather').onclick = function() {
   var p = PRICES.autoGather[state.autoGatherLvl];
@@ -2755,6 +2910,7 @@ var tutorialSteps = [
   { icon: '🦘', title: 'Прыгай!', text: 'Нажми <kbd>Space</kbd> для прыжка.<br><br>На мобиле — кнопка <b>JUMP</b>!' },
   { icon: '🐄', title: 'Корми корову', text: 'Подойди к корове и нажми <kbd>E</kbd>.<br><br>Она даст <b>молоко</b>' },
   { icon: '🏠', title: 'Продавай в амбаре', text: 'Иди к амбару и нажми <kbd>E</kbd>.' },
+  { icon: '🛠️', title: 'Инструменты', text: 'Купи вилы, динамит или пылесос.<br><br>Переключай кнопкой <b>Q</b> или круглой кнопкой с эмодзи!' },
   { icon: '🧵', title: 'Найди иголку!', text: 'Иголка <b>перемещается</b> каждые 30-60 секунд!<br><br>Удачи!' }
 ];
 
