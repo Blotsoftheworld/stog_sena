@@ -33,9 +33,10 @@
   #fullscreen-btn:active { transform: scale(0.95); }
   @media (max-width: 700px) { #fullscreen-btn { width: 38px; height: 38px; top: 8px; right: 8px; font-size: 17px; } }
 
-  #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  /* ТУТОРИАЛ — без скролла */
+  #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
   #tutorial.show { display: flex; }
-  #tutorial-box { background: linear-gradient(180deg, rgba(60,40,15,0.98), rgba(30,20,8,0.98)); border: 4px solid #ffd700; border-radius: 24px; padding: 35px 40px; max-width: 500px; width: 100%; box-shadow: 0 0 80px rgba(255,215,0,0.4); text-align: center; color: #fff; max-height: calc(100vh - 40px); overflow-y: auto; }
+  #tutorial-box { background: linear-gradient(180deg, rgba(60,40,15,0.98), rgba(30,20,8,0.98)); border: 4px solid #ffd700; border-radius: 24px; padding: 35px 40px; max-width: 500px; width: 100%; box-shadow: 0 0 80px rgba(255,215,0,0.4); text-align: center; color: #fff; }
   #tutorial-icon { font-size: 64px; margin-bottom: 15px; display: block; }
   #tutorial-title { color: #ffd700; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
   #tutorial-text { font-size: 16px; line-height: 1.7; color: #e0e0e0; margin-bottom: 25px; min-height: 100px; }
@@ -56,6 +57,15 @@
     #tutorial-buttons { flex-direction: column-reverse; gap: 8px; }
     #tutorial-next { padding: 12px 14px; font-size: 14px; }
     #tutorial-skip { padding: 10px 14px; font-size: 12px; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #tutorial-box { padding: 14px 18px; border-radius: 14px; border-width: 2px; max-width: 620px; }
+    #tutorial-icon { font-size: 32px; margin-bottom: 4px; }
+    #tutorial-title { font-size: 16px; margin-bottom: 6px; }
+    #tutorial-text { font-size: 12px; line-height: 1.4; margin-bottom: 10px; min-height: 45px; }
+    #tutorial-buttons { flex-direction: row; gap: 8px; }
+    #tutorial-next { padding: 9px 14px; font-size: 13px; }
+    #tutorial-skip { padding: 9px 12px; font-size: 12px; }
   }
 
   #rotate-screen { position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1005, #000); display: none; align-items: center; justify-content: center; flex-direction: column; color: #ffd700; padding: 30px; text-align: center; }
@@ -120,9 +130,29 @@
   #inventory-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.25s; }
   #inventory-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; color: #fff; font-size: 14px; line-height: 22px; text-shadow: 2px 2px 4px #000; font-weight: bold; }
 
-  #hint { position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%); color: #fff; background: rgba(10,10,10,0.85); padding: 10px 22px; border-radius: 12px; font-size: 14px; text-align: center; border: 1px solid rgba(255,215,0,0.4); white-space: nowrap; z-index: 18; display: none; }
-  #hint.show { display: block; }
+  #hint {
+    position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%);
+    color: #fff; background: rgba(10,10,10,0.9);
+    padding: 10px 22px; border-radius: 12px;
+    font-size: 14px; text-align: center;
+    border: 1px solid rgba(255,215,0,0.6);
+    white-space: nowrap; z-index: 19;
+    display: none;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    max-width: 92vw;
+  }
+  #hint.show { display: block; animation: hintIn 0.3s ease; }
   #hint b { color: #ffd700; }
+  @keyframes hintIn {
+    0% { opacity: 0; transform: translate(-50%, 10px); }
+    100% { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @media (max-width: 700px) {
+    #hint { bottom: 200px; font-size: 12px; padding: 8px 14px; white-space: normal; line-height: 1.35; max-width: 90vw; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #hint { bottom: 100px; font-size: 11px; padding: 6px 12px; max-width: 70vw; }
+  }
 
   #mission-panel { position: fixed; top: 15px; right: 65px; z-index: 30; background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95)); border: 3px solid #ffd700; border-radius: 16px; padding: 14px 18px; max-width: 320px; min-width: 260px; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3); display: none; transition: transform 0.3s, opacity 0.3s; pointer-events: none; }
   #mission-panel.show { display: block; }
@@ -156,6 +186,7 @@
   .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
   @keyframes floatUp { 0% { transform: translate(-50%,0); opacity: 1; } 100% { transform: translate(-50%,-110px); opacity: 0; } }
 
+  /* МАГАЗИН — на мобильных без скролла, компактный */
   #shop-menu { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; padding: 15px; }
   #shop-menu.open { display: flex; }
   #shop-window { background: linear-gradient(rgba(70,45,20,0.98), rgba(40,25,10,0.98)); border: 4px solid #c9a227; border-radius: 18px; padding: 20px; width: 100%; max-width: 500px; max-height: calc(100vh - 30px); overflow-y: auto; }
@@ -172,29 +203,37 @@
   .shop-item button .price { display: block; color: #ffd700; font-size: 11px; margin-top: 2px; }
   #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; position: sticky; bottom: 0; }
   @media (max-width: 700px) {
-    #shop-window { padding: 14px; border-radius: 14px; border-width: 3px; }
-    #shop-window h2 { font-size: 18px; }
-    .shop-item { padding: 9px; gap: 8px; }
-    .shop-item .name { font-size: 12px; }
-    .shop-item button { padding: 8px 10px; font-size: 11px; min-width: 75px; }
-    #shop-close { padding: 10px 28px; font-size: 14px; }
+    #shop-menu { padding: 8px; }
+    #shop-window { padding: 10px 12px; border-radius: 12px; border-width: 3px; max-height: calc(100vh - 16px); }
+    #shop-window h2 { font-size: 15px; margin-bottom: 4px; }
+    .money-row { font-size: 11px; margin-bottom: 6px; }
+    .money-row b { font-size: 13px; }
+    .shop-item { padding: 5px 7px; gap: 6px; border-radius: 8px; margin-bottom: 4px; }
+    .shop-item .name { font-size: 11px; margin-bottom: 1px; }
+    .shop-item .desc { font-size: 9px; }
+    .shop-item .lvl { font-size: 9px; margin-top: 1px; }
+    .shop-item button { padding: 6px 8px; font-size: 10px; min-width: 65px; border-radius: 7px; }
+    .shop-item button .price { font-size: 9px; }
+    #shop-close { padding: 8px 22px; font-size: 12px; margin-top: 8px; }
   }
 
-  #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+  /* ОКНО ПОБЕДЫ — без скролла, компактное на мобильных */
+  #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 14px; }
   #message.show { display: flex; }
-  #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; max-height: calc(100vh - 40px); overflow-y: auto; }
-  #message-box h1 { color: #ffd700; font-size: 32px; margin-bottom: 20px; }
-  #message-box p { font-size: 17px; margin: 10px 0; }
-  #message-box .btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
-  #message-box button { padding: 14px 40px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+  #message-box { text-align: center; color: #fff; padding: 30px 34px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 22px; max-width: 90vw; width: 100%; }
+  #message-box h1 { color: #ffd700; font-size: 28px; margin-bottom: 14px; }
+  #message-box p { font-size: 16px; margin: 7px 0; }
+  #message-box .btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+  #message-box button { padding: 14px 32px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
   #msg-end-btn { background: linear-gradient(180deg, #4a8f3a, #2d5a23); color: #fff; border: 3px solid #7cf05c !important; box-shadow: 0 0 20px rgba(124,240,92,0.5); }
   #msg-replay-btn { background: #ffd700; color: #000; }
   @media (max-width: 700px) {
-    #message { padding: 14px; }
-    #message-box { padding: 34px 26px; border-radius: 22px; border-width: 4px; max-width: 96vw; }
-    #message-box h1 { font-size: 26px; margin-bottom: 18px; }
-    #message-box p { font-size: 16px; margin: 12px 0; }
-    #message-box button { padding: 16px 32px; font-size: 16px; border-radius: 14px; }
+    #message { padding: 10px; }
+    #message-box { padding: 22px 20px; border-radius: 18px; border-width: 3px; max-width: 94vw; }
+    #message-box h1 { font-size: 22px; margin-bottom: 10px; }
+    #message-box p { font-size: 14px; margin: 5px 0; }
+    #message-box .btn-row { gap: 8px; margin-top: 16px; }
+    #message-box button { padding: 12px 24px; font-size: 14px; border-radius: 10px; }
   }
 
   #ending-screen { position: fixed; inset: 0; z-index: 1200; background: #000; display: none; align-items: center; justify-content: center; overflow: hidden; }
@@ -262,9 +301,7 @@
   #ending-skip-btn { position: absolute; top: 20px; right: 20px; z-index: 10; padding: 10px 20px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,215,0,0.6); border-radius: 10px; color: #ffd700; font-size: 14px; font-weight: bold; cursor: pointer; }
   @media (max-width: 700px) { #ending-skip-btn { padding: 8px 14px; font-size: 12px; top: 12px; right: 12px; } }
 
-  /* ============================================
-     📞 ЗВОНОК — КОМПАКТНЫЙ, КНОПКИ ВСЕГДА ВИДНЫ
-     ============================================ */
+  /* 📞 ЗВОНОК — фиксированный размер, БЕЗ СКРОЛЛА */
   #phone-call {
     position: fixed; inset: 0; z-index: 900;
     background: rgba(0,0,0,0.92);
@@ -272,19 +309,17 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 10px;
     overflow: hidden;
   }
   #phone-call.show { display: flex; }
-
   #phone-call-box {
     background: linear-gradient(180deg, #2a3a2a, #1a2a1a);
     border: 3px solid #4ade80;
     border-radius: 20px;
-    padding: 18px 16px 16px;
-    max-width: 360px;
-    width: 100%;
-    max-height: calc(100vh - 24px);
+    padding: 16px 14px 14px;
+    width: 340px;
+    max-width: calc(100vw - 20px);
     text-align: center;
     color: #fff;
     box-shadow: 0 0 60px rgba(74,222,128,0.5);
@@ -292,118 +327,35 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    overflow-y: auto;
+    box-sizing: border-box;
   }
   #phone-call-box.answered { animation: none; }
   @keyframes phoneShake {
     0%,100% { transform: rotate(-1.5deg) translateX(-3px); }
     50% { transform: rotate(1.5deg) translateX(3px); }
   }
-
-  #phone-icon {
-    font-size: 46px;
-    display: block;
-    margin-bottom: 6px;
-    animation: phonePulse 1s infinite;
-    flex-shrink: 0;
-  }
-  @keyframes phonePulse {
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-  }
-
-  #phone-caller {
-    font-size: 17px;
-    font-weight: bold;
-    color: #4ade80;
-    margin-bottom: 3px;
-    flex-shrink: 0;
-  }
-  #phone-number {
-    font-size: 12px;
-    color: #a0d8a0;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-    flex-shrink: 0;
-  }
-  #phone-text {
-    font-size: 13px;
-    line-height: 1.45;
-    color: #e0e0e0;
-    margin-bottom: 12px;
-    min-height: 36px;
-    flex-shrink: 0;
-  }
-  #phone-buttons {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  #phone-answer {
-    flex: 1;
-    padding: 12px 10px;
-    background: linear-gradient(180deg, #22c55e, #16a34a);
-    border: 2px solid #4ade80;
-    border-radius: 50px;
-    color: #fff;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 0 18px rgba(74,222,128,0.6);
-    animation: answerPulse 1.4s infinite;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-  @keyframes answerPulse {
-    0%,100% { box-shadow: 0 0 18px rgba(74,222,128,0.6); }
-    50% { box-shadow: 0 0 30px rgba(74,222,128,1), 0 0 45px rgba(74,222,128,0.5); }
-  }
+  #phone-icon { font-size: 40px; display: block; margin-bottom: 4px; animation: phonePulse 1s infinite; line-height: 1; }
+  @keyframes phonePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  #phone-caller { font-size: 16px; font-weight: bold; color: #4ade80; margin-bottom: 2px; }
+  #phone-number { font-size: 11px; color: #a0d8a0; margin-bottom: 8px; letter-spacing: 1px; }
+  #phone-text { font-size: 12px; line-height: 1.4; color: #e0e0e0; margin-bottom: 10px; min-height: 32px; }
+  #phone-buttons { display: flex; gap: 8px; }
+  #phone-answer { flex: 1; padding: 11px 8px; background: linear-gradient(180deg, #22c55e, #16a34a); border: 2px solid #4ade80; border-radius: 50px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; box-shadow: 0 0 18px rgba(74,222,128,0.6); animation: answerPulse 1.4s infinite; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  @keyframes answerPulse { 0%,100% { box-shadow: 0 0 18px rgba(74,222,128,0.6); } 50% { box-shadow: 0 0 30px rgba(74,222,128,1), 0 0 45px rgba(74,222,128,0.5); } }
   #phone-answer:active { transform: scale(0.95); }
-  #phone-decline {
-    padding: 12px 16px;
-    background: linear-gradient(180deg, #dc2626, #991b1b);
-    border: 2px solid #ef4444;
-    border-radius: 50px;
-    color: #fff;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
+  #phone-decline { padding: 11px 14px; background: linear-gradient(180deg, #dc2626, #991b1b); border: 2px solid #ef4444; border-radius: 50px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   #phone-decline:active { transform: scale(0.95); }
-
-  /* Подсказка про ответ */
-  #phone-tip {
-    font-size: 11px;
-    color: #ffd700;
-    margin-top: 8px;
-    animation: blink 1.4s infinite;
-    flex-shrink: 0;
-  }
+  #phone-tip { font-size: 10px; color: #ffd700; margin-top: 6px; animation: blink 1.4s infinite; line-height: 1.2; }
   @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-  /* Мобильная адаптация */
-  @media (max-width: 700px) {
-    #phone-call-box { padding: 16px 14px 14px; border-radius: 18px; max-width: 320px; }
-    #phone-icon { font-size: 42px; }
-    #phone-caller { font-size: 16px; }
-    #phone-number { font-size: 11px; margin-bottom: 8px; }
-    #phone-text { font-size: 12px; margin-bottom: 10px; min-height: 32px; }
-    #phone-answer { padding: 13px 10px; font-size: 14px; }
-    #phone-decline { padding: 13px 14px; font-size: 14px; }
-    #phone-tip { font-size: 10px; margin-top: 6px; }
-  }
-
-  /* Очень маленькие экраны / альбомная */
   @media (max-height: 480px) {
-    #phone-call-box { padding: 12px 14px 12px; max-width: 480px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
-    #phone-icon { font-size: 34px; margin-bottom: 0; width: 100%; }
-    #phone-caller { font-size: 14px; width: 100%; }
-    #phone-number { font-size: 10px; margin-bottom: 4px; width: 100%; }
-    #phone-text { font-size: 11px; margin-bottom: 6px; min-height: 28px; width: 100%; }
-    #phone-buttons { width: 100%; }
-    #phone-tip { width: 100%; margin-top: 4px; }
+    #phone-call-box { width: 460px; padding: 12px 14px 12px; max-width: calc(100vw - 20px); }
+    #phone-icon { font-size: 32px; margin-bottom: 2px; }
+    #phone-caller { font-size: 14px; }
+    #phone-number { font-size: 10px; margin-bottom: 6px; }
+    #phone-text { font-size: 11px; margin-bottom: 8px; min-height: 26px; }
+    #phone-answer { padding: 8px 8px; font-size: 12px; }
+    #phone-decline { padding: 8px 12px; font-size: 12px; }
+    #phone-tip { font-size: 9px; margin-top: 4px; }
   }
 
   #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
@@ -436,7 +388,10 @@
   #admin-close { display: block; margin: 0 auto; padding: 10px 30px; background: linear-gradient(180deg, #666, #333); border: 2px solid #ff00ff; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
   .admin-hint { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
 
-  @media (max-width: 900px), (pointer: coarse) { #pcHint { display: none !important; } #hint { display: none !important; } }
+  @media (max-width: 900px), (pointer: coarse) {
+    #pcHint { display: none !important; }
+  }
+
   @media (max-width: 700px) {
     #moveJoystick { width: 110px; height: 110px; bottom: 20px; left: 20px; }
     #moveKnob { width: 48px; height: 48px; }
@@ -535,7 +490,7 @@
 </div>
 
 <div id="cooldown"><div id="cooldown-fill"></div></div>
-<div id="hint"><b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Q</b> — инструмент | <b>Z</b> — магазин</div>
+<div id="hint"><b>Собери сено</b> — тапни по стогу</div>
 <div id="popups"></div>
 
 <div id="shop-menu">
@@ -652,7 +607,6 @@
   </div>
 </div>
 
-<!-- 📞 ЗВОНОК — КОМПАКТНЫЙ -->
 <div id="phone-call">
   <div id="phone-call-box">
     <span id="phone-icon">📞</span>
@@ -739,7 +693,6 @@ function startEnding() {
   showSlide(0);
   scheduleSlides();
 }
-
 function showSlide(index) {
   var slides = document.querySelectorAll('.slide');
   for (var i = 0; i < slides.length; i++) {
@@ -748,7 +701,6 @@ function showSlide(index) {
   }
   document.getElementById('final-scene').classList.remove('active');
 }
-
 function scheduleSlides() {
   var slides = document.querySelectorAll('.slide');
   var totalSlides = slides.length;
@@ -763,13 +715,11 @@ function scheduleSlides() {
     })(i);
   }
 }
-
 function showFinalScene() {
   var slides = document.querySelectorAll('.slide');
   for (var i = 0; i < slides.length; i++) slides[i].classList.remove('active');
   document.getElementById('final-scene').classList.add('active');
 }
-
 document.getElementById('msg-end-btn').addEventListener('click', function() { startEnding(); });
 document.getElementById('ending-skip-btn').addEventListener('click', function() {
   endingTimers.forEach(function(t) { clearTimeout(t); });
@@ -782,7 +732,7 @@ document.getElementById('final-replay-btn').addEventListener('click', function()
 });
 
 // ============================================
-// 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ
+// ПОЛНОЭКРАННЫЙ РЕЖИМ
 // ============================================
 var fullscreenBtn = document.getElementById('fullscreen-btn');
 function isFullscreen() {
@@ -979,7 +929,6 @@ function showPhoneCall() {
       afterPhoneCall();
     }, 3000);
   }
-
   function declineCall() {
     phoneRingtone.pause();
     phoneRingtone.currentTime = 0;
@@ -987,11 +936,8 @@ function showPhoneCall() {
     showPhoneBubble('Не бери трубку — но иголку всё равно ищи! 🧵');
     afterPhoneCall();
   }
-
-  // Клики
   phoneAnswer.onclick = answerCall;
   phoneDecline.onclick = declineCall;
-  // Тач-события (мобильные) — с preventDefault
   phoneAnswer.ontouchstart = function(e) { e.preventDefault(); e.stopPropagation(); answerCall(); };
   phoneDecline.ontouchstart = function(e) { e.preventDefault(); e.stopPropagation(); declineCall(); };
 }
@@ -1038,7 +984,7 @@ var missions = [
       var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
       return d < HAYSTACK_RADIUS + 4;
     }, complete: 'Ты у стога сена!' },
-  { id: 'gather_hay', icon: '✋', title: 'МИССИЯ 2', text: 'Собери <b>5 сена</b> из стога <kbd>ЛКМ</kbd> или <kbd>E</kbd>',
+  { id: 'gather_hay', icon: '✋', title: 'МИССИЯ 2', text: 'Собери <b>5 сена</b> из стога',
     check: function() { return state.hay >= 5; }, complete: 'Ты собрал 5 сена!' },
   { id: 'goto_cow', icon: '🐄', title: 'МИССИЯ 3', text: 'Подойди к <b>корове</b>',
     check: function() {
@@ -2212,14 +2158,15 @@ function showPopup(text, x, y) {
 
 var hintTimeout;
 function showHint(text) {
-  if (isMobileDevice) return;
   var hint = document.getElementById('hint');
   if (!hint) return;
   hint.innerHTML = text;
   hint.classList.add('show');
   clearTimeout(hintTimeout);
   hintTimeout = setTimeout(function() {
-    hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Q</b> — инструмент | <b>Z</b> — магазин';
+    hint.innerHTML = isMobileDevice
+      ? '<b>Собери сено</b> — тапни по стогу'
+      : '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Q</b> — инструмент | <b>Z</b> — магазин';
   }, 2500);
 }
 
@@ -2560,7 +2507,7 @@ if (window.visualViewport) {
 
 var tutorialSteps = [
   { icon: '🎮', title: 'Добро пожаловать!', text: 'Цель — <b>найти иголку в стоге сена</b><br><br>Собирай сено, корми корову, продавай молоко!' },
-  { icon: '🌾', title: 'Собирай сено', text: '<b>ЛКМ по стогу</b> — берёшь колосок.<br><br>Прокачай инвентарь в амбаре!' },
+  { icon: '🌾', title: 'Собирай сено', text: '<b>Тапни по стогу</b> — берёшь колосок.<br><br>Прокачай инвентарь в амбаре!' },
   { icon: '🦘', title: 'Прыгай!', text: 'Нажми <kbd>Space</kbd> для прыжка.<br><br>На мобиле — кнопка <b>JUMP</b>!' },
   { icon: '🐄', title: 'Корми корову', text: 'Подойди к корове и нажми <kbd>E</kbd>.<br><br>Она даст <b>молоко</b>' },
   { icon: '🏠', title: 'Продавай в амбаре', text: 'Иди к амбару и нажми <kbd>E</kbd>.' },
