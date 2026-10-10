@@ -12,60 +12,27 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
   html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    inset: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #000;
-    touch-action: none;
-    overscroll-behavior: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
+    width: 100%; height: 100%; overflow: hidden; position: fixed; inset: 0;
+    font-family: 'Segoe UI', Arial, sans-serif; background: #000;
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; -webkit-touch-callout: none;
   }
-  canvas {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 1;
-  }
+  canvas { display: block; position: fixed; top: 0; left: 0; width: 100% !important; height: 100% !important; z-index: 1; }
 
   #fullscreen-btn {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 60;
-    width: 42px;
-    height: 42px;
-    background: rgba(20,15,10,0.85);
-    border: 2px solid #ffd700;
-    border-radius: 10px;
-    color: #ffd700;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed; top: 12px; right: 12px; z-index: 60;
+    width: 42px; height: 42px;
+    background: rgba(20,15,10,0.85); border: 2px solid #ffd700; border-radius: 10px;
+    color: #ffd700; font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.2);
     transition: transform 0.2s, background 0.2s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    padding: 0;
-    line-height: 1;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; padding: 0; line-height: 1;
   }
   #fullscreen-btn:hover { background: rgba(40,30,15,0.95); transform: scale(1.08); }
   #fullscreen-btn:active { transform: scale(0.95); }
-
-  @media (max-width: 700px) {
-    #fullscreen-btn { width: 38px; height: 38px; top: 8px; right: 8px; font-size: 17px; border-radius: 9px; }
-  }
-  @media (max-height: 480px) {
-    #fullscreen-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 15px; }
-  }
+  @media (max-width: 700px) { #fullscreen-btn { width: 38px; height: 38px; top: 8px; right: 8px; font-size: 17px; } }
+  @media (max-height: 480px) { #fullscreen-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 15px; } }
 
   #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #tutorial.show { display: flex; }
@@ -81,9 +48,7 @@
   #tutorial-buttons { display: flex; gap: 10px; }
   #tutorial-next { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #4a8f3a, #2d5a23); border: 2px solid #7cf05c; border-radius: 12px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
   #tutorial-skip { padding: 14px 20px; background: rgba(0,0,0,0.4); border: 2px solid #666; border-radius: 12px; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; }
-  #tutorial-skip:hover { background: rgba(0,0,0,0.6); color: #fff; }
   #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
-
   @media (max-width: 700px) {
     #tutorial { padding: 12px; }
     #tutorial-box { padding: 22px 18px; border-radius: 18px; border-width: 3px; }
@@ -94,17 +59,12 @@
     #tutorial-buttons { flex-direction: column-reverse; gap: 8px; }
     #tutorial-next { padding: 12px 14px; font-size: 14px; }
     #tutorial-skip { padding: 10px 14px; font-size: 12px; }
-    #tutorial-dots { gap: 6px; margin-bottom: 15px; }
-    .tutorial-dot { width: 8px; height: 8px; }
   }
   @media (max-height: 500px) and (orientation: landscape) {
-    #tutorial { padding: 8px; align-items: center; }
     #tutorial-box { padding: 14px 18px; max-height: calc(100vh - 16px); border-radius: 14px; border-width: 2px; max-width: 620px; }
     #tutorial-icon { font-size: 32px; margin-bottom: 4px; }
     #tutorial-title { font-size: 16px; margin-bottom: 6px; }
     #tutorial-text { font-size: 12px; line-height: 1.4; margin-bottom: 10px; min-height: 45px; }
-    #tutorial-dots { margin-bottom: 10px; gap: 5px; }
-    .tutorial-dot { width: 7px; height: 7px; }
     #tutorial-buttons { flex-direction: row; gap: 8px; }
     #tutorial-next { padding: 9px 14px; font-size: 13px; }
     #tutorial-skip { padding: 9px 12px; font-size: 12px; }
@@ -119,18 +79,11 @@
 
   #loading {
     position: fixed; inset: 0; z-index: 500;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; color: #ffd700;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; color: #ffd700;
     transition: opacity 0.8s ease;
-    background: url('1.jpg') center/cover no-repeat;
-    background-color: #1a1005;
+    background: url('1.jpg') center/cover no-repeat; background-color: #1a1005;
   }
-  #loading::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%);
-    z-index: 1;
-  }
+  #loading::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%); z-index: 1; }
   #loading > * { position: relative; z-index: 2; }
   #loading.done { opacity: 0; pointer-events: none; }
   #loading .title { font-size: 42px; font-weight: bold; text-shadow: 0 0 40px #ffd700, 0 4px 12px #000; margin-bottom: 15px; text-align: center; padding: 0 15px; }
@@ -139,20 +92,10 @@
   #loading .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.1s linear; }
   #loading .percent { margin-top: 20px; font-size: 28px; font-weight: bold; color: #ffd700; }
   #loading .status { margin-top: 12px; font-size: 14px; color: #ccc; }
-
   @media (max-width: 700px) {
-    #loading .title { font-size: 26px; }
-    #loading .sub { font-size: 13px; margin-bottom: 22px; }
-    #loading .bar-outer { height: 22px; }
-    #loading .percent { font-size: 22px; margin-top: 15px; }
+    #loading .title { font-size: 26px; } #loading .sub { font-size: 13px; margin-bottom: 22px; }
+    #loading .bar-outer { height: 22px; } #loading .percent { font-size: 22px; margin-top: 15px; }
     #loading .status { font-size: 12px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #loading .title { font-size: 24px; margin-bottom: 8px; }
-    #loading .sub { font-size: 12px; margin-bottom: 15px; }
-    #loading .bar-outer { width: 320px; height: 18px; border-width: 2px; }
-    #loading .percent { font-size: 18px; margin-top: 10px; }
-    #loading .status { font-size: 11px; margin-top: 8px; }
   }
 
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
@@ -169,42 +112,11 @@
   #shootBtn { position: absolute; bottom: 130px; right: 30px; width: 80px; height: 80px; background: rgba(255,50,50,0.3); border: 3px solid rgba(255,100,100,0.6); border-radius: 50%; color: white; font-size: 28px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 25; }
   #shootBtn.show { display: flex; }
   #shootBtn.active { background: rgba(255,50,50,0.7); transform: scale(0.95); }
-
-  /* 🛠️ Кнопка переключения инструментов — показывается ТОЛЬКО когда есть хотя бы один купленный инструмент */
-  #toolBtn {
-    position: absolute;
-    bottom: 210px;
-    right: 30px;
-    width: 80px;
-    height: 80px;
-    background: rgba(255,200,80,0.35);
-    border: 3px solid rgba(255,215,0,0.8);
-    border-radius: 50%;
-    color: white;
-    font-size: 32px;
-    font-weight: bold;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    touch-action: none;
-    z-index: 26;
-    flex-direction: column;
-    line-height: 1;
-    text-shadow: 0 2px 4px #000;
-    pointer-events: auto;
-  }
+  #toolBtn { position: absolute; bottom: 210px; right: 30px; width: 80px; height: 80px; background: rgba(255,200,80,0.35); border: 3px solid rgba(255,215,0,0.8); border-radius: 50%; color: white; font-size: 32px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 26; flex-direction: column; line-height: 1; text-shadow: 0 2px 4px #000; pointer-events: auto; }
   #toolBtn.show { display: flex; }
   #toolBtn.active { background: rgba(255,200,80,0.75); transform: scale(0.95); }
   #toolBtn .tool-emoji { font-size: 30px; pointer-events: none; }
-  #toolBtn .tool-name {
-    font-size: 9px;
-    font-weight: bold;
-    color: #ffd700;
-    margin-top: 1px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-  }
+  #toolBtn .tool-name { font-size: 9px; font-weight: bold; color: #ffd700; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; }
 
   #stamina-bar-mobile { position: absolute; bottom: 175px; left: 30px; width: 130px; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; z-index: 20; pointer-events: none; display: none; }
   #stamina-bar-mobile.show { display: block; }
@@ -217,19 +129,8 @@
   #hud.show { display: block; }
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
-
-  @media (max-width: 700px) {
-    #hud { padding: 12px 16px; font-size: 15px; line-height: 1.7; top: 10px; left: 10px; border-radius: 12px; border-width: 2px; min-width: 170px; }
-    #hud .row { gap: 16px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #hud { padding: 10px 14px; font-size: 14px; line-height: 1.6; top: 8px; left: 8px; min-width: 160px; }
-    #hud .row { gap: 14px; }
-  }
-  @media (max-height: 420px) and (orientation: landscape) {
-    #hud { padding: 8px 12px; font-size: 13px; line-height: 1.5; top: 6px; left: 6px; min-width: 150px; }
-    #hud .row { gap: 12px; }
-  }
+  @media (max-width: 700px) { #hud { padding: 12px 16px; font-size: 15px; line-height: 1.7; top: 10px; left: 10px; border-radius: 12px; border-width: 2px; min-width: 170px; } #hud .row { gap: 16px; } }
+  @media (max-height: 500px) and (orientation: landscape) { #hud { padding: 10px 14px; font-size: 14px; line-height: 1.6; top: 8px; left: 8px; min-width: 160px; } #hud .row { gap: 14px; } }
 
   #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
   #inventory-bar.show { display: block; }
@@ -240,15 +141,7 @@
   #hint.show { display: block; }
   #hint b { color: #ffd700; }
 
-  #mission-panel {
-    position: fixed; top: 15px; right: 65px; z-index: 30;
-    background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95));
-    border: 3px solid #ffd700; border-radius: 16px;
-    padding: 14px 18px; max-width: 320px; min-width: 260px;
-    color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3);
-    display: none; transition: transform 0.3s, opacity 0.3s;
-    pointer-events: none;
-  }
+  #mission-panel { position: fixed; top: 15px; right: 65px; z-index: 30; background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95)); border: 3px solid #ffd700; border-radius: 16px; padding: 14px 18px; max-width: 320px; min-width: 260px; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3); display: none; transition: transform 0.3s, opacity 0.3s; pointer-events: none; }
   #mission-panel.show { display: block; }
   #mission-panel.flash { animation: missionFlash 0.8s; }
   @keyframes missionFlash {
@@ -263,55 +156,26 @@
   #mission-text kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,215,0,0.5); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-weight: bold; color: #ffd700; font-size: 12px; }
   #mission-progress { height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; }
   #mission-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ade80, #7cf05c); transition: width 0.4s; border-radius: 3px; }
-
   @media (max-width: 700px) {
-    #mission-panel {
-      top: 10px; right: 10px; left: auto; bottom: auto;
-      max-width: 62vw; min-width: 200px;
-      padding: 12px 14px; border-width: 3px; border-radius: 14px;
-    }
+    #mission-panel { top: 10px; right: 10px; left: auto; bottom: auto; max-width: 62vw; min-width: 200px; padding: 12px 14px; border-width: 3px; border-radius: 14px; }
     #mission-title { font-size: 12px; margin-bottom: 6px; gap: 5px; letter-spacing: 0.8px; }
     #mission-title .step-badge { width: 20px; height: 20px; font-size: 11px; }
     #mission-text { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
-    #mission-text kbd { font-size: 12px; padding: 1px 4px; }
     #mission-progress { height: 5px; }
   }
   @media (max-height: 500px) and (orientation: landscape) {
     #mission-panel { top: 10px; right: 10px; max-width: 300px; min-width: 200px; padding: 10px 12px; border-width: 2px; border-radius: 12px; }
     #mission-title { font-size: 11px; margin-bottom: 5px; }
-    #mission-title .step-badge { width: 18px; height: 18px; font-size: 10px; }
     #mission-text { font-size: 13px; margin-bottom: 6px; line-height: 1.35; }
-    #mission-text kbd { font-size: 11px; }
     #mission-progress { height: 4px; }
   }
 
-  #mission-complete {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
-    z-index: 850; pointer-events: none; opacity: 0;
-    background: linear-gradient(135deg, rgba(74,222,128,0.95), rgba(34,197,94,0.95));
-    border: 4px solid #4ade80; border-radius: 20px;
-    padding: 25px 40px; text-align: center; color: #fff;
-    box-shadow: 0 0 60px rgba(74,222,128,0.8);
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
-    max-width: 90vw;
-  }
+  #mission-complete { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); z-index: 850; pointer-events: none; opacity: 0; background: linear-gradient(135deg, rgba(74,222,128,0.95), rgba(34,197,94,0.95)); border: 4px solid #4ade80; border-radius: 20px; padding: 25px 40px; text-align: center; color: #fff; box-shadow: 0 0 60px rgba(74,222,128,0.8); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; max-width: 90vw; }
   #mission-complete.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   #mission-complete .icon { font-size: 50px; margin-bottom: 10px; }
   #mission-complete .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
   #mission-complete .desc { font-size: 14px; opacity: 0.9; }
-
-  @media (max-width: 700px) {
-    #mission-complete { padding: 20px 26px; }
-    #mission-complete .icon { font-size: 40px; }
-    #mission-complete .title { font-size: 17px; }
-    #mission-complete .desc { font-size: 12px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #mission-complete { padding: 16px 22px; }
-    #mission-complete .icon { font-size: 34px; margin-bottom: 6px; }
-    #mission-complete .title { font-size: 14px; }
-    #mission-complete .desc { font-size: 11px; }
-  }
+  @media (max-width: 700px) { #mission-complete { padding: 20px 26px; } #mission-complete .icon { font-size: 40px; } #mission-complete .title { font-size: 17px; } #mission-complete .desc { font-size: 12px; } }
 
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
@@ -332,7 +196,6 @@
   .shop-item button:disabled { background: #333; color: #666; cursor: not-allowed; }
   .shop-item button .price { display: block; color: #ffd700; font-size: 11px; margin-top: 2px; }
   #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; position: sticky; bottom: 0; }
-
   @media (max-width: 700px) {
     #shop-window { padding: 14px; border-radius: 14px; border-width: 3px; }
     #shop-window h2 { font-size: 18px; margin-bottom: 6px; }
@@ -347,7 +210,6 @@
     #shop-close { padding: 10px 28px; font-size: 14px; }
   }
   @media (max-height: 500px) and (orientation: landscape) {
-    #shop-menu { padding: 8px; }
     #shop-window { padding: 10px 14px; border-radius: 12px; border-width: 2px; max-width: 90vw; max-height: calc(100vh - 16px); }
     #shop-window h2 { font-size: 15px; margin-bottom: 4px; }
     .money-row { font-size: 11px; margin-bottom: 6px; }
@@ -361,25 +223,335 @@
     #shop-close { padding: 8px 24px; font-size: 12px; margin-top: 10px; }
   }
 
+  /* 🏆 ОКНО ПОБЕДЫ — УВЕЛИЧЕНО НА ТЕЛЕФОНЕ */
   #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
   #message.show { display: flex; }
   #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; max-height: calc(100vh - 40px); overflow-y: auto; }
   #message-box h1 { color: #ffd700; font-size: 32px; margin-bottom: 20px; }
   #message-box p { font-size: 17px; margin: 10px 0; }
-  #message-box button { margin-top: 25px; padding: 14px 40px; background: #ffd700; color: #000; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+  #message-box .btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
+  #message-box button { padding: 14px 40px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+  #msg-end-btn { background: linear-gradient(180deg, #4a8f3a, #2d5a23); color: #fff; border: 3px solid #7cf05c !important; box-shadow: 0 0 20px rgba(124,240,92,0.5); }
+  #msg-end-btn:hover { background: linear-gradient(180deg, #5fa84a, #3a6d2e); }
+  #msg-replay-btn { background: #ffd700; color: #000; }
 
   @media (max-width: 700px) {
-    #message-box { padding: 25px 20px; border-radius: 18px; border-width: 3px; }
-    #message-box h1 { font-size: 22px; margin-bottom: 14px; }
-    #message-box p { font-size: 14px; }
-    #message-box button { padding: 12px 30px; font-size: 14px; }
+    #message { padding: 14px; }
+    #message-box { padding: 34px 26px; border-radius: 22px; border-width: 4px; max-width: 96vw; }
+    #message-box h1 { font-size: 26px; margin-bottom: 18px; }
+    #message-box p { font-size: 16px; margin: 12px 0; }
+    #message-box button { padding: 16px 32px; font-size: 16px; border-radius: 14px; }
+    #message-box .btn-row { gap: 12px; margin-top: 24px; }
   }
   @media (max-height: 500px) and (orientation: landscape) {
     #message-box { padding: 16px 25px; border-radius: 14px; border-width: 2px; }
     #message-box h1 { font-size: 18px; margin-bottom: 8px; }
     #message-box p { font-size: 12px; margin: 5px 0; }
-    #message-box button { margin-top: 12px; padding: 9px 24px; font-size: 12px; border-radius: 8px; }
+    #message-box button { padding: 9px 24px; font-size: 13px; border-radius: 8px; }
   }
+
+  /* 🎬 КОНЦОВКА — слайд-шоу */
+  #ending-screen {
+    position: fixed; inset: 0; z-index: 1200;
+    background: #000;
+    display: none;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  #ending-screen.show { display: flex; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    padding: 20px;
+    text-align: center;
+  }
+  .slide.active {
+    display: flex;
+    opacity: 1;
+    animation: slideIn 0.8s ease;
+  }
+  @keyframes slideIn {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .slide-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    filter: brightness(0.55);
+    z-index: 0;
+  }
+  .slide-content {
+    position: relative; z-index: 1;
+    max-width: 900px;
+    padding: 30px 40px;
+    background: rgba(0,0,0,0.45);
+    border-radius: 24px;
+    border: 3px solid rgba(255,215,0,0.5);
+    backdrop-filter: blur(4px);
+  }
+  .slide-emoji { font-size: 110px; margin-bottom: 20px; display: block; animation: floatEmoji 3s ease-in-out infinite; }
+  @keyframes floatEmoji {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+  .slide-title { font-size: 34px; font-weight: bold; color: #ffd700; margin-bottom: 16px; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
+  .slide-text { font-size: 18px; line-height: 1.7; color: #f0e0c0; }
+  .slide-num {
+    position: absolute; bottom: 30px; right: 30px;
+    color: rgba(255,215,0,0.6); font-size: 16px; font-weight: bold;
+    z-index: 2;
+  }
+  @media (max-width: 700px) {
+    .slide-content { padding: 22px 20px; border-radius: 18px; }
+    .slide-emoji { font-size: 78px; margin-bottom: 14px; }
+    .slide-title { font-size: 24px; margin-bottom: 12px; }
+    .slide-text { font-size: 15px; line-height: 1.6; }
+    .slide-num { bottom: 14px; right: 14px; font-size: 13px; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    .slide-content { padding: 14px 22px; border-radius: 14px; max-width: 640px; }
+    .slide-emoji { font-size: 56px; margin-bottom: 8px; }
+    .slide-title { font-size: 20px; margin-bottom: 8px; }
+    .slide-text { font-size: 13px; line-height: 1.45; }
+    .slide-num { bottom: 10px; right: 10px; font-size: 12px; }
+  }
+
+  /* 🕺 Финальная сцена с танцором */
+  #final-scene {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #2a1a05 0%, #000 70%);
+    text-align: center;
+    padding: 20px;
+    z-index: 3;
+  }
+  #final-scene.active { display: flex; animation: slideIn 1s ease; }
+
+  .dancer-stage {
+    position: relative;
+    width: 280px; height: 380px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dancer {
+    position: relative;
+    width: 100px;
+    height: 200px;
+    animation: dancerBounce 0.6s ease-in-out infinite;
+    transform-origin: bottom center;
+  }
+  @keyframes dancerBounce {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+  .dancer-head {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffd9a8, #e8b070);
+    border: 3px solid #8a5020;
+    z-index: 3;
+  }
+  .dancer-head::before, .dancer-head::after {
+    content: '';
+    position: absolute;
+    top: 22px;
+    width: 8px; height: 8px;
+    background: #2a1005;
+    border-radius: 50%;
+  }
+  .dancer-head::before { left: 14px; }
+  .dancer-head::after { right: 14px; }
+  .dancer-smile {
+    position: absolute;
+    top: 38px; left: 50%;
+    transform: translateX(-50%);
+    width: 24px; height: 12px;
+    border: 3px solid #2a1005;
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+  }
+  .dancer-body {
+    position: absolute;
+    top: 60px; left: 50%;
+    transform: translateX(-50%);
+    width: 66px; height: 82px;
+    border-radius: 16px 16px 10px 10px;
+    background: linear-gradient(180deg, #ff5050, #cc2020);
+    border: 3px solid #8a1010;
+    z-index: 2;
+  }
+  .dancer-arm {
+    position: absolute;
+    top: 66px;
+    width: 16px; height: 60px;
+    background: linear-gradient(180deg, #ffd9a8, #e8b070);
+    border: 3px solid #8a5020;
+    border-radius: 8px;
+    transform-origin: top center;
+    z-index: 1;
+  }
+  .dancer-arm.left {
+    left: 8px;
+    animation: armWaveLeft 0.5s ease-in-out infinite alternate;
+  }
+  .dancer-arm.right {
+    right: 8px;
+    animation: armWaveRight 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes armWaveLeft {
+    0% { transform: rotate(30deg); }
+    100% { transform: rotate(-40deg); }
+  }
+  @keyframes armWaveRight {
+    0% { transform: rotate(-30deg); }
+    100% { transform: rotate(40deg); }
+  }
+  .dancer-leg {
+    position: absolute;
+    top: 138px;
+    width: 20px; height: 60px;
+    background: linear-gradient(180deg, #4060a0, #204080);
+    border: 3px solid #102040;
+    border-radius: 6px;
+    transform-origin: top center;
+    z-index: 1;
+  }
+  .dancer-leg.left {
+    left: 22px;
+    animation: legKickLeft 0.5s ease-in-out infinite alternate;
+  }
+  .dancer-leg.right {
+    right: 22px;
+    animation: legKickRight 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes legKickLeft {
+    0% { transform: rotate(-12deg); }
+    100% { transform: rotate(12deg); }
+  }
+  @keyframes legKickRight {
+    0% { transform: rotate(12deg); }
+    100% { transform: rotate(-12deg); }
+  }
+
+  .dancer-shadow {
+    position: absolute;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 20px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.7), transparent 70%);
+    border-radius: 50%;
+    animation: shadowPulse 0.6s ease-in-out infinite;
+  }
+  @keyframes shadowPulse {
+    0%,100% { transform: translateX(-50%) scaleX(1); opacity: 0.7; }
+    50% { transform: translateX(-50%) scaleX(0.85); opacity: 0.5; }
+  }
+
+  .music-notes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .note {
+    position: absolute;
+    font-size: 28px;
+    opacity: 0;
+    animation: noteFloat 4s ease-out infinite;
+  }
+  @keyframes noteFloat {
+    0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.5); }
+    15% { opacity: 1; transform: translateY(-30px) rotate(15deg) scale(1); }
+    100% { opacity: 0; transform: translateY(-250px) rotate(-30deg) scale(0.7); }
+  }
+  .note:nth-child(1) { left: 20%; bottom: 40%; animation-delay: 0s; }
+  .note:nth-child(2) { left: 50%; bottom: 30%; animation-delay: 0.8s; }
+  .note:nth-child(3) { left: 75%; bottom: 45%; animation-delay: 1.6s; }
+  .note:nth-child(4) { left: 35%; bottom: 50%; animation-delay: 2.4s; }
+  .note:nth-child(5) { left: 65%; bottom: 35%; animation-delay: 3.2s; }
+
+  #final-title {
+    color: #ffd700;
+    font-size: 38px;
+    font-weight: bold;
+    text-shadow: 0 0 30px rgba(255,215,0,0.8);
+    margin-bottom: 10px;
+    z-index: 2;
+    position: relative;
+    animation: titleGlow 2s ease-in-out infinite;
+  }
+  @keyframes titleGlow {
+    0%,100% { text-shadow: 0 0 30px rgba(255,215,0,0.8); }
+    50% { text-shadow: 0 0 50px rgba(255,215,0,1), 0 0 80px rgba(255,215,0,0.6); }
+  }
+  #final-subtitle {
+    color: #e0d0a0;
+    font-size: 18px;
+    margin-bottom: 30px;
+    z-index: 2;
+    position: relative;
+  }
+  #final-replay-btn {
+    padding: 16px 44px;
+    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
+    border: 3px solid #7cf05c;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 30px rgba(124,240,92,0.6);
+    z-index: 2;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  #final-replay-btn:active { transform: scale(0.95); }
+  #final-replay-btn:hover { background: linear-gradient(180deg, #5fa84a, #3a6d2e); }
+
+  @media (max-width: 700px) {
+    #final-title { font-size: 28px; }
+    #final-subtitle { font-size: 15px; margin-bottom: 22px; }
+    #final-replay-btn { padding: 18px 40px; font-size: 17px; }
+    .dancer-stage { width: 240px; height: 330px; }
+    .dancer { transform: scale(0.9); }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #final-title { font-size: 22px; margin-bottom: 6px; }
+    #final-subtitle { font-size: 13px; margin-bottom: 12px; }
+    #final-replay-btn { padding: 11px 32px; font-size: 14px; }
+    .dancer-stage { width: 200px; height: 240px; margin-bottom: 8px; }
+    .dancer { transform: scale(0.7); }
+  }
+
+  #ending-skip-btn {
+    position: absolute; top: 20px; right: 20px;
+    z-index: 10;
+    padding: 10px 20px;
+    background: rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,215,0,0.6);
+    border-radius: 10px;
+    color: #ffd700;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #ending-skip-btn:hover { background: rgba(0,0,0,0.85); }
+  @media (max-width: 700px) { #ending-skip-btn { padding: 8px 14px; font-size: 12px; top: 12px; right: 12px; } }
 
   #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
   #click-to-play.show { display: flex; }
@@ -404,36 +576,19 @@
   #phone-text { font-size: 15px; line-height: 1.6; color: #e0e0e0; margin-bottom: 30px; min-height: 60px; }
   #phone-buttons { display: flex; gap: 12px; }
   #phone-answer { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #22c55e, #16a34a); border: 3px solid #4ade80; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(74,222,128,0.6); }
-  #phone-answer:hover { background: linear-gradient(180deg, #4ade80, #22c55e); }
   #phone-decline { padding: 14px 20px; background: linear-gradient(180deg, #dc2626, #991b1b); border: 3px solid #ef4444; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
-  #phone-decline:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
   #phone-bubble { position: fixed; top: 80px; right: 20px; background: #2a3a2a; border: 2px solid #4ade80; border-radius: 18px 18px 18px 4px; padding: 16px 20px; max-width: 320px; color: #fff; font-size: 14px; line-height: 1.5; z-index: 950; display: none; box-shadow: 0 8px 32px rgba(0,0,0,0.6); animation: bubbleIn 0.4s ease-out; }
   #phone-bubble.show { display: block; }
   @keyframes bubbleIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
   #phone-bubble::before { content: '📞'; position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 24px; }
-
   @media (max-width: 700px) {
-    #phone-call { padding: 12px; }
     #phone-call-box { padding: 22px 18px; border-radius: 20px; border-width: 3px; }
     #phone-icon { font-size: 50px; margin-bottom: 12px; }
     #phone-caller { font-size: 16px; margin-bottom: 5px; }
     #phone-number { font-size: 12px; margin-bottom: 15px; letter-spacing: 1px; }
     #phone-text { font-size: 12px; margin-bottom: 18px; min-height: 45px; line-height: 1.4; }
     #phone-answer, #phone-decline { padding: 11px 12px; font-size: 13px; border-width: 2px; }
-    #phone-buttons { gap: 8px; }
-    #phone-bubble { top: 55px; right: 8px; max-width: 72vw; font-size: 11px; padding: 10px 14px; border-radius: 14px 14px 14px 4px; }
-    #phone-bubble::before { left: -28px; font-size: 18px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #phone-call { padding: 8px; }
-    #phone-call-box { padding: 14px 22px; border-radius: 16px; border-width: 2px; max-height: calc(100vh - 16px); max-width: 520px; }
-    #phone-icon { font-size: 36px; margin-bottom: 6px; }
-    #phone-caller { font-size: 14px; margin-bottom: 3px; }
-    #phone-number { font-size: 11px; margin-bottom: 10px; letter-spacing: 1px; }
-    #phone-text { font-size: 11px; margin-bottom: 12px; min-height: 32px; line-height: 1.35; }
-    #phone-answer, #phone-decline { padding: 8px 12px; font-size: 11px; border-width: 2px; }
-    #phone-buttons { gap: 8px; }
-    #phone-bubble { top: 50px; right: 6px; font-size: 10px; padding: 8px 12px; max-width: 60vw; }
+    #phone-bubble { top: 55px; right: 8px; max-width: 72vw; font-size: 11px; padding: 10px 14px; }
   }
 
   #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
@@ -445,33 +600,12 @@
   .admin-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .admin-row label { flex: 1; font-size: 13px; color: #ccc; }
   .admin-row input { width: 100px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid #ff00ff; border-radius: 6px; color: #fff; font-size: 14px; font-family: monospace; }
-  .admin-row input:focus { outline: none; box-shadow: 0 0 10px #ff00ff; }
-  .admin-btn { padding: 8px 14px; background: linear-gradient(180deg, #ff00ff, #aa00aa); border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-  .admin-btn:hover { background: linear-gradient(180deg, #ff44ff, #dd00dd); box-shadow: 0 0 15px #ff00ff; }
+  .admin-btn { padding: 8px 14px; background: linear-gradient(180deg, #ff00ff, #aa00aa); border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
   .admin-btn.danger { background: linear-gradient(180deg, #ff3333, #aa0000); }
-  .admin-btn.danger:hover { background: linear-gradient(180deg, #ff5555, #dd0000); }
   #admin-close { display: block; margin: 0 auto; padding: 10px 30px; background: linear-gradient(180deg, #666, #333); border: 2px solid #ff00ff; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
-  #admin-close:hover { background: linear-gradient(180deg, #888, #555); }
   .admin-hint { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
 
-  @media (max-height: 500px) and (orientation: landscape) {
-    #admin-box { padding: 14px 18px; border-radius: 14px; border-width: 2px; }
-    #admin-box h2 { font-size: 16px; margin-bottom: 10px; }
-    .admin-section { margin-bottom: 10px; padding-bottom: 8px; }
-    .admin-section h3 { font-size: 11px; margin-bottom: 6px; }
-    .admin-row { margin-bottom: 5px; gap: 6px; }
-    .admin-row label { font-size: 11px; }
-    .admin-row input { width: 80px; padding: 4px 8px; font-size: 12px; }
-    .admin-btn { padding: 5px 10px; font-size: 11px; }
-    #admin-close { padding: 7px 22px; font-size: 12px; }
-    .admin-hint { font-size: 9px; margin-top: 6px; }
-  }
-
-  @media (max-width: 900px), (pointer: coarse) {
-    #pcHint { display: none !important; }
-    #hint { display: none !important; }
-  }
-
+  @media (max-width: 900px), (pointer: coarse) { #pcHint { display: none !important; } #hint { display: none !important; } }
   @media (max-width: 700px) {
     #moveJoystick { width: 110px; height: 110px; bottom: 20px; left: 20px; }
     #moveKnob { width: 48px; height: 48px; }
@@ -486,7 +620,6 @@
     #inventory-text { font-size: 12px; line-height: 18px; }
     #cooldown { bottom: 120px; width: 200px; }
   }
-
   @media (max-height: 420px) and (orientation: landscape) {
     #moveJoystick { width: 95px; height: 95px; bottom: 12px; left: 12px; }
     #moveKnob { width: 42px; height: 42px; }
@@ -496,10 +629,6 @@
     #toolBtn { width: 58px; height: 58px; bottom: 152px; right: 12px; }
     #toolBtn .tool-emoji { font-size: 22px; }
     #toolBtn .tool-name { font-size: 7px; }
-    #stamina-bar-mobile { bottom: 118px; left: 12px; width: 95px; height: 5px; }
-    #inventory-bar { bottom: 78px; height: 20px; }
-    #inventory-text { font-size: 11px; line-height: 16px; }
-    #cooldown { bottom: 100px; width: 170px; }
   }
 
   #start-game-btn > div:first-child { font-size: 42px; padding: 0 15px; }
@@ -507,11 +636,6 @@
     #start-game-btn > div:first-child { font-size: 26px; margin-bottom: 12px; }
     #start-game-btn > div:nth-child(2) { font-size: 13px; margin-bottom: 22px; }
     #start-game-btn-inner { padding: 14px 36px !important; font-size: 16px !important; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #start-game-btn > div:first-child { font-size: 22px; margin-bottom: 8px; }
-    #start-game-btn > div:nth-child(2) { font-size: 12px; margin-bottom: 14px; }
-    #start-game-btn-inner { padding: 11px 30px !important; font-size: 14px !important; }
   }
 </style>
 </head>
@@ -606,24 +730,16 @@
     <div class="shop-item"><div class="info"><div class="name">💪 Скорость сбора</div><div class="desc">Меньше кулдаун</div><div class="lvl">Ур: <b id="gatherLvl">1</b></div></div><button id="buyGather">Купить<span class="price" id="gatherPrice">300₽</span></button></div>
     <div class="shop-item"><div class="info"><div class="name">🎒 Инвентарь</div><div class="desc">Больше сена</div><div class="lvl">Ур: <b id="invLvl">1</b></div></div><button id="buyInv">Купить<span class="price" id="invPrice">500₽</span></button></div>
     <div class="shop-item"><div class="info"><div class="name">🔍 Удача</div><div class="desc">Шанс иголки</div><div class="lvl">Ур: <b id="luckLvl">1</b></div></div><button id="buyLuck">Купить<span class="price" id="luckPrice">1000₽</span></button></div>
-    <div class="shop-item" style="border-color: rgba(139,90,43,0.5);">
-      <div class="info"><div class="name">🗡️ Вилы</div><div class="desc">+5 сена к сбору</div><div class="lvl">Разово</div></div>
-      <button id="buyFork">Купить<span class="price" id="forkPrice">5000₽</span></button>
-    </div>
-    <div class="shop-item" style="border-color: rgba(255,100,0,0.5);">
-      <div class="info"><div class="name">💥 Динамит</div><div class="desc">+15 сена к сбору</div><div class="lvl">Разово</div></div>
-      <button id="buyDynamite">Купить<span class="price" id="dynamitePrice">12000₽</span></button>
-    </div>
-    <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
-      <div class="info"><div class="name">🌀 Пылесос</div><div class="desc">Автосбор рядом со стогом</div><div class="lvl">Разово</div></div>
-      <button id="buyVacuum">Купить<span class="price" id="vacuumPrice">25000₽</span></button>
-    </div>
+    <div class="shop-item" style="border-color: rgba(139,90,43,0.5);"><div class="info"><div class="name">🗡️ Вилы</div><div class="desc">+5 сена к сбору</div><div class="lvl">Разово</div></div><button id="buyFork">Купить<span class="price" id="forkPrice">5000₽</span></button></div>
+    <div class="shop-item" style="border-color: rgba(255,100,0,0.5);"><div class="info"><div class="name">💥 Динамит</div><div class="desc">+15 сена к сбору</div><div class="lvl">Разово</div></div><button id="buyDynamite">Купить<span class="price" id="dynamitePrice">12000₽</span></button></div>
+    <div class="shop-item" style="border-color: rgba(100,200,255,0.5);"><div class="info"><div class="name">🌀 Пылесос</div><div class="desc">Автосбор рядом со стогом</div><div class="lvl">Разово</div></div><button id="buyVacuum">Купить<span class="price" id="vacuumPrice">25000₽</span></button></div>
     <div class="shop-item" style="border-color: rgba(150,100,255,0.5);"><div class="info"><div class="name">⚙️ Автосборщик</div><div class="desc">Сам собирает</div><div class="lvl">Ур: <b id="autoGatherLvl">0</b></div></div><button id="buyAutoGather">Купить<span class="price" id="autoGatherPrice">1500₽</span></button></div>
 
     <button id="shop-close">Закрыть</button>
   </div>
 </div>
 
+<!-- 🏆 ОКНО ПОБЕДЫ -->
 <div id="message">
   <div id="message-box">
     <h1>🎉 ПОБЕДА! 🎉</h1>
@@ -631,7 +747,95 @@
     <p>💰 Заработано: <b id="final-money">0</b>₽</p>
     <p>🥛 Молока: <b id="final-milk">0</b> л</p>
     <p>🌾 Сена: <b id="final-hay">0</b></p>
-    <button onclick="location.reload()">Играть снова</button>
+    <div class="btn-row">
+      <button id="msg-end-btn">🎬 Смотреть концовку</button>
+      <button id="msg-replay-btn" onclick="location.reload()">🔄 Играть снова</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🎬 КОНЦОВКА -->
+<div id="ending-screen">
+  <button id="ending-skip-btn">Пропустить ▶▶</button>
+
+  <!-- Слайд 1: Дом -->
+  <div class="slide" data-slide="0">
+    <div class="slide-bg" style="background: linear-gradient(135deg, #6a4a2a, #3a2510);"></div>
+    <div class="slide-content">
+      <span class="slide-emoji">🏡</span>
+      <div class="slide-title">Новый дом</div>
+      <div class="slide-text">На заработанные деньги ты построил крепкий дом.<br>Теперь у тебя есть своё тёплое гнёздышко!</div>
+    </div>
+    <div class="slide-num">1 / 5</div>
+  </div>
+
+  <!-- Слайд 2: Семья -->
+  <div class="slide" data-slide="1">
+    <div class="slide-bg" style="background: linear-gradient(135deg, #6a2a4a, #3a1025);"></div>
+    <div class="slide-content">
+      <span class="slide-emoji">💑</span>
+      <div class="slide-title">Любовь всей жизни</div>
+      <div class="slide-text">Ты встретил человека, с которым захотел провести всю жизнь.<br>Вы поженились и стали семьёй!</div>
+    </div>
+    <div class="slide-num">2 / 5</div>
+  </div>
+
+  <!-- Слайд 3: Дети -->
+  <div class="slide" data-slide="2">
+    <div class="slide-bg" style="background: linear-gradient(135deg, #2a6a4a, #103a25);"></div>
+    <div class="slide-content">
+      <span class="slide-emoji">👨‍👩‍👧‍👦</span>
+      <div class="slide-title">Большая семья</div>
+      <div class="slide-text">У вас родились дети.<br>Дом наполнился смехом, играми и теплом!</div>
+    </div>
+    <div class="slide-num">3 / 5</div>
+  </div>
+
+  <!-- Слайд 4: Достаток -->
+  <div class="slide" data-slide="3">
+    <div class="slide-bg" style="background: linear-gradient(135deg, #6a6a2a, #3a3a10);"></div>
+    <div class="slide-content">
+      <span class="slide-emoji">🌾🐄💰</span>
+      <div class="slide-title">Богатая ферма</div>
+      <div class="slide-text">Твоя ферма расцвела: поля колосятся,<br>коровы дают молоко, амбары полны!</div>
+    </div>
+    <div class="slide-num">4 / 5</div>
+  </div>
+
+  <!-- Слайд 5: Счастье -->
+  <div class="slide" data-slide="4">
+    <div class="slide-bg" style="background: linear-gradient(135deg, #4a2a6a, #25103a);"></div>
+    <div class="slide-content">
+      <span class="slide-emoji">🌅✨</span>
+      <div class="slide-title">Счастье</div>
+      <div class="slide-text">Каждый вечер ты смотришь на закат и понимаешь:<br>жизнь удалась!</div>
+    </div>
+    <div class="slide-num">5 / 5</div>
+  </div>
+
+  <!-- 🕺 Финальная сцена с танцором -->
+  <div id="final-scene">
+    <div class="music-notes">
+      <span class="note">🎵</span>
+      <span class="note">🎶</span>
+      <span class="note">🎵</span>
+      <span class="note">🎶</span>
+      <span class="note">🎵</span>
+    </div>
+    <div class="dancer-stage">
+      <div class="dancer">
+        <div class="dancer-head"><div class="dancer-smile"></div></div>
+        <div class="dancer-body"></div>
+        <div class="dancer-arm left"></div>
+        <div class="dancer-arm right"></div>
+        <div class="dancer-leg left"></div>
+        <div class="dancer-leg right"></div>
+      </div>
+      <div class="dancer-shadow"></div>
+    </div>
+    <div id="final-title">🎉 Ты победил! 🎉</div>
+    <div id="final-subtitle">Спасибо за игру, товарищ!</div>
+    <button id="final-replay-btn">🔄 Играть снова</button>
   </div>
 </div>
 
@@ -700,6 +904,112 @@ if (typeof THREE === 'undefined') {
 }
 
 // ============================================
+// 🎬 КОНЦОВКА — слайд-шоу (5 слайдов по 10 секунд)
+// ============================================
+var SLIDE_DURATION = 10000; // 10 секунд на слайд
+var endingMusic = new Audio('5.mp3');
+endingMusic.loop = true;
+endingMusic.volume = 0.7;
+
+var endingActive = false;
+var endingTimers = [];
+var currentSlide = 0;
+
+function startEnding() {
+  if (endingActive) return;
+  endingActive = true;
+
+  // Скрываем окно победы
+  document.getElementById('message').classList.remove('show');
+
+  // Показываем экран концовки
+  var screen = document.getElementById('ending-screen');
+  screen.classList.add('show');
+
+  // Останавливаем рингтон если играет
+  if (phoneRingtone) { try { phoneRingtone.pause(); } catch(e) {} }
+
+  // Запускаем музыку
+  endingMusic.currentTime = 0;
+  endingMusic.play().catch(function(e) {
+    console.log('Музыка концовки не запустилась:', e);
+  });
+
+  // Показываем первый слайд
+  currentSlide = 0;
+  showSlide(0);
+
+  // Запускаем таймеры на переключение слайдов
+  scheduleSlides();
+}
+
+function showSlide(index) {
+  var slides = document.querySelectorAll('.slide');
+  for (var i = 0; i < slides.length; i++) {
+    if (i === index) slides[i].classList.add('active');
+    else slides[i].classList.remove('active');
+  }
+  // Скрываем финальную сцену
+  document.getElementById('final-scene').classList.remove('active');
+}
+
+function scheduleSlides() {
+  var slides = document.querySelectorAll('.slide');
+  var totalSlides = slides.length;
+
+  for (var i = 0; i < totalSlides; i++) {
+    (function(idx) {
+      var t = setTimeout(function() {
+        if (!endingActive) return;
+        if (idx + 1 < totalSlides) {
+          showSlide(idx + 1);
+        } else {
+          // После последнего слайда — финальная сцена с танцором
+          showFinalScene();
+        }
+      }, SLIDE_DURATION * (idx + 1));
+      endingTimers.push(t);
+    })(i);
+  }
+}
+
+function showFinalScene() {
+  var slides = document.querySelectorAll('.slide');
+  for (var i = 0; i < slides.length; i++) slides[i].classList.remove('active');
+  document.getElementById('final-scene').classList.add('active');
+}
+
+function stopEnding() {
+  endingActive = false;
+  endingTimers.forEach(function(t) { clearTimeout(t); });
+  endingTimers = [];
+  try {
+    endingMusic.pause();
+    endingMusic.currentTime = 0;
+  } catch(e) {}
+  document.getElementById('ending-screen').classList.remove('show');
+}
+
+// Кнопка «Смотреть концовку» в окне победы
+document.getElementById('msg-end-btn').addEventListener('click', function() {
+  startEnding();
+});
+
+// Кнопка «Пропустить» в концовке
+document.getElementById('ending-skip-btn').addEventListener('click', function() {
+  // Переходим сразу к финальной сцене
+  endingTimers.forEach(function(t) { clearTimeout(t); });
+  endingTimers = [];
+  showFinalScene();
+});
+
+// Кнопка «Играть снова» в финальной сцене
+document.getElementById('final-replay-btn').addEventListener('click', function() {
+  try { endingMusic.pause(); } catch(e) {}
+  location.reload();
+});
+
+// ============================================
 // 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ
 // ============================================
 var fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -710,13 +1020,8 @@ function isFullscreen() {
 }
 
 function updateFullscreenBtn() {
-  if (isFullscreen()) {
-    fullscreenBtn.textContent = '✕';
-    fullscreenBtn.title = 'Выйти из полного экрана';
-  } else {
-    fullscreenBtn.textContent = '⛶';
-    fullscreenBtn.title = 'Полный экран';
-  }
+  fullscreenBtn.textContent = isFullscreen() ? '✕' : '⛶';
+  fullscreenBtn.title = isFullscreen() ? 'Выйти из полного экрана' : 'Полный экран';
 }
 
 function toggleFullscreen() {
@@ -726,17 +1031,12 @@ function toggleFullscreen() {
               el.mozRequestFullScreen || el.msRequestFullscreen;
     if (req) {
       var result = req.call(el);
-      if (result && result.catch) {
-        result.catch(function(e) { console.log('Fullscreen error:', e); fallbackFullscreen(); });
-      }
-    } else { fallbackFullscreen(); }
+      if (result && result.catch) result.catch(function() { fallbackFullscreen(); });
+    } else fallbackFullscreen();
   } else {
     var exit = document.exitFullscreen || document.webkitExitFullscreen ||
                document.mozCancelFullScreen || document.msExitFullscreen;
-    if (exit) {
-      var r = exit.call(document);
-      if (r && r.catch) r.catch(function(e) { console.log(e); });
-    }
+    if (exit) { var r = exit.call(document); if (r && r.catch) r.catch(function(){}); }
   }
 }
 
@@ -1063,9 +1363,7 @@ function completeMission() {
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x5aa8e0);
 scene.fog = new THREE.Fog(0x5aa8e0, 45, 150);
-
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 300);
-
 var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -1089,25 +1387,19 @@ scene.add(new THREE.Mesh(skyGeo, skyMat));
 
 var hemiLight = new THREE.HemisphereLight(0x9dc8ff, 0x6a8a3a, 0.5);
 scene.add(hemiLight);
-
 var sun = new THREE.DirectionalLight(0xffe0a8, 0.85);
 sun.position.set(40, 60, 30);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -50;
-sun.shadow.camera.right = 50;
-sun.shadow.camera.top = 50;
-sun.shadow.camera.bottom = -50;
+sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
 sun.shadow.camera.far = 180;
-sun.shadow.bias = -0.0005;
-sun.shadow.normalBias = 0.02;
+sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
 scene.add(sun);
 scene.add(sun.target);
-
 var fillLight = new THREE.DirectionalLight(0x88b8ff, 0.2);
 fillLight.position.set(-30, 20, -30);
 scene.add(fillLight);
-
 var bounceLight = new THREE.DirectionalLight(0xffc880, 0.15);
 bounceLight.position.set(0, -10, 0);
 scene.add(bounceLight);
@@ -1145,8 +1437,7 @@ function makeGrassTexture(size) {
     var col2 = 'rgba('+Math.floor(90*g2)+','+Math.floor(220*g2)+','+Math.floor(40*g2)+','+(0.5+Math.random()*0.5)+')';
     var lw = 0.7 + Math.random()*1.0;
     drawWrapped(function(ox,oy) {
-      ctx.strokeStyle = col2;
-      ctx.lineWidth = lw;
+      ctx.strokeStyle = col2; ctx.lineWidth = lw;
       ctx.beginPath();
       ctx.moveTo(tx+ox, ty+oy);
       ctx.lineTo(tx+ox+dx, ty+oy+dy);
@@ -1155,8 +1446,7 @@ function makeGrassTexture(size) {
   })();
   var tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(30, 30);
-  tex.anisotropy = 8;
+  tex.repeat.set(30, 30); tex.anisotropy = 8;
   return tex;
 }
 
@@ -1176,16 +1466,13 @@ function buildHayTextures() {
   colorC.width = colorC.height = bumpC.width = bumpC.height = S;
   var cc = colorC.getContext('2d');
   var bc = bumpC.getContext('2d');
-  cc.fillStyle = '#d4a020';
-  cc.fillRect(0, 0, S, S);
-  bc.fillStyle = '#808080';
-  bc.fillRect(0, 0, S, S);
+  cc.fillStyle = '#d4a020'; cc.fillRect(0, 0, S, S);
+  bc.fillStyle = '#808080'; bc.fillRect(0, 0, S, S);
   var colors = ['#f5c020','#e0a800','#cc9000','#ffd040','#b07800','#e8b820','#ffd860','#906800'];
   function drawWrapped(ctx, x, y, dx, dy, drawFn) {
     for (var ox = -1; ox <= 1; ox++) {
       for (var oy = -1; oy <= 1; oy++) {
-        var px = x + ox * S;
-        var py = y + oy * S;
+        var px = x + ox * S, py = y + oy * S;
         if (px + Math.min(0, dx) > S || px + Math.max(0, dx) < 0 ||
             py + Math.min(0, dy) > S || py + Math.max(0, dy) < 0) continue;
         drawFn(px, py, dx, dy);
@@ -1194,65 +1481,29 @@ function buildHayTextures() {
   }
   for (var i = 0; i < 14000; i++) {
     (function() {
-      var x = Math.random() * S;
-      var y = Math.random() * S;
+      var x = Math.random() * S, y = Math.random() * S;
       var angle = (Math.random() - 0.5) * Math.PI * 0.9 + (Math.random() < 0.5 ? 0 : Math.PI);
       var len = 6 + Math.random() * 40;
-      var dx = Math.cos(angle) * len;
-      var dy = Math.sin(angle) * len;
+      var dx = Math.cos(angle) * len, dy = Math.sin(angle) * len;
       var col = colors[(Math.random() * colors.length) | 0];
       var cw = 0.6 + Math.random() * 1.6;
       var bv = 100 + Math.random() * 100;
       var bw = 0.6 + Math.random() * 1.6;
       drawWrapped(cc, x, y, dx, dy, function(px, py, pdx, pdy) {
-        cc.strokeStyle = col;
-        cc.lineWidth = cw;
-        cc.lineCap = 'round';
-        cc.beginPath();
-        cc.moveTo(px, py);
-        cc.lineTo(px + pdx, py + pdy);
-        cc.stroke();
+        cc.strokeStyle = col; cc.lineWidth = cw; cc.lineCap = 'round';
+        cc.beginPath(); cc.moveTo(px, py); cc.lineTo(px + pdx, py + pdy); cc.stroke();
       });
       drawWrapped(bc, x, y, dx, dy, function(px, py, pdx, pdy) {
         bc.strokeStyle = 'rgb(' + bv + ',' + bv + ',' + bv + ')';
-        bc.lineWidth = bw;
-        bc.lineCap = 'round';
-        bc.beginPath();
-        bc.moveTo(px, py);
-        bc.lineTo(px + pdx, py + pdy);
-        bc.stroke();
+        bc.lineWidth = bw; bc.lineCap = 'round';
+        bc.beginPath(); bc.moveTo(px, py); bc.lineTo(px + pdx, py + pdy); bc.stroke();
       });
-    })();
-  }
-  for (var k = 0; k < 120; k++) {
-    (function() {
-      var x = Math.random() * S;
-      var y = Math.random() * S;
-      var r = 15 + Math.random() * 70;
-      var dark = Math.random() < 0.6;
-      for (var ox = -1; ox <= 1; ox++) {
-        for (var oy = -1; oy <= 1; oy++) {
-          var px = x + ox * S;
-          var py = y + oy * S;
-          if (px + r < 0 || px - r > S || py + r < 0 || py - r > S) continue;
-          var g = cc.createRadialGradient(px, py, 0, px, py, r);
-          g.addColorStop(0, dark ? 'rgba(80,50,10,0.4)' : 'rgba(255,220,100,0.35)');
-          g.addColorStop(1, 'rgba(0,0,0,0)');
-          cc.fillStyle = g;
-          cc.fillRect(px - r, py - r, r * 2, r * 2);
-          var bg = bc.createRadialGradient(px, py, 0, px, py, r);
-          bg.addColorStop(0, dark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)');
-          bg.addColorStop(1, 'rgba(128,128,128,0)');
-          bc.fillStyle = bg;
-          bc.fillRect(px - r, py - r, r * 2, r * 2);
-        }
-      }
     })();
   }
   var imgData = cc.getImageData(0, 0, S, S);
   for (var idx = 0; idx < imgData.data.length; idx += 4) {
     var n = (Math.random() - 0.5) * 20;
-    imgData.data[idx]   = Math.max(0, Math.min(255, imgData.data[idx] + n));
+    imgData.data[idx] = Math.max(0, Math.min(255, imgData.data[idx] + n));
     imgData.data[idx+1] = Math.max(0, Math.min(255, imgData.data[idx+1] + n * 0.9));
     imgData.data[idx+2] = Math.max(0, Math.min(255, imgData.data[idx+2] + n * 0.5));
   }
@@ -1270,19 +1521,13 @@ function buildHayTextures() {
 }
 
 var hayTex = buildHayTextures();
-
 var hayMaterial = new THREE.MeshStandardMaterial({
-  map: hayTex.colorTex,
-  bumpMap: hayTex.bumpTex,
-  bumpScale: 0.35,
-  roughness: 1.0,
-  metalness: 0.0,
-  color: 0xffddaa
+  map: hayTex.colorTex, bumpMap: hayTex.bumpTex, bumpScale: 0.35,
+  roughness: 1.0, metalness: 0.0, color: 0xffddaa
 });
 
 var HAYSTACK_RADIUS = 3.2;
 var HAYSTACK_HEIGHT = 3.4;
-
 var haystackGroup = new THREE.Group();
 haystackGroup.position.set(0, 0, -15);
 scene.add(haystackGroup);
@@ -1290,18 +1535,14 @@ scene.add(haystackGroup);
 var domeGeo = new THREE.SphereGeometry(HAYSTACK_RADIUS, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2);
 domeGeo.scale(1, HAYSTACK_HEIGHT / HAYSTACK_RADIUS, 1);
 domeGeo.computeVertexNormals();
-
 var haystack = new THREE.Mesh(domeGeo, hayMaterial);
-haystack.castShadow = true;
-haystack.receiveShadow = true;
+haystack.castShadow = true; haystack.receiveShadow = true;
 haystackGroup.add(haystack);
 
 var skirtGeo = new THREE.CylinderGeometry(HAYSTACK_RADIUS * 1.02, HAYSTACK_RADIUS * 1.08, 0.3, 64, 1, true);
 var skirt = new THREE.Mesh(skirtGeo, hayMaterial);
-skirt.position.y = 0.15;
-skirt.castShadow = true;
+skirt.position.y = 0.15; skirt.castShadow = true;
 haystackGroup.add(skirt);
-
 addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
 
 var needle = new THREE.Group();
@@ -1321,8 +1562,7 @@ haystackGroup.add(needle);
 function relocateNeedle() {
   var a = Math.random() * Math.PI * 2;
   var r = Math.random() * HAYSTACK_RADIUS * 0.85;
-  var maxY = HAYSTACK_HEIGHT * 0.75;
-  var h = 0.4 + Math.random() * maxY;
+  var h = 0.4 + Math.random() * HAYSTACK_HEIGHT * 0.75;
   needle.position.set(Math.cos(a) * r, h, Math.sin(a) * r);
   needle.rotation.set(Math.random(), Math.random()*Math.PI*2, Math.random());
 }
@@ -1344,8 +1584,7 @@ function makeWoodTexture(size) {
   var c = document.createElement('canvas');
   c.width = c.height = size;
   var ctx = c.getContext('2d');
-  ctx.fillStyle = '#7a4520';
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#7a4520'; ctx.fillRect(0, 0, size, size);
   var plankH = size / 8;
   for (var i = 0; i < 8; i++) {
     var y = i * plankH;
@@ -1375,8 +1614,7 @@ function makeCowTexture(size) {
   var c = document.createElement('canvas');
   c.width = c.height = size;
   var ctx = c.getContext('2d');
-  ctx.fillStyle = '#f8f4ec';
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#f8f4ec'; ctx.fillRect(0, 0, size, size);
   for (var i = 0; i < 20000; i++) {
     var x = Math.random()*size, y = Math.random()*size;
     var v = 240 + Math.random()*15;
@@ -1393,17 +1631,12 @@ function makeCowTexture(size) {
     for (var p = 0; p <= 12; p++) {
       var ang = (p/12)*Math.PI*2;
       var r = radius * (0.75 + Math.random()*0.3);
-      var px = cx + Math.cos(ang)*r;
-      var py = cy + Math.sin(ang)*r;
-      if (p === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      var px = cx + Math.cos(ang)*r, py = cy + Math.sin(ang)*r;
+      if (p === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
     }
-    ctx.closePath();
-    ctx.fill();
+    ctx.closePath(); ctx.fill();
   }
-  drawSpot(100, 120, 80);
-  drawSpot(400, 200, 95);
-  drawSpot(250, 420, 70);
+  drawSpot(100, 120, 80); drawSpot(400, 200, 95); drawSpot(250, 420, 70);
   var tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.anisotropy = 8;
@@ -1415,15 +1648,12 @@ function makeLeavesTexture(size) {
   var c = document.createElement('canvas');
   c.width = c.height = size;
   var ctx = c.getContext('2d');
-  ctx.fillStyle = '#2d4a1c';
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#2d4a1c'; ctx.fillRect(0, 0, size, size);
   for (var i = 0; i < 3000; i++) {
     var x = Math.random()*size, y = Math.random()*size;
     var g = 0.5 + Math.random()*0.7;
     ctx.fillStyle = 'rgba('+Math.floor(70*g)+','+Math.floor(130*g)+','+Math.floor(45*g)+','+(0.5+Math.random()*0.5)+')';
-    ctx.beginPath();
-    ctx.arc(x, y, 3+Math.random()*6, 0, Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y, 3+Math.random()*6, 0, Math.PI*2); ctx.fill();
   }
   var tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -1435,8 +1665,7 @@ function makeBarkTexture(size) {
   var c = document.createElement('canvas');
   c.width = c.height = size;
   var ctx = c.getContext('2d');
-  ctx.fillStyle = '#4a2e18';
-  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#4a2e18'; ctx.fillRect(0, 0, size, size);
   for (var i = 0; i < 400; i++) {
     var x = Math.random()*size;
     var g = 0.7 + Math.random()*0.6;
@@ -1480,29 +1709,25 @@ barn.add(barnFloor);
 
 var backWall = new THREE.Mesh(new THREE.BoxGeometry(BARN_W, BARN_H, WALL_T), woodMat);
 backWall.position.set(0, BARN_H/2, BARN_D/2);
-backWall.castShadow = true;
-backWall.receiveShadow = true;
+backWall.castShadow = true; backWall.receiveShadow = true;
 barn.add(backWall);
 
 [-BARN_W/2, BARN_W/2].forEach(function(x) {
   var sw = new THREE.Mesh(new THREE.BoxGeometry(WALL_T, BARN_H, BARN_D), woodMat);
   sw.position.set(x, BARN_H/2, 0);
-  sw.castShadow = true;
-  sw.receiveShadow = true;
+  sw.castShadow = true; sw.receiveShadow = true;
   barn.add(sw);
 });
 
 var frontWallSide = (BARN_W - DOOR_W * 2 - 0.3) / 2;
 var frontLeft = new THREE.Mesh(new THREE.BoxGeometry(frontWallSide, BARN_H, WALL_T), woodMat);
 frontLeft.position.set(-(DOOR_W + 0.15 + frontWallSide/2), BARN_H/2, -BARN_D/2);
-frontLeft.castShadow = true;
-frontLeft.receiveShadow = true;
+frontLeft.castShadow = true; frontLeft.receiveShadow = true;
 barn.add(frontLeft);
 
 var frontRight = new THREE.Mesh(new THREE.BoxGeometry(frontWallSide, BARN_H, WALL_T), woodMat);
 frontRight.position.set(DOOR_W + 0.15 + frontWallSide/2, BARN_H/2, -BARN_D/2);
-frontRight.castShadow = true;
-frontRight.receiveShadow = true;
+frontRight.castShadow = true; frontRight.receiveShadow = true;
 barn.add(frontRight);
 
 var lintel = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W*2 + 0.3, BARN_H - DOOR_H, WALL_T), woodMat);
@@ -1516,8 +1741,7 @@ leftDoorPivot.position.set(-(DOOR_W + 0.15), 0, -BARN_D/2);
 barn.add(leftDoorPivot);
 var leftDoor = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.18), doorMat);
 leftDoor.position.set(DOOR_W/2, DOOR_H/2, 0);
-leftDoor.castShadow = true;
-leftDoor.receiveShadow = true;
+leftDoor.castShadow = true; leftDoor.receiveShadow = true;
 leftDoorPivot.add(leftDoor);
 leftDoorPivot.rotation.y = DOOR_OPEN_ANGLE;
 
@@ -1526,8 +1750,7 @@ rightDoorPivot.position.set(DOOR_W + 0.15, 0, -BARN_D/2);
 barn.add(rightDoorPivot);
 var rightDoor = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.18), doorMat);
 rightDoor.position.set(-DOOR_W/2, DOOR_H/2, 0);
-rightDoor.castShadow = true;
-rightDoor.receiveShadow = true;
+rightDoor.castShadow = true; rightDoor.receiveShadow = true;
 rightDoorPivot.add(rightDoor);
 rightDoorPivot.rotation.y = -DOOR_OPEN_ANGLE;
 
@@ -1569,19 +1792,16 @@ body.rotation.x = Math.PI / 2;
 body.position.set(0, 1.7, 0);
 body.castShadow = true;
 cow.add(body);
-
 var bodyFront = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 16), cowBodyMat);
 bodyFront.position.set(0, 1.7, 1.1);
 bodyFront.castShadow = true;
 cow.add(bodyFront);
-
 var bodyBack = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 16), cowBodyMat);
 bodyBack.position.set(0, 1.7, -1.1);
 bodyBack.castShadow = true;
 cow.add(bodyBack);
 
-var HEAD_Y = 2.6;
-var HEAD_Z = 1.75;
+var HEAD_Y = 2.6, HEAD_Z = 1.75;
 var head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 22, 18), cowBodyMat);
 head.position.set(0, HEAD_Y, HEAD_Z);
 head.scale.set(1.0, 0.95, 1.1);
@@ -1678,8 +1898,7 @@ function makeTree(x, z) {
   var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, trunkHeight, 10),
     new THREE.MeshStandardMaterial({ map: barkTex, roughness: 1 }));
   trunk.position.y = trunkHeight/2;
-  trunk.castShadow = true;
-  trunk.receiveShadow = true;
+  trunk.castShadow = true; trunk.receiveShadow = true;
   tree.add(trunk);
   var leafMat = new THREE.MeshStandardMaterial({ map: leavesTex, roughness: 1 });
   for (var i = 0; i < 6; i++) {
@@ -1687,8 +1906,7 @@ function makeTree(x, z) {
     var leaf = new THREE.Mesh(new THREE.SphereGeometry(layerSize, 12, 10), leafMat);
     leaf.position.set((Math.random()-0.5)*1.6, trunkHeight - 0.3 + i*0.6 + Math.random()*0.4, (Math.random()-0.5)*1.6);
     leaf.scale.y = 0.85;
-    leaf.castShadow = true;
-    leaf.receiveShadow = true;
+    leaf.castShadow = true; leaf.receiveShadow = true;
     tree.add(leaf);
   }
   var topLeaf = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 10), leafMat);
@@ -1712,8 +1930,7 @@ function makeBush(x, z) {
   );
   bush.position.set(x, 0.6, z);
   bush.scale.y = 0.8;
-  bush.castShadow = true;
-  bush.receiveShadow = true;
+  bush.castShadow = true; bush.receiveShadow = true;
   scene.add(bush);
 }
 for (var b2 = 0; b2 < 30; b2++) {
@@ -1729,23 +1946,20 @@ for (var fi = -40; fi <= 40; fi += 4) {
   [-40, 40].forEach(function(z) {
     var post = new THREE.Mesh(fenceGeo, fenceMat);
     post.position.set(fi, 1, z);
-    post.castShadow = true;
-    post.receiveShadow = true;
+    post.castShadow = true; post.receiveShadow = true;
     scene.add(post);
   });
   [-40, 40].forEach(function(x) {
     var post = new THREE.Mesh(fenceGeo, fenceMat);
     post.position.set(x, 1, fi);
-    post.castShadow = true;
-    post.receiveShadow = true;
+    post.castShadow = true; post.receiveShadow = true;
     scene.add(post);
   });
 }
 
 function makeLabel(text) {
   var canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 128;
+  canvas.width = 512; canvas.height = 128;
   var ctx = canvas.getContext('2d');
   ctx.fillStyle = 'rgba(0,0,0,0.8)';
   ctx.fillRect(0, 0, 512, 128);
@@ -1791,8 +2005,6 @@ var touchLookActive = false;
 var lookTouchId = null;
 var lastTouchX = 0, lastTouchY = 0;
 
-// ✅ ИСПРАВЛЕНО: isUITarget корректно проверяет и сам элемент, и его детей,
-// и сравнивает с fullscreenBtn через ===
 function isUITarget(target) {
   if (!target || !target.nodeType) return false;
   var moveJoystick = document.getElementById('moveJoystick');
@@ -1817,8 +2029,7 @@ lookArea.addEventListener('touchstart', function(e) {
     if (isUITarget(t.target)) continue;
     touchLookActive = true;
     lookTouchId = t.identifier;
-    lastTouchX = t.clientX;
-    lastTouchY = t.clientY;
+    lastTouchX = t.clientX; lastTouchY = t.clientY;
     if (lookHint) lookHint.style.display = 'none';
     break;
   }
@@ -1829,8 +2040,7 @@ lookArea.addEventListener('touchmove', function(e) {
   var touch = null;
   for (var i = 0; i < e.changedTouches.length; i++) {
     if (e.changedTouches[i].identifier === lookTouchId) {
-      touch = e.changedTouches[i];
-      break;
+      touch = e.changedTouches[i]; break;
     }
   }
   if (!touch) return;
@@ -1840,17 +2050,14 @@ lookArea.addEventListener('touchmove', function(e) {
   player.yaw -= dx * TOUCH_SENSITIVITY;
   player.pitch -= dy * TOUCH_SENSITIVITY;
   player.pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, player.pitch));
-  lastTouchX = touch.clientX;
-  lastTouchY = touch.clientY;
+  lastTouchX = touch.clientX; lastTouchY = touch.clientY;
 }, { passive: false });
 
 function endLookTouch(e) {
   if (!touchLookActive || lookTouchId === null) return;
   for (var i = 0; i < e.changedTouches.length; i++) {
     if (e.changedTouches[i].identifier === lookTouchId) {
-      touchLookActive = false;
-      lookTouchId = null;
-      break;
+      touchLookActive = false; lookTouchId = null; break;
     }
   }
 }
@@ -1861,9 +2068,7 @@ var canvasEl = renderer.domElement;
 var pointerLocked = false;
 
 function safePointerLock() {
-  if (!tutorialCompleted) return;
-  if (isMobileDevice) return;
-  if (!document.hasFocus()) return;
+  if (!tutorialCompleted || isMobileDevice || !document.hasFocus()) return;
   try { if (canvasEl) canvasEl.requestPointerLock(); } catch (e) {}
 }
 
@@ -1903,8 +2108,7 @@ var joystickInput = { x: 0, y: 0 };
 var joystickTouchId = null;
 
 function handleMoveStart(e) {
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   moveActive = true;
   if (e.changedTouches && e.changedTouches.length) {
     joystickTouchId = e.changedTouches[0].identifier;
@@ -1912,27 +2116,19 @@ function handleMoveStart(e) {
 }
 function handleMoveMove(e) {
   if (!moveActive) return;
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   var touch = null;
   if (e.changedTouches && joystickTouchId !== null) {
     for (var i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === joystickTouchId) {
-        touch = e.changedTouches[i];
-        break;
-      }
+      if (e.changedTouches[i].identifier === joystickTouchId) { touch = e.changedTouches[i]; break; }
     }
-  } else if (e.touches && e.touches.length) {
-    touch = e.touches[0];
-  } else {
-    touch = e;
-  }
+  } else if (e.touches && e.touches.length) { touch = e.touches[0]; }
+  else { touch = e; }
   if (!touch) return;
   var rect = moveJoystick.getBoundingClientRect();
   var cx = rect.left + rect.width/2;
   var cy = rect.top + rect.height/2;
-  var dx = touch.clientX - cx;
-  var dy = touch.clientY - cy;
+  var dx = touch.clientX - cx, dy = touch.clientY - cy;
   var maxDist = rect.width/2 - 25;
   var dist = Math.sqrt(dx*dx + dy*dy);
   if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
@@ -1945,8 +2141,7 @@ function handleMoveEnd(e) {
   moveActive = false;
   joystickTouchId = null;
   moveKnob.style.transform = 'translate(-50%, -50%)';
-  joystickInput.x = 0;
-  joystickInput.y = 0;
+  joystickInput.x = 0; joystickInput.y = 0;
 }
 moveJoystick.addEventListener('touchstart', handleMoveStart, { passive: false });
 moveJoystick.addEventListener('touchmove', handleMoveMove, { passive: false });
@@ -1991,7 +2186,6 @@ document.addEventListener('keyup', function(e) {
 });
 
 var adminOpen = false;
-
 function toggleAdmin() {
   adminOpen = !adminOpen;
   var panel = document.getElementById('admin-panel');
@@ -2008,7 +2202,6 @@ function toggleAdmin() {
     if (!isMobileDevice && !state.foundNeedle && tutorialCompleted) safePointerLock();
   }
 }
-
 function adminSet(what) {
   var val;
   if (what === 'money') { val = parseInt(document.getElementById('admin-money').value) || 0; state.money = val; }
@@ -2016,10 +2209,8 @@ function adminSet(what) {
   else if (what === 'milk') { val = parseInt(document.getElementById('admin-milk').value) || 0; state.milk = val; }
   else if (what === 'speed') { val = parseFloat(document.getElementById('admin-speed').value) || 5; state.moveSpeed = val; }
   else if (what === 'maxhay') { val = parseInt(document.getElementById('admin-maxhay').value) || 25; state.maxHay = val; }
-  updateHUD();
-  updateShopMenu();
+  updateHUD(); updateShopMenu();
 }
-
 function adminQuick(action) {
   if (action === 'money') { state.money += 100000; }
   else if (action === 'all') {
@@ -2033,9 +2224,8 @@ function adminQuick(action) {
     state.gatherCooldown = Math.max(0.1, 0.8 * Math.pow(0.7, state.gatherLvl - 1));
     state.hasFork = true; state.hasDynamite = true; state.hasVacuum = true;
     state.autoGatherLvl = 5;
-  } else if (action === 'tools') {
-    state.hasFork = true; state.hasDynamite = true; state.hasVacuum = true;
-  } else if (action === 'luck') { state.luckLvl = 5; }
+  } else if (action === 'tools') { state.hasFork = true; state.hasDynamite = true; state.hasVacuum = true; }
+  else if (action === 'luck') { state.luckLvl = 5; }
   else if (action === 'needle') { findNeedle(); toggleAdmin(); return; }
   else if (action === 'reset') { if (confirm('Точно сбросить игру?')) location.reload(); return; }
   updateHUD(); updateShopMenu(); updateToolButton();
@@ -2048,15 +2238,8 @@ var toolBtn = document.getElementById('toolBtn');
 var staminaFillMobile = document.getElementById('staminaFill-mobile');
 var isRunningTouch = false;
 
-function startRunTouch(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  if (state.stamina > 0.5) { isRunningTouch = true; runBtn.classList.add('active'); }
-}
-function stopRunTouch(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
-  isRunningTouch = false;
-  runBtn.classList.remove('active');
-}
+function startRunTouch(e) { if (e) { e.preventDefault(); e.stopPropagation(); } if (state.stamina > 0.5) { isRunningTouch = true; runBtn.classList.add('active'); } }
+function stopRunTouch(e) { if (e) { e.preventDefault(); e.stopPropagation(); } isRunningTouch = false; runBtn.classList.remove('active'); }
 runBtn.addEventListener('touchstart', startRunTouch, { passive: false });
 runBtn.addEventListener('touchend', stopRunTouch, { passive: false });
 runBtn.addEventListener('touchcancel', stopRunTouch, { passive: false });
@@ -2073,9 +2256,6 @@ function handleJump(e) {
 jumpBtn.addEventListener('touchstart', handleJump, { passive: false });
 jumpBtn.addEventListener('mousedown', handleJump);
 
-// ============================================
-// 🛠️ ПЕРЕКЛЮЧЕНИЕ ИНСТРУМЕНТОВ
-// ============================================
 var TOOLS = [
   { id: 'hand', emoji: '✋', name: 'РУКА', tooltip: 'Рука' },
   { id: 'fork', emoji: '🍴', name: 'ВИЛЫ', tooltip: 'Вилы' },
@@ -2084,29 +2264,21 @@ var TOOLS = [
 ];
 
 function getAvailableTools() {
-  var available = [TOOLS[0]]; // рука всегда
+  var available = [TOOLS[0]];
   if (state.hasFork) available.push(TOOLS[1]);
   if (state.hasDynamite) available.push(TOOLS[2]);
   if (state.hasVacuum) available.push(TOOLS[3]);
   return available;
 }
 
-// ✅ ИСПРАВЛЕНО: показываем кнопку только если есть хотя бы один купленный инструмент
 function updateToolButton() {
   if (!toolBtn) return;
   var available = getAvailableTools();
   var hasAnyTool = available.length > 1;
-
-  if (hasAnyTool) {
-    toolBtn.classList.add('show');
-  } else {
-    toolBtn.classList.remove('show');
-  }
-
+  if (hasAnyTool) toolBtn.classList.add('show');
+  else toolBtn.classList.remove('show');
   var tool = null;
-  for (var i = 0; i < TOOLS.length; i++) {
-    if (TOOLS[i].id === state.currentTool) { tool = TOOLS[i]; break; }
-  }
+  for (var i = 0; i < TOOLS.length; i++) { if (TOOLS[i].id === state.currentTool) { tool = TOOLS[i]; break; } }
   if (!tool) tool = TOOLS[0];
   var emojiEl = toolBtn.querySelector('.tool-emoji');
   var nameEl = toolBtn.querySelector('.tool-name');
@@ -2119,17 +2291,12 @@ function updateToolButton() {
 function cycleTool() {
   var available = getAvailableTools();
   if (available.length <= 1) {
-    if (state.currentTool !== 'hand') {
-      state.currentTool = 'hand';
-      updateToolButton();
-    }
+    if (state.currentTool !== 'hand') { state.currentTool = 'hand'; updateToolButton(); }
     showHint('Купи инструменты в амбаре!');
     return;
   }
   var curIdx = 0;
-  for (var k = 0; k < available.length; k++) {
-    if (available[k].id === state.currentTool) { curIdx = k; break; }
-  }
+  for (var k = 0; k < available.length; k++) { if (available[k].id === state.currentTool) { curIdx = k; break; } }
   var nextIdx = (curIdx + 1) % available.length;
   state.currentTool = available[nextIdx].id;
   updateToolButton();
@@ -2171,10 +2338,7 @@ if (shootBtn) {
 }
 
 var clickToPlay = document.getElementById('click-to-play');
-clickToPlay.addEventListener('click', function() {
-  if (!tutorialCompleted) return;
-  safePointerLock();
-});
+clickToPlay.addEventListener('click', function() { if (!tutorialCompleted) return; safePointerLock(); });
 
 var isMouseDownGather = false;
 canvasEl.addEventListener('mousedown', function(e) {
@@ -2205,17 +2369,13 @@ function tryGatherHay() {
   if (state.hay >= state.maxHay) { showHint('Инвентарь полон!'); return; }
 
   var hayPerGather = 1, toolUsed = state.currentTool;
-  if (toolUsed === 'vacuum' && state.hasVacuum) {
-    hayPerGather = 8;
-    spawnVacuumParticles();
-  } else if (toolUsed === 'fork' && state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
+  if (toolUsed === 'vacuum' && state.hasVacuum) { hayPerGather = 8; spawnVacuumParticles(); }
+  else if (toolUsed === 'fork' && state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
     hayPerGather = 5; state.lastForkTime = now; spawnForkParticle();
-  } else if (toolUsed === 'dynamite' && state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
-    hayPerGather = 15; state.lastDynamiteTime = now; spawnExplosion();
-  } else {
-    toolUsed = 'hand';
-    hayPerGather = 1;
   }
+  else if (toolUsed === 'dynamite' && state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
+    hayPerGather = 15; state.lastDynamiteTime = now; spawnExplosion();
+  } else { toolUsed = 'hand'; hayPerGather = 1; }
 
   state.lastGatherTime = now;
   var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
@@ -2229,8 +2389,7 @@ function tryGatherHay() {
   if (toolUsed === 'dynamite') txt += ' 💥';
   if (toolUsed === 'vacuum') txt += ' 🌀';
   showPopup(txt, window.innerWidth/2, window.innerHeight/2 - 50);
-  updateHUD();
-  updateShopMenu();
+  updateHUD(); updateShopMenu();
 }
 
 function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i*50); }
@@ -2344,7 +2503,6 @@ function updateParticles(dt) {
 }
 
 var shopMenu = document.getElementById('shop-menu');
-
 function toggleShop() {
   var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
   if (!shopOpen && d > 12) { showHint('Подойди к амбару'); return; }
@@ -2358,7 +2516,6 @@ function toggleShop() {
     if (!state.foundNeedle && !isMobileDevice && !adminOpen && tutorialCompleted) safePointerLock();
   }
 }
-
 document.getElementById('shop-close').onclick = toggleShop;
 
 function updateShopMenu() {
@@ -2383,40 +2540,18 @@ function updateShopMenu() {
   document.getElementById('sellMilkCount').textContent = state.milk;
   document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '₽';
   document.getElementById('sellMilk').disabled = state.milk === 0;
-
   var forkBtn = document.getElementById('buyFork');
   var forkPriceEl = document.getElementById('forkPrice');
-  if (state.hasFork) {
-    forkBtn.childNodes[0].nodeValue = 'Куплено';
-    forkBtn.disabled = true;
-    forkPriceEl.textContent = '';
-  } else {
-    forkBtn.childNodes[0].nodeValue = 'Купить';
-    forkBtn.disabled = state.money < PRICES.fork[0];
-    forkPriceEl.textContent = PRICES.fork[0] + '₽';
-  }
+  if (state.hasFork) { forkBtn.childNodes[0].nodeValue = 'Куплено'; forkBtn.disabled = true; forkPriceEl.textContent = ''; }
+  else { forkBtn.childNodes[0].nodeValue = 'Купить'; forkBtn.disabled = state.money < PRICES.fork[0]; forkPriceEl.textContent = PRICES.fork[0] + '₽'; }
   var dynBtn = document.getElementById('buyDynamite');
   var dynPriceEl = document.getElementById('dynamitePrice');
-  if (state.hasDynamite) {
-    dynBtn.childNodes[0].nodeValue = 'Куплено';
-    dynBtn.disabled = true;
-    dynPriceEl.textContent = '';
-  } else {
-    dynBtn.childNodes[0].nodeValue = 'Купить';
-    dynBtn.disabled = state.money < PRICES.dynamite[0];
-    dynPriceEl.textContent = PRICES.dynamite[0] + '₽';
-  }
+  if (state.hasDynamite) { dynBtn.childNodes[0].nodeValue = 'Куплено'; dynBtn.disabled = true; dynPriceEl.textContent = ''; }
+  else { dynBtn.childNodes[0].nodeValue = 'Купить'; dynBtn.disabled = state.money < PRICES.dynamite[0]; dynPriceEl.textContent = PRICES.dynamite[0] + '₽'; }
   var vacBtn = document.getElementById('buyVacuum');
   var vacPriceEl = document.getElementById('vacuumPrice');
-  if (state.hasVacuum) {
-    vacBtn.childNodes[0].nodeValue = 'Куплено';
-    vacBtn.disabled = true;
-    vacPriceEl.textContent = '';
-  } else {
-    vacBtn.childNodes[0].nodeValue = 'Купить';
-    vacBtn.disabled = state.money < PRICES.vacuum[0];
-    vacPriceEl.textContent = PRICES.vacuum[0] + '₽';
-  }
+  if (state.hasVacuum) { vacBtn.childNodes[0].nodeValue = 'Куплено'; vacBtn.disabled = true; vacPriceEl.textContent = ''; }
+  else { vacBtn.childNodes[0].nodeValue = 'Купить'; vacBtn.disabled = state.money < PRICES.vacuum[0]; vacPriceEl.textContent = PRICES.vacuum[0] + '₽'; }
   document.getElementById('autoGatherLvl').textContent = state.autoGatherLvl;
   var agp = PRICES.autoGather[state.autoGatherLvl];
   document.getElementById('autoGatherPrice').textContent = agp ? agp + '₽' : 'MAX';
@@ -2463,22 +2598,19 @@ document.getElementById('buyFork').onclick = function() {
   if (state.hasFork || state.money < PRICES.fork[0]) return;
   state.money -= PRICES.fork[0]; state.hasFork = true;
   showHint('Вилы куплены!');
-  updateShopMenu();
-  updateToolButton();
+  updateShopMenu(); updateToolButton();
 };
 document.getElementById('buyDynamite').onclick = function() {
   if (state.hasDynamite || state.money < PRICES.dynamite[0]) return;
   state.money -= PRICES.dynamite[0]; state.hasDynamite = true;
   showHint('Динамит куплен!');
-  updateShopMenu();
-  updateToolButton();
+  updateShopMenu(); updateToolButton();
 };
 document.getElementById('buyVacuum').onclick = function() {
   if (state.hasVacuum || state.money < PRICES.vacuum[0]) return;
   state.money -= PRICES.vacuum[0]; state.hasVacuum = true;
   showHint('Пылесос куплен!');
-  updateShopMenu();
-  updateToolButton();
+  updateShopMenu(); updateToolButton();
 };
 document.getElementById('buyAutoGather').onclick = function() {
   var p = PRICES.autoGather[state.autoGatherLvl];
@@ -2544,25 +2676,18 @@ function updatePlayer(dt) {
   if (keys.s || keys.arrowdown) pcY += 1;
   if (keys.a || keys.arrowleft) pcX -= 1;
   if (keys.d || keys.arrowright) pcX += 1;
-  inputX += pcX;
-  inputY += pcY;
+  inputX += pcX; inputY += pcY;
   var isMoving = Math.abs(inputX) > 0.01 || Math.abs(inputY) > 0.01;
   var isRunning = (keys.shift || isRunningTouch) && state.stamina > 0 && isMoving;
-  if (isRunning) {
-    state.stamina -= state.staminaDrain * dt;
-    if (state.stamina < 0) state.stamina = 0;
-  } else {
-    state.stamina += state.staminaRegen * dt;
-    if (state.stamina > state.staminaMax) state.stamina = state.staminaMax;
-  }
+  if (isRunning) { state.stamina -= state.staminaDrain * dt; if (state.stamina < 0) state.stamina = 0; }
+  else { state.stamina += state.staminaRegen * dt; if (state.stamina > state.staminaMax) state.stamina = state.staminaMax; }
   updateStaminaUI();
   if (isMoving) {
     var mag = Math.sqrt(inputX*inputX + inputY*inputY);
     if (mag > 1) { inputX /= mag; inputY /= mag; }
     var speedMult = isRunning ? 1.8 : 1;
     var speed = state.moveSpeed * speedMult * 0.5;
-    var cos = Math.cos(player.yaw);
-    var sin = Math.sin(player.yaw);
+    var cos = Math.cos(player.yaw), sin = Math.sin(player.yaw);
     var moveX = inputX * cos + inputY * sin;
     var moveZ = -inputX * sin + inputY * cos;
     var tryX = new THREE.Vector3(player.position.x + moveX*speed*dt, player.position.y, player.position.z);
@@ -2597,10 +2722,8 @@ function updateCooldownUI() {
   var cd = document.getElementById('cooldown');
   var cdf = document.getElementById('cooldown-fill');
   if (cd && cdf) {
-    if (el < t) {
-      cd.classList.add('show');
-      cdf.style.width = (el/t) * 100 + '%';
-    } else cd.classList.remove('show');
+    if (el < t) { cd.classList.add('show'); cdf.style.width = (el/t) * 100 + '%'; }
+    else cd.classList.remove('show');
   }
 }
 
@@ -2644,8 +2767,7 @@ function updateAutoGatherPassive(dt) {
   if (state.autoGatherTimer >= interval) {
     state.autoGatherTimer = 0;
     var a = Math.min(state.autoGatherLvl, state.maxHay - state.hay);
-    state.hay += a;
-    state.totalHay += a;
+    state.hay += a; state.totalHay += a;
     if (Math.random() < 0.003 + (state.luckLvl - 1) * 0.0015 * a) { findNeedle(); return; }
     showPopup('+' + a + ' сена', window.innerWidth/2, window.innerHeight/2 - 80);
     updateHUD();
@@ -2670,8 +2792,7 @@ function updateVisibility() {
 }
 
 function handleResize() {
-  var w = window.innerWidth;
-  var h = window.innerHeight;
+  var w = window.innerWidth, h = window.innerHeight;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
@@ -2735,10 +2856,8 @@ function updateTutorialStep() {
 }
 function nextTutorialStep() {
   if (!tutorialEl.classList.contains('show')) return;
-  if (currentTutorialStep < tutorialSteps.length - 1) {
-    currentTutorialStep++;
-    updateTutorialStep();
-  } else closeTutorial();
+  if (currentTutorialStep < tutorialSteps.length - 1) { currentTutorialStep++; updateTutorialStep(); }
+  else closeTutorial();
 }
 function closeTutorial() {
   if (!tutorialEl.classList.contains('show')) return;
