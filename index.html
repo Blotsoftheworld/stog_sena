@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<title>🧵 Иголка в стоге сена 3D</title>
+<link rel="icon" href="data:,">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+  body { overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; background: #000; touch-action: none; }
+  canvas { display: block; }
+
+  #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  #tutorial.show { display: flex; }
+  #tutorial-box { background: linear-gradient(180deg, rgba(60,40,15,0.98), rgba(30,20,8,0.98)); border: 4px solid #ffd700; border-radius: 24px; padding: 35px 40px; max-width: 500px; width: 100%; box-shadow: 0 0 80px rgba(255,215,0,0.4); text-align: center; color: #fff; }
+  #tutorial-icon { font-size: 64px; margin-bottom: 15px; display: block; }
+  #tutorial-title { color: #ffd700; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
+  #tutorial-text { font-size: 16px; line-height: 1.7; color: #e0e0e0; margin-bottom: 25px; min-height: 100px; }
+  #tutorial-text b { color: #ffd700; }
+  #tutorial-text kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,215,0,0.5); border-radius: 6px; padding: 2px 8px; font-family: monospace; font-weight: bold; color: #ffd700; font-size: 14px; }
+  #tutorial-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+  .tutorial-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,215,0,0.3); transition: 0.3s; }
+  .tutorial-dot.active { background: #ffd700; box-shadow: 0 0 10px #ffd700; transform: scale(1.3); }
+  #tutorial-buttons { display: flex; gap: 10px; }
+  #tutorial-next { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #4a8f3a, #2d5a23); border: 2px solid #7cf05c; border-radius: 12px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
+  #tutorial-skip { padding: 14px 20px; background: rgba(0,0,0,0.4); border: 2px solid #666; border-radius: 12px; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; }
+  #tutorial-skip:hover { background: rgba(0,0,0,0.6); color: #fff; }
+  #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @media (max-width: 700px) {
+    #tutorial-box { padding: 25px 20px; border-radius: 18px; }
+    #tutorial-icon { font-size: 48px; margin-bottom: 10px; }
+    #tutorial-title { font-size: 20px; margin-bottom: 12px; }
+    #tutorial-text { font-size: 14px; line-height: 1.6; margin-bottom: 18px; min-height: 80px; }
+    #tutorial-buttons { flex-direction: column-reverse; gap: 8px; }
+    #tutorial-next { padding: 12px 16px; font-size: 15px; }
+    #tutorial-skip { padding: 10px 16px; font-size: 13px; }
+  }
+
+  #rotate-screen { position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1005, #000); display: none; align-items: center; justify-content: center; flex-direction: column; color: #ffd700; padding: 30px; text-align: center; }
+  #rotate-screen.show { display: flex; }
+  #rotate-screen .phone-icon { font-size: 80px; animation: rotateAnim 2s infinite ease-in-out; margin-bottom: 30px; }
+  @keyframes rotateAnim { 0%,20% { transform: rotate(0deg); } 40%,60% { transform: rotate(-90deg); } 80%,100% { transform: rotate(0deg); } }
+  #rotate-screen h2 { font-size: 26px; font-weight: bold; text-shadow: 0 0 30px #ffd700; margin-bottom: 15px; }
+  #rotate-screen p { font-size: 16px; color: #ccc; line-height: 1.6; max-width: 320px; }
+
+  #loading {
+    position: fixed; inset: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #ffd700;
+    transition: opacity 0.8s ease;
+    background: url('1.jpg') center/cover no-repeat;
+    background-color: #1a1005;
+  }
+  #loading::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%);
+    z-index: 1;
+  }
+  #loading > * { position: relative; z-index: 2; }
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading .title { font-size: 42px; font-weight: bold; text-shadow: 0 0 40px #ffd700, 0 4px 12px #000; margin-bottom: 15px; }
+  #loading .sub { font-size: 16px; color: #ddd; margin-bottom: 40px; }
+  #loading .bar-outer { width: 400px; max-width: 80vw; height: 26px; background: rgba(0,0,0,0.6); border: 3px solid #ffd700; border-radius: 14px; overflow: hidden; }
+  #loading .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.1s linear; }
+  #loading .percent { margin-top: 20px; font-size: 28px; font-weight: bold; color: #ffd700; }
+  #loading .status { margin-top: 12px; font-size: 14px; color: #ccc; }
+
+  #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
+  #lookHint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: rgba(255,255,255,0.15); font-size: 14px; text-align: center; pointer-events: none; z-index: 8; }
+  #moveJoystick { position: absolute; bottom: 30px; left: 30px; width: 130px; height: 130px; background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; touch-action: none; z-index: 20; display: none; }
+  #moveJoystick.show { display: block; }
+  #moveKnob { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 55px; height: 55px; background: rgba(255,255,255,0.5); border-radius: 50%; pointer-events: none; }
+  #runBtn { position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; background: rgba(100,200,255,0.25); border: 3px solid rgba(100,200,255,0.6); border-radius: 50%; color: white; font-size: 15px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 25; }
+  #runBtn.show { display: flex; }
+  #runBtn.active { background: rgba(100,200,255,0.6); transform: scale(1.1); }
+  #jumpBtn { position: absolute; bottom: 130px; right: 130px; width: 80px; height: 80px; background: rgba(150,255,100,0.3); border: 3px solid rgba(150,255,100,0.7); border-radius: 50%; color: white; font-size: 14px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 25; }
+  #jumpBtn.show { display: flex; }
+  #jumpBtn.active { background: rgba(150,255,100,0.7); transform: scale(0.95); }
+  #shootBtn { position: absolute; bottom: 130px; right: 30px; width: 80px; height: 80px; background: rgba(255,50,50,0.3); border: 3px solid rgba(255,100,100,0.6); border-radius: 50%; color: white; font-size: 28px; font-weight: bold; display: none; align-items: center; justify-content: center; touch-action: none; z-index: 25; }
+  #shootBtn.show { display: flex; }
+  #shootBtn.active { background: rgba(255,50,50,0.7); transform: scale(0.95); }
+  #stamina-bar-mobile { position: absolute; bottom: 175px; left: 30px; width: 130px; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; overflow: hidden; z-index: 20; pointer-events: none; display: none; }
+  #stamina-bar-mobile.show { display: block; }
+  #staminaFill-mobile { width: 100%; height: 100%; background: linear-gradient(90deg, #00FF88, #00CC66); transition: width 0.1s; border-radius: 4px; }
+  #pcHint { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.6); font-size: 12px; text-align: center; pointer-events: none; z-index: 10; line-height: 1.6; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 10px; white-space: nowrap; display: none; }
+  #pcHint.show { display: block; }
+  #pcHint kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-weight: bold; color: white; font-size: 11px; }
+  @media (max-width: 700px) { #pcHint { display: none !important; } }
+
+  #hud { position: fixed; top: 15px; left: 15px; color: #fff; background: rgba(20,15,10,0.75); padding: 12px 16px; border-radius: 12px; font-size: 13px; line-height: 1.7; border: 1px solid rgba(255,215,0,0.35); box-shadow: 0 8px 32px rgba(0,0,0,0.6); pointer-events: none; z-index: 15; display: none; }
+  #hud.show { display: block; }
+  #hud .row { display: flex; justify-content: space-between; gap: 20px; }
+  #hud b { color: #ffd700; }
+
+  #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
+  #inventory-bar.show { display: block; }
+  #inventory-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.25s; }
+  #inventory-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; color: #fff; font-size: 14px; line-height: 22px; text-shadow: 2px 2px 4px #000; font-weight: bold; }
+
+  #hint { position: fixed; bottom: 45px; left: 50%; transform: translateX(-50%); color: #fff; background: rgba(10,10,10,0.85); padding: 10px 22px; border-radius: 12px; font-size: 14px; text-align: center; border: 1px solid rgba(255,215,0,0.4); white-space: nowrap; z-index: 18; display: none; }
+  #hint.show { display: block; }
+  #hint b { color: #ffd700; }
+
+  /* Mission panel */
+  #mission-panel {
+    position: fixed; top: 15px; right: 15px; z-index: 30;
+    background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95));
+    border: 3px solid #ffd700; border-radius: 16px;
+    padding: 14px 18px; max-width: 320px; min-width: 260px;
+    color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3);
+    display: none; transition: transform 0.3s, opacity 0.3s;
+  }
+  #mission-panel.show { display: block; }
+  #mission-panel.flash { animation: missionFlash 0.8s; }
+  @keyframes missionFlash {
+    0% { box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3); }
+    50% { box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 60px rgba(255,215,0,1); transform: scale(1.05); }
+    100% { box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.3); }
+  }
+  #mission-title { color: #ffd700; font-size: 13px; font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+  #mission-title .step-badge { background: #ffd700; color: #000; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  #mission-text { font-size: 15px; line-height: 1.5; color: #fff; margin-bottom: 10px; }
+  #mission-text b { color: #ffd700; }
+  #mission-text kbd { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,215,0,0.5); border-radius: 4px; padding: 1px 5px; font-family: monospace; font-weight: bold; color: #ffd700; font-size: 12px; }
+  #mission-progress { height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; }
+  #mission-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4ade80, #7cf05c); transition: width 0.4s; border-radius: 3px; }
+
+  /* Mission complete popup */
+  #mission-complete {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+    z-index: 850; pointer-events: none; opacity: 0;
+    background: linear-gradient(135deg, rgba(74,222,128,0.95), rgba(34,197,94,0.95));
+    border: 4px solid #4ade80; border-radius: 20px;
+    padding: 25px 40px; text-align: center; color: #fff;
+    box-shadow: 0 0 60px rgba(74,222,128,0.8);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    max-width: 90vw;
+  }
+  #mission-complete.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  #mission-complete .icon { font-size: 50px; margin-bottom: 10px; }
+  #mission-complete .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+  #mission-complete .desc { font-size: 14px; opacity: 0.9; }
+
+  @media (max-width: 700px) {
+    #mission-panel {
+      top: 10px;
+      right: 10px;
+      left: auto;
+      bottom: auto;
+      max-width: 55vw;
+      min-width: 180px;
+      padding: 8px 12px;
+      border-width: 2px;
+      border-radius: 12px;
+    }
+    #mission-title { font-size: 10px; margin-bottom: 4px; gap: 4px; }
+    #mission-title .step-badge { width: 16px; height: 16px; font-size: 10px; }
+    #mission-text { font-size: 12px; margin-bottom: 6px; line-height: 1.3; }
+    #mission-progress { height: 4px; }
+    #mission-complete { padding: 20px 25px; }
+    #mission-complete .icon { font-size: 40px; }
+    #mission-complete .title { font-size: 16px; }
+    #mission-complete .desc { font-size: 12px; }
+  }
+
+  #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
+  @keyframes floatUp { 0% { transform: translate(-50%,0); opacity: 1; } 100% { transform: translate(-50%,-110px); opacity: 0; } }
+
+  #shop-menu { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; padding: 15px; }
+  #shop-menu.open { display: flex; }
+  #shop-window { background: linear-gradient(rgba(70,45,20,0.98), rgba(40,25,10,0.98)); border: 4px solid #c9a227; border-radius: 18px; padding: 20px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+  #shop-window h2 { color: #ffd700; text-align: center; margin-bottom: 8px; font-size: 22px; }
+  .money-row { color: #fff; text-align: center; margin-bottom: 15px; font-size: 15px; }
+  .money-row b { color: #ffd700; font-size: 18px; }
+  .shop-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(201,162,39,0.35); }
+  .shop-item .info { flex: 1; color: #fff; min-width: 0; }
+  .shop-item .name { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+  .shop-item .desc { font-size: 11px; color: #ccc; }
+  .shop-item .lvl { color: #4fc3f7; font-size: 11px; margin-top: 3px; font-weight: bold; }
+  .shop-item button { background: linear-gradient(180deg, #4a8f3a, #2d5a23); color: #fff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: bold; cursor: pointer; min-width: 90px; }
+  .shop-item button:disabled { background: #333; color: #666; cursor: not-allowed; }
+  .shop-item button .price { display: block; color: #ffd700; font-size: 11px; margin-top: 2px; }
+  #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+
+  #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+  #message.show { display: flex; }
+  #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; }
+  #message-box h1 { color: #ffd700; font-size: 32px; margin-bottom: 20px; }
+  #message-box p { font-size: 17px; margin: 10px 0; }
+  #message-box button { margin-top: 25px; padding: 14px 40px; background: #ffd700; color: #000; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
+
+  #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
+  #click-to-play.show { display: flex; }
+  #click-to-play .title { color: #ffd700; font-size: 38px; font-weight: bold; text-shadow: 0 0 40px #ffd700; margin-bottom: 18px; }
+  #click-to-play .sub { font-size: 16px; color: #ccc; }
+  #click-to-play .blink { animation: blink 1.5s infinite; margin-top: 30px; font-size: 20px; color: #ffd700; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  #cooldown { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); width: 250px; height: 6px; background: rgba(0,0,0,0.75); border-radius: 4px; overflow: hidden; display: none; z-index: 18; }
+  #cooldown.show { display: block; }
+  #cooldown-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b6b, #ffd700); }
+
+  #phone-call { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  #phone-call.show { display: flex; }
+  #phone-call-box { background: linear-gradient(180deg, #2a3a2a, #1a2a1a); border: 4px solid #4ade80; border-radius: 28px; padding: 40px 50px; max-width: 420px; width: 100%; text-align: center; color: #fff; box-shadow: 0 0 80px rgba(74,222,128,0.5); animation: phoneShake 0.6s infinite; }
+  @keyframes phoneShake { 0%,100% { transform: rotate(-2deg) translateX(-4px); } 50% { transform: rotate(2deg) translateX(4px); } }
+  #phone-call-box.answered { animation: none; }
+  #phone-icon { font-size: 80px; display: block; margin-bottom: 20px; animation: phonePulse 1s infinite; }
+  @keyframes phonePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+  #phone-caller { font-size: 22px; font-weight: bold; color: #4ade80; margin-bottom: 8px; }
+  #phone-number { font-size: 16px; color: #a0d8a0; margin-bottom: 30px; letter-spacing: 2px; }
+  #phone-text { font-size: 15px; line-height: 1.6; color: #e0e0e0; margin-bottom: 30px; min-height: 60px; }
+  #phone-buttons { display: flex; gap: 12px; }
+  #phone-answer { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #22c55e, #16a34a); border: 3px solid #4ade80; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(74,222,128,0.6); }
+  #phone-answer:hover { background: linear-gradient(180deg, #4ade80, #22c55e); }
+  #phone-decline { padding: 14px 20px; background: linear-gradient(180deg, #dc2626, #991b1b); border: 3px solid #ef4444; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
+  #phone-decline:hover { background: linear-gradient(180deg, #ef4444, #dc2626); }
+  #phone-bubble { position: fixed; top: 80px; right: 20px; background: #2a3a2a; border: 2px solid #4ade80; border-radius: 18px 18px 18px 4px; padding: 16px 20px; max-width: 320px; color: #fff; font-size: 14px; line-height: 1.5; z-index: 950; display: none; box-shadow: 0 8px 32px rgba(0,0,0,0.6); animation: bubbleIn 0.4s ease-out; }
+  #phone-bubble.show { display: block; }
+  @keyframes bubbleIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+  #phone-bubble::before { content: '📞'; position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 24px; }
+
+  @media (max-width: 700px) {
+    #phone-call-box { padding: 30px 25px; border-radius: 22px; }
+    #phone-icon { font-size: 60px; margin-bottom: 15px; }
+    #phone-caller { font-size: 18px; }
+    #phone-number { font-size: 13px; margin-bottom: 20px; }
+    #phone-text { font-size: 13px; margin-bottom: 20px; min-height: 50px; }
+    #phone-answer, #phone-decline { padding: 12px 16px; font-size: 14px; }
+    #phone-bubble { top: 60px; right: 10px; max-width: 70vw; font-size: 12px; padding: 12px 16px; }
+  }
+
+  #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  #admin-panel.show { display: flex; }
+  #admin-box { background: linear-gradient(180deg, #1a1a2a, #0a0a15); border: 3px solid #ff00ff; border-radius: 20px; padding: 25px 30px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; color: #fff; box-shadow: 0 0 60px rgba(255,0,255,0.5); }
+  #admin-box h2 { color: #ff00ff; text-align: center; margin-bottom: 20px; font-size: 24px; text-shadow: 0 0 15px #ff00ff; }
+  .admin-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,0,255,0.2); }
+  .admin-section h3 { color: #00ffff; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .admin-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .admin-row label { flex: 1; font-size: 13px; color: #ccc; }
+  .admin-row input { width: 100px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid #ff00ff; border-radius: 6px; color: #fff; font-size: 14px; font-family: monospace; }
+  .admin-row input:focus { outline: none; box-shadow: 0 0 10px #ff00ff; }
+  .admin-btn { padding: 8px 14px; background: linear-gradient(180deg, #ff00ff, #aa00aa); border: none; border-radius: 8px; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+  .admin-btn:hover { background: linear-gradient(180deg, #ff44ff, #dd00dd); box-shadow: 0 0 15px #ff00ff; }
+  .admin-btn.danger { background: linear-gradient(180deg, #ff3333, #aa0000); }
+  .admin-btn.danger:hover { background: linear-gradient(180deg, #ff5555, #dd0000); }
+  #admin-close { display: block; margin: 0 auto; padding: 10px 30px; background: linear-gradient(180deg, #666, #333); border: 2px solid #ff00ff; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
+  #admin-close:hover { background: linear-gradient(180deg, #888, #555); }
+  .admin-hint { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
+
+  @media (max-width: 900px), (pointer: coarse) {
+    #pcHint { display: none !important; }
+    #hint { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="tutorial">
+  <div id="tutorial-box">
+    <span id="tutorial-icon">🎮</span>
+    <div id="tutorial-title">Добро пожаловать!</div>
+    <div id="tutorial-text"></div>
+    <div id="tutorial-dots"></div>
+    <div id="tutorial-buttons">
+      <button id="tutorial-skip">Пропустить</button>
+      <button id="tutorial-next">Далее →</button>
+    </div>
+  </div>
+</div>
+
+<div id="rotate-screen">
+  <div class="phone-icon">📱</div>
+  <h2>Переверни телефон</h2>
+  <p>Игра работает только в горизонтальном положении.</p>
+</div>
+
+<div id="loading">
+  <div class="title">🧵 Иголка в стоге сена</div>
+  <div class="sub">Подготовка фермы...</div>
+  <div class="bar-outer"><div class="bar-fill" id="loading-fill"></div></div>
+  <div class="percent" id="loading-percent">0%</div>
+  <div class="status" id="loading-status">Загрузка...</div>
+</div>
+
+<div id="lookArea"><div id="lookHint">Свайп для обзора</div></div>
+<div id="moveJoystick"><div id="moveKnob"></div></div>
+<div id="stamina-bar-mobile"><div id="staminaFill-mobile"></div></div>
+<div id="runBtn">RUN</div>
+<div id="jumpBtn">JUMP</div>
+<div id="shootBtn">🌾</div>
+
+<div id="pcHint">
+  <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> движение |
+  <kbd>Мышь</kbd> обзор |
+  <kbd>Shift</kbd> бег |
+  <kbd>Space</kbd> прыжок |
+  <kbd>E</kbd> действие |
+  <kbd>Z</kbd> магазин
+</div>
+
+<div id="hud">
+  <div class="row"><span>🌾 Сено:</span> <b id="hay">0</b>/<b id="maxHay">25</b></div>
+  <div class="row"><span>🥛 Молоко:</span> <b id="milk">0</b></div>
+  <div class="row"><span>💰 Деньги:</span> <b id="money">0</b>$</div>
+  <div class="row"><span>⚡ Скорость:</span> <b id="speed">5.0</b></div>
+</div>
+
+<!-- Mission panel -->
+<div id="mission-panel">
+  <div id="mission-title"><span class="step-badge" id="mission-step">1</span> <span id="mission-title-text">МИССИЯ</span></div>
+  <div id="mission-text"></div>
+  <div id="mission-progress"><div id="mission-progress-fill"></div></div>
+</div>
+
+<!-- Mission complete popup -->
+<div id="mission-complete">
+  <div class="icon" id="mission-complete-icon">✅</div>
+  <div class="title" id="mission-complete-title">Миссия выполнена!</div>
+  <div class="desc" id="mission-complete-desc"></div>
+</div>
+
+<div id="inventory-bar">
+  <div id="inventory-fill"></div>
+  <div id="inventory-text">0 / 25</div>
+</div>
+
+<div id="cooldown"><div id="cooldown-fill"></div></div>
+<div id="hint"><b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин</div>
+<div id="popups"></div>
+
+<div id="shop-menu">
+  <div id="shop-window">
+    <h2>🏠 АМБАР</h2>
+    <div class="money-row">💰 <b id="shop-money">0</b>$ | 🥛 <b id="shop-milk">0</b></div>
+
+    <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
+      <div class="info"><div class="name">🥛 Продать молоко</div><div class="desc">1 литр = 5$</div><div class="lvl">У тебя: <b id="sellMilkCount">0</b> л</div></div>
+      <button id="sellMilk">Продать<span class="price" id="sellMilkPrice">0$</span></button>
+    </div>
+    <div class="shop-item"><div class="info"><div class="name">⚡ Скорость</div><div class="desc">Быстрее бег</div><div class="lvl">Ур: <b id="speedLvl">1</b></div></div><button id="buySpeed">Купить<span class="price" id="speedPrice">20$</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">💪 Скорость сбора</div><div class="desc">Меньше кулдаун</div><div class="lvl">Ур: <b id="gatherLvl">1</b></div></div><button id="buyGather">Купить<span class="price" id="gatherPrice">30$</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">🎒 Инвентарь</div><div class="desc">Больше сена</div><div class="lvl">Ур: <b id="invLvl">1</b></div></div><button id="buyInv">Купить<span class="price" id="invPrice">50$</span></button></div>
+    <div class="shop-item"><div class="info"><div class="name">🔍 Удача</div><div class="desc">Шанс иголки</div><div class="lvl">Ур: <b id="luckLvl">1</b></div></div><button id="buyLuck">Купить<span class="price" id="luckPrice">100$</span></button></div>
+    <div class="shop-item" style="border-color: rgba(139,90,43,0.5);">
+      <div class="info"><div class="name">🗡️ Вилы</div><div class="desc">+5 сена к сбору</div><div class="lvl">Разово</div></div>
+      <button id="buyFork">Купить<span class="price" id="forkPrice">500$</span></button>
+    </div>
+    <div class="shop-item" style="border-color: rgba(255,100,0,0.5);">
+      <div class="info"><div class="name">💥 Динамит</div><div class="desc">+15 сена к сбору</div><div class="lvl">Разово</div></div>
+      <button id="buyDynamite">Купить<span class="price" id="dynamitePrice">1200$</span></button>
+    </div>
+    <div class="shop-item" style="border-color: rgba(100,200,255,0.5);">
+      <div class="info"><div class="name">🌀 Пылесос</div><div class="desc">Автосбор рядом со стогом</div><div class="lvl">Разово</div></div>
+      <button id="buyVacuum">Купить<span class="price" id="vacuumPrice">2500$</span></button>
+    </div>
+    <div class="shop-item" style="border-color: rgba(150,100,255,0.5);"><div class="info"><div class="name">⚙️ Автосборщик</div><div class="desc">Сам собирает</div><div class="lvl">Ур: <b id="autoGatherLvl">0</b></div></div><button id="buyAutoGather">Купить<span class="price" id="autoGatherPrice">150$</span></button></div>
+
+    <button id="shop-close">Закрыть</button>
+  </div>
+</div>
+
+<div id="message">
+  <div id="message-box">
+    <h1>🎉 ПОБЕДА! 🎉</h1>
+    <p>Ты нашёл иголку! 🧵</p>
+    <p>💰 Заработано: <b id="final-money">0</b>$</p>
+    <p>🥛 Молока: <b id="final-milk">0</b> л</p>
+    <p>🌾 Сена: <b id="final-hay">0</b></p>
+    <button onclick="location.reload()">Играть снова</button>
+  </div>
+</div>
+
+<div id="phone-call">
+  <div id="phone-call-box">
+    <span id="phone-icon">📞</span>
+    <div id="phone-caller">Владимир Путин</div>
+    <div id="phone-number">+7 (495) 606-36-02</div>
+    <div id="phone-text">Товарищ! Иголка потерялась в стоге. Найди её — и получишь награду!</div>
+    <div id="phone-buttons">
+      <button id="phone-decline">Отклонить</button>
+      <button id="phone-answer">Ответить</button>
+    </div>
+  </div>
+</div>
+
+<div id="phone-bubble"></div>
+
+<div id="admin-panel">
+  <div id="admin-box">
+    <h2>🛠️ АДМИН-ПАНЕЛЬ</h2>
+
+    <div class="admin-section">
+      <h3>💰 Ресурсы</h3>
+      <div class="admin-row">
+        <label>Деньги:</label>
+        <input type="number" id="admin-money" value="0" step="100">
+        <button class="admin-btn" onclick="adminSet('money')">OK</button>
+      </div>
+      <div class="admin-row">
+        <label>Сено:</label>
+        <input type="number" id="admin-hay" value="0" step="5">
+        <button class="admin-btn" onclick="adminSet('hay')">OK</button>
+      </div>
+      <div class="admin-row">
+        <label>Молоко:</label>
+        <input type="number" id="admin-milk" value="0" step="5">
+        <button class="admin-btn" onclick="adminSet('milk')">OK</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>⚡ Параметры</h3>
+      <div class="admin-row">
+        <label>Скорость:</label>
+        <input type="number" id="admin-speed" value="5" step="0.5">
+        <button class="admin-btn" onclick="adminSet('speed')">OK</button>
+      </div>
+      <div class="admin-row">
+        <label>Макс. сена:</label>
+        <input type="number" id="admin-maxhay" value="25" step="5">
+        <button class="admin-btn" onclick="adminSet('maxhay')">OK</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>🎁 Быстрые действия</h3>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="adminQuick('money')">💰 +10000$</button>
+        <button class="admin-btn" onclick="adminQuick('all')">🎁 Всё</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="adminQuick('tools')">🛠️ Все инструменты</button>
+      </div>
+      <div class="admin-row">
+        <button class="admin-btn" onclick="adminQuick('luck')">🍀 Удача макс</button>
+        <button class="admin-btn danger" onclick="adminQuick('needle')">🧵 Найти иголку</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>🔄 Сброс</h3>
+      <div class="admin-row">
+        <button class="admin-btn danger" onclick="adminQuick('reset')" style="flex:1">💥 Сбросить игру</button>
+      </div>
+    </div>
+
+    <button id="admin-close" onclick="toggleAdmin()">Закрыть [0]</button>
+    <div class="admin-hint">Открыть: клавиша <b>0</b> (ноль)</div>
+  </div>
+</div>
+
+<div id="click-to-play">
+  <div class="title">🧵 Иголка в стоге сена</div>
+  <div class="sub">Собирай сено, корми корову — и найди иголку!</div>
+  <div class="blink">👆 Кликни, чтобы играть</div>
+</div>
+
+<div id="start-game-btn" style="
+  position: fixed; inset: 0; z-index: 1100;
+  display: none; align-items: center; justify-content: center;
+  background: radial-gradient(circle at center, rgba(30,20,10,0.92), rgba(0,0,0,0.98));
+  cursor: pointer; flex-direction: column; text-align: center; padding: 20px;
+">
+  <div style="
+    color:#ffd700; font-size:42px; font-weight:bold;
+    text-shadow:0 0 40px #ffd700; margin-bottom:20px;
+  ">🧵 Иголка в стоге сена</div>
+  <div style="color:#ccc; font-size:16px; margin-bottom:35px;">
+    Собирай сено, корми корову — и найди иголку!
+  </div>
+  <button id="start-game-btn-inner" style="
+    padding: 18px 50px; font-size: 20px; font-weight: bold;
+    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
+    border: 3px solid #7cf05c; border-radius: 14px;
+    color: #fff; cursor: pointer;
+    box-shadow: 0 0 30px rgba(124,240,92,0.5);
+  ">▶ Начать игру</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.137.0/build/three.min.js"></script>
+
+<script>
+if (typeof THREE === 'undefined') {
+  document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:Arial;text-align:center;"><h1>Не удалось загрузить Three.js</h1><p>Проверь интернет-соединение и обнови страницу.</p></div>';
+  throw new Error('Three.js not loaded');
+}
+
+var particles = [];
+var colliders = [];
+function addCollider(x, z, r) { colliders.push({ x: x, z: z, r: r }); }
+var WORLD_BOUND = 38;
+var visibleObjects = [];
+var UPDATE_INTERVAL = 0.1;
+
+var rotateScreen = document.getElementById('rotate-screen');
+var isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+function checkOrientation() {
+  if (!isMobileDevice) return true;
+  var isPortrait = window.innerHeight > window.innerWidth;
+  if (isPortrait) { rotateScreen.classList.add('show'); return false; }
+  rotateScreen.classList.remove('show');
+  return true;
+}
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', function() { setTimeout(checkOrientation, 100); });
+
+var loadingEl = document.getElementById('loading');
+var loadingFill = document.getElementById('loading-fill');
+var loadingPercent = document.getElementById('loading-percent');
+var loadingStatus = document.getElementById('loading-status');
+var LOADING_DURATION = 5000;
+var loadingStart = 0;
+var loadingStarted = false;
+var gameStarted = false;
+var tutorialCompleted = false;
+
+var statusMessages = [
+  'Инициализация сцены...','Создание земли...','Посадка колосков...',
+  'Строительство амбара...','Приведение коровы...','Прячем иголку...',
+  'Почти готово...','Загрузка завершена!'
+];
+
+function animateLoading() {
+  if (!loadingStarted) return;
+  var now = performance.now();
+  var elapsed = now - loadingStart;
+  var progress = Math.min(elapsed / LOADING_DURATION, 1);
+  var eased = 1 - Math.pow(1 - progress, 2);
+  var percent = Math.floor(eased * 100);
+  loadingFill.style.width = percent + '%';
+  loadingPercent.textContent = percent + '%';
+  var stepIndex = Math.floor(progress * (statusMessages.length - 1));
+  loadingStatus.textContent = statusMessages[stepIndex];
+  if (progress < 1) requestAnimationFrame(animateLoading);
+  else setTimeout(function() {
+    loadingEl.classList.add('done');
+    document.getElementById('hud').classList.add('show');
+    document.getElementById('inventory-bar').classList.add('show');
+    document.getElementById('pcHint').classList.add('show');
+    if (isMobileDevice) {
+      document.getElementById('moveJoystick').classList.add('show');
+      document.getElementById('runBtn').classList.add('show');
+      document.getElementById('jumpBtn').classList.add('show');
+      document.getElementById('shootBtn').classList.add('show');
+      document.getElementById('stamina-bar-mobile').classList.add('show');
+    }
+    updateHUD();
+    updateShopMenu();
+
+    if (!gameStarted) {
+      gameStarted = true;
+      animate();
+    }
+
+    var startBtn = document.getElementById('start-game-btn');
+    startBtn.style.display = 'flex';
+
+    var startClicked = false;
+    startBtn.addEventListener('click', function() {
+      if (startClicked) return;
+      startClicked = true;
+      startBtn.style.display = 'none';
+      showPhoneCall();
+    });
+  }, 500);
+}
+
+function startLoading() {
+  if (loadingStarted) return;
+  loadingStarted = true;
+  loadingStart = performance.now();
+  loadingEl.style.display = 'flex';
+  loadingEl.classList.remove('done');
+  animateLoading();
+}
+
+function initGame() {
+  if (checkOrientation()) startLoading();
+  else {
+    loadingEl.style.display = 'none';
+    var interval = setInterval(function() {
+      if (checkOrientation()) { clearInterval(interval); startLoading(); }
+    }, 300);
+  }
+}
+
+// ============================================
+// 📞 ЗВОНОК ОТ ПУТИНА
+// ============================================
+var phoneRingtone = new Audio('ringtone.mp3');
+phoneRingtone.loop = true;
+phoneRingtone.volume = 0.5;
+
+var putinVoice = new Audio('putin-voice.mp3');
+putinVoice.volume = 1.0;
+
+var phoneCallShown = false;
+
+function afterPhoneCall() {
+  setTimeout(function() {
+    showTutorial();
+  }, 600);
+}
+
+function showPhoneCall() {
+  if (phoneCallShown) return;
+  phoneCallShown = true;
+
+  var phoneCall = document.getElementById('phone-call');
+  var phoneAnswer = document.getElementById('phone-answer');
+  var phoneDecline = document.getElementById('phone-decline');
+  var phoneCallBox = document.getElementById('phone-call-box');
+  var phoneText = document.getElementById('phone-text');
+  var phoneIcon = document.getElementById('phone-icon');
+
+  phoneCall.classList.add('show');
+
+  phoneRingtone.play().catch(function() {
+    console.log('Рингтон блокирован');
+  });
+
+  phoneAnswer.onclick = function() {
+    phoneRingtone.pause();
+    phoneRingtone.currentTime = 0;
+
+    phoneCallBox.classList.add('answered');
+    phoneIcon.textContent = '💬';
+    phoneText.textContent = 'Товарищ! Ищи сено, корми корову. Найдёшь иголку — получишь награду!';
+
+    putinVoice.play().catch(function(e) {
+      console.log('Голос не запустился:', e);
+    });
+
+    setTimeout(function() {
+      phoneCall.classList.remove('show');
+      showPhoneBubble('Товарищ, найди иголку в стоге! 🧵');
+      afterPhoneCall();
+    }, 3000);
+  };
+
+  phoneDecline.onclick = function() {
+    phoneRingtone.pause();
+    phoneRingtone.currentTime = 0;
+    phoneCall.classList.remove('show');
+    showPhoneBubble('Не бери трубку — но иголку всё равно ищи! 🧵');
+    afterPhoneCall();
+  };
+}
+
+function showPhoneBubble(text) {
+  var bubble = document.getElementById('phone-bubble');
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  setTimeout(function() {
+    bubble.classList.remove('show');
+  }, 5000);
+}
+
+// ============================================
+// СОСТОЯНИЕ
+// ============================================
+var state = {
+  money: 0, hay: 0, milk: 0, totalHay: 0, totalMilkSold: 0,
+  maxHay: 25, moveSpeed: 5.0, gatherCooldown: 0.8, lastGatherTime: 0,
+  foundNeedle: false, speedLvl: 1, gatherLvl: 1, invLvl: 1, luckLvl: 1,
+  hasFork: false, hasDynamite: false, hasVacuum: false,
+  forkCooldown: 2.0, lastForkTime: 0,
+  dynamiteCooldown: 8.0, lastDynamiteTime: 0,
+  vacuumActive: false, vacuumTimer: 0,
+  autoGatherLvl: 0, autoGatherTimer: 0,
+  stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0
+};
+
+var PRICES = {
+  speed: [20,40,80,160,320,640,1280],
+  gather: [30,60,120,240,480,960,1920],
+  inv: [50,100,200,400,800,1600,3200],
+  luck: [100,250,600,1500,4000],
+  fork: [500], dynamite: [1200], vacuum: [2500],
+  autoGather: [150,400,1000,2500,6000]
+};
+var MILK_PRICE = 5;
+
+// ============================================
+// 🎯 СИСТЕМА МИССИЙ
+// ============================================
+var missions = [
+  {
+    id: 'goto_haystack', icon: '🌾', title: 'МИССИЯ 1',
+    text: 'Подойди к <b>стогу сена</b>',
+    check: function() {
+      var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+      return d < HAYSTACK_RADIUS + 4;
+    },
+    complete: 'Ты у стога сена!'
+  },
+  {
+    id: 'gather_hay', icon: '✋', title: 'МИССИЯ 2',
+    text: 'Собери <b>5 сена</b> из стога <kbd>ЛКМ</kbd> или <kbd>🌾</kbd>',
+    check: function() { return state.hay >= 5; },
+    complete: 'Ты собрал 5 сена!'
+  },
+  {
+    id: 'goto_cow', icon: '🐄', title: 'МИССИЯ 3',
+    text: 'Подойди к <b>корове</b>',
+    check: function() {
+      var d = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
+      return d < 5;
+    },
+    complete: 'Ты нашёл корову!'
+  },
+  {
+    id: 'feed_cow', icon: '🥛', title: 'МИССИЯ 4',
+    text: 'Накорми корову: нажми <kbd>E</kbd> рядом с ней',
+    check: function() { return state.milk > 0; },
+    complete: 'Корова дала молоко!'
+  },
+  {
+    id: 'goto_barn', icon: '🏠', title: 'МИССИЯ 5',
+    text: 'Подойди к <b>амбару</b>',
+    check: function() {
+      var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+      return d < 9;
+    },
+    complete: 'Ты у амбара!'
+  },
+  {
+    id: 'open_shop', icon: '💰', title: 'МИССИЯ 6',
+    text: 'Открой магазин: нажми <kbd>E</kbd> или <kbd>Z</kbd>',
+    check: function() { return shopOpen; },
+    complete: 'Магазин открыт!'
+  },
+  {
+    id: 'sell_milk', icon: '🥛', title: 'МИССИЯ 7',
+    text: 'Продай <b>молоко</b> в амбаре',
+    check: function() { return state.totalMilkSold > 0; },
+    complete: 'Молоко продано!'
+  },
+  {
+    id: 'find_needle', icon: '🧵', title: 'ГЛАВНАЯ ЦЕЛЬ',
+    text: 'Найди <b>иголку в стоге сена</b>!',
+    check: function() { return state.foundNeedle; },
+    complete: 'Иголка найдена!'
+  }
+];
+
+var currentMission = 0;
+var missionPanelEl = document.getElementById('mission-panel');
+var missionStepEl = document.getElementById('mission-step');
+var missionTitleTextEl = document.getElementById('mission-title-text');
+var missionTextEl = document.getElementById('mission-text');
+var missionProgressFill = document.getElementById('mission-progress-fill');
+var missionCompleteEl = document.getElementById('mission-complete');
+
+var missionVisible = false;
+var missionCycleTimer = null;
+var missionHiddenTimer = null;
+
+function startMissionCycle() {
+  showMissionBriefly();
+}
+
+function showMissionBriefly() {
+  if (currentMission >= missions.length) return;
+
+  var m = missions[currentMission];
+  missionStepEl.textContent = currentMission + 1;
+  missionTitleTextEl.textContent = m.title;
+  missionTextEl.innerHTML = m.icon + ' ' + m.text;
+  missionProgressFill.style.width = ((currentMission) / missions.length * 100) + '%';
+
+  missionPanelEl.classList.add('show');
+  missionPanelEl.classList.remove('flash');
+  void missionPanelEl.offsetWidth;
+  missionPanelEl.classList.add('flash');
+  missionVisible = true;
+
+  clearTimeout(missionCycleTimer);
+  clearTimeout(missionHiddenTimer);
+
+  missionCycleTimer = setTimeout(function() {
+    missionPanelEl.classList.remove('show');
+    missionVisible = false;
+
+    if (currentMission < missions.length && !state.foundNeedle) {
+      missionHiddenTimer = setTimeout(function() {
+        if (currentMission < missions.length && !state.foundNeedle) showMissionBriefly();
+      }, 10000);
+    }
+  }, 10000);
+}
+
+function checkMissions() {
+  if (!tutorialCompleted) return;
+  if (currentMission >= missions.length) return;
+  var m = missions[currentMission];
+  if (m.check()) {
+    completeMission();
+  }
+}
+
+function completeMission() {
+  var m = missions[currentMission];
+
+  document.getElementById('mission-complete-icon').textContent = m.icon;
+  document.getElementById('mission-complete-title').textContent = '✅ ' + m.complete;
+  document.getElementById('mission-complete-desc').textContent = 'Миссия ' + (currentMission + 1) + ' выполнена';
+  missionCompleteEl.classList.add('show');
+  setTimeout(function() { missionCompleteEl.classList.remove('show'); }, 1800);
+
+  currentMission++;
+
+  clearTimeout(missionCycleTimer);
+  clearTimeout(missionHiddenTimer);
+  missionPanelEl.classList.remove('show');
+  missionVisible = false;
+
+  if (currentMission < missions.length) {
+    setTimeout(function() {
+      showMissionBriefly();
+    }, 1500);
+  } else {
+    setTimeout(function() {
+      missionTitleTextEl.textContent = 'ГОТОВО';
+      missionStepEl.textContent = '✓';
+      missionTextEl.innerHTML = '🎉 Все миссии выполнены!';
+      missionProgressFill.style.width = '100%';
+      missionPanelEl.classList.add('show');
+      missionVisible = true;
+      setTimeout(function() {
+        missionPanelEl.classList.remove('show');
+      }, 10000);
+    }, 900);
+  }
+}
+
+// ============================================
+// СЦЕНА
+// ============================================
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0x5aa8e0);
+scene.fog = new THREE.Fog(0x5aa8e0, 45, 150);
+
+var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 300);
+
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+document.body.appendChild(renderer.domElement);
+
+var skyGeo = new THREE.SphereGeometry(250, 32, 16);
+var skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: {
+    topColor: { value: new THREE.Color(0x1e5fc4) },
+    midColor: { value: new THREE.Color(0x5aa8e0) },
+    bottomColor: { value: new THREE.Color(0xffd28a) }
+  },
+  vertexShader: 'varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform vec3 topColor; uniform vec3 midColor; uniform vec3 bottomColor; varying vec3 vPos; void main() { float h = normalize(vPos).y; vec3 sky; if (h < 0.0) sky = bottomColor; else if (h < 0.4) sky = mix(bottomColor, midColor, h / 0.4); else sky = mix(midColor, topColor, (h - 0.4) / 0.6); gl_FragColor = vec4(sky, 1.0); }'
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+var hemiLight = new THREE.HemisphereLight(0x9dc8ff, 0x6a8a3a, 0.5);
+scene.add(hemiLight);
+
+var sun = new THREE.DirectionalLight(0xffe0a8, 0.85);
+sun.position.set(40, 60, 30);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -50;
+sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50;
+sun.shadow.camera.bottom = -50;
+sun.shadow.camera.far = 180;
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.02;
+scene.add(sun);
+scene.add(sun.target);
+
+var fillLight = new THREE.DirectionalLight(0x88b8ff, 0.2);
+fillLight.position.set(-30, 20, -30);
+scene.add(fillLight);
+
+var bounceLight = new THREE.DirectionalLight(0xffc880, 0.15);
+bounceLight.position.set(0, -10, 0);
+scene.add(bounceLight);
+
+function makeGrassTexture(size) {
+  size = size || 512;
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#3d8a1e';
+  ctx.fillRect(0, 0, size, size);
+  function drawWrapped(fn) {
+    fn(0,0); fn(-size,0); fn(size,0); fn(0,-size); fn(0,size);
+    fn(-size,-size); fn(size,-size); fn(-size,size); fn(size,size);
+  }
+  for (var i = 0; i < 220; i++) (function() {
+    var x = Math.random()*size, y = Math.random()*size;
+    var r = 25 + Math.random()*45;
+    var shade = Math.random();
+    var col = shade > 0.55 ? '55,150,30' : shade > 0.3 ? '90,190,50' : '40,110,20';
+    drawWrapped(function(ox,oy) {
+      var g = ctx.createRadialGradient(x+ox, y+oy, 0, x+ox, y+oy, r);
+      g.addColorStop(0, 'rgba('+col+',0.75)');
+      g.addColorStop(1, 'rgba('+col+',0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x+ox-r, y+oy-r, r*2, r*2);
+    });
+  })();
+  for (var j = 0; j < 6000; j++) (function() {
+    var tx = Math.random()*size, ty = Math.random()*size;
+    var g2 = 0.6 + Math.random()*0.6;
+    var len = 3 + Math.random()*5;
+    var angle = -Math.PI/2 + (Math.random()-0.5)*0.6;
+    var dx = Math.cos(angle)*len, dy = Math.sin(angle)*len;
+    var col2 = 'rgba('+Math.floor(90*g2)+','+Math.floor(220*g2)+','+Math.floor(40*g2)+','+(0.5+Math.random()*0.5)+')';
+    var lw = 0.7 + Math.random()*1.0;
+    drawWrapped(function(ox,oy) {
+      ctx.strokeStyle = col2;
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(tx+ox, ty+oy);
+      ctx.lineTo(tx+ox+dx, ty+oy+dy);
+      ctx.stroke();
+    });
+  })();
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(30, 30);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+var grassTex = makeGrassTexture(512);
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(300, 300),
+  new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1, color: 0xbbdd99 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+function buildHayTextures() {
+  var S = 1024;
+  var colorC = document.createElement('canvas');
+  var bumpC = document.createElement('canvas');
+  colorC.width = colorC.height = bumpC.width = bumpC.height = S;
+
+  var cc = colorC.getContext('2d');
+  var bc = bumpC.getContext('2d');
+
+  cc.fillStyle = '#d4a020';
+  cc.fillRect(0, 0, S, S);
+  bc.fillStyle = '#808080';
+  bc.fillRect(0, 0, S, S);
+
+  var colors = ['#f5c020','#e0a800','#cc9000','#ffd040','#b07800','#e8b820','#ffd860','#906800'];
+
+  function drawWrapped(ctx, x, y, dx, dy, drawFn) {
+    for (var ox = -1; ox <= 1; ox++) {
+      for (var oy = -1; oy <= 1; oy++) {
+        var px = x + ox * S;
+        var py = y + oy * S;
+        if (px + Math.min(0, dx) > S || px + Math.max(0, dx) < 0 ||
+            py + Math.min(0, dy) > S || py + Math.max(0, dy) < 0) continue;
+        drawFn(px, py, dx, dy);
+      }
+    }
+  }
+
+  for (var i = 0; i < 14000; i++) {
+    (function() {
+      var x = Math.random() * S;
+      var y = Math.random() * S;
+      var angle = (Math.random() - 0.5) * Math.PI * 0.9 + (Math.random() < 0.5 ? 0 : Math.PI);
+      var len = 6 + Math.random() * 40;
+      var dx = Math.cos(angle) * len;
+      var dy = Math.sin(angle) * len;
+      var col = colors[(Math.random() * colors.length) | 0];
+      var cw = 0.6 + Math.random() * 1.6;
+      var bv = 100 + Math.random() * 100;
+      var bw = 0.6 + Math.random() * 1.6;
+
+      drawWrapped(cc, x, y, dx, dy, function(px, py, pdx, pdy) {
+        cc.strokeStyle = col;
+        cc.lineWidth = cw;
+        cc.lineCap = 'round';
+        cc.beginPath();
+        cc.moveTo(px, py);
+        cc.lineTo(px + pdx, py + pdy);
+        cc.stroke();
+      });
+
+      drawWrapped(bc, x, y, dx, dy, function(px, py, pdx, pdy) {
+        bc.strokeStyle = 'rgb(' + bv + ',' + bv + ',' + bv + ')';
+        bc.lineWidth = bw;
+        bc.lineCap = 'round';
+        bc.beginPath();
+        bc.moveTo(px, py);
+        bc.lineTo(px + pdx, py + pdy);
+        bc.stroke();
+      });
+    })();
+  }
+
+  for (var k = 0; k < 120; k++) {
+    (function() {
+      var x = Math.random() * S;
+      var y = Math.random() * S;
+      var r = 15 + Math.random() * 70;
+      var dark = Math.random() < 0.6;
+      for (var ox = -1; ox <= 1; ox++) {
+        for (var oy = -1; oy <= 1; oy++) {
+          var px = x + ox * S;
+          var py = y + oy * S;
+          if (px + r < 0 || px - r > S || py + r < 0 || py - r > S) continue;
+          var g = cc.createRadialGradient(px, py, 0, px, py, r);
+          g.addColorStop(0, dark ? 'rgba(80,50,10,0.4)' : 'rgba(255,220,100,0.35)');
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          cc.fillStyle = g;
+          cc.fillRect(px - r, py - r, r * 2, r * 2);
+          var bg = bc.createRadialGradient(px, py, 0, px, py, r);
+          bg.addColorStop(0, dark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)');
+          bg.addColorStop(1, 'rgba(128,128,128,0)');
+          bc.fillStyle = bg;
+          bc.fillRect(px - r, py - r, r * 2, r * 2);
+        }
+      }
+    })();
+  }
+
+  var imgData = cc.getImageData(0, 0, S, S);
+  for (var idx = 0; idx < imgData.data.length; idx += 4) {
+    var n = (Math.random() - 0.5) * 20;
+    imgData.data[idx]   = Math.max(0, Math.min(255, imgData.data[idx] + n));
+    imgData.data[idx+1] = Math.max(0, Math.min(255, imgData.data[idx+1] + n * 0.9));
+    imgData.data[idx+2] = Math.max(0, Math.min(255, imgData.data[idx+2] + n * 0.5));
+  }
+  cc.putImageData(imgData, 0, 0);
+
+  var colorTex = new THREE.CanvasTexture(colorC);
+  var bumpTex = new THREE.CanvasTexture(bumpC);
+
+  [colorTex, bumpTex].forEach(function(t) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    t.generateMipmaps = true;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter;
+  });
+
+  return { colorTex: colorTex, bumpTex: bumpTex };
+}
+
+var hayTex = buildHayTextures();
+
+var hayMaterial = new THREE.MeshStandardMaterial({
+  map: hayTex.colorTex,
+  bumpMap: hayTex.bumpTex,
+  bumpScale: 0.35,
+  roughness: 1.0,
+  metalness: 0.0,
+  color: 0xffddaa
+});
+
+var HAYSTACK_RADIUS = 3.2;
+var HAYSTACK_HEIGHT = 3.4;
+
+var haystackGroup = new THREE.Group();
+haystackGroup.position.set(0, 0, -15);
+scene.add(haystackGroup);
+
+var domeGeo = new THREE.SphereGeometry(
+  HAYSTACK_RADIUS, 64, 32,
+  0, Math.PI * 2,
+  0, Math.PI / 2
+);
+domeGeo.scale(1, HAYSTACK_HEIGHT / HAYSTACK_RADIUS, 1);
+domeGeo.computeVertexNormals();
+
+var haystack = new THREE.Mesh(domeGeo, hayMaterial);
+haystack.castShadow = true;
+haystack.receiveShadow = true;
+haystackGroup.add(haystack);
+
+var skirtGeo = new THREE.CylinderGeometry(
+  HAYSTACK_RADIUS * 1.02,
+  HAYSTACK_RADIUS * 1.08,
+  0.3, 64, 1, true
+);
+var skirt = new THREE.Mesh(skirtGeo, hayMaterial);
+skirt.position.y = 0.15;
+skirt.castShadow = true;
+haystackGroup.add(skirt);
+
+addCollider(0, -15, HAYSTACK_RADIUS * 1.05);
+
+var needle = new THREE.Group();
+var needleBody = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 8),
+  new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 1.0, roughness: 0.1 }));
+needleBody.rotation.z = Math.PI / 2;
+needle.add(needleBody);
+var needleEye = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.018, 8, 16),
+  new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 1.0, roughness: 0.1 }));
+needleEye.position.x = 0.45;
+needleEye.rotation.y = Math.PI / 2;
+needle.add(needleEye);
+needle.position.set((Math.random()-0.5)*4, 1 + Math.random()*2, (Math.random()-0.5)*4);
+needle.visible = false;
+haystackGroup.add(needle);
+
+function relocateNeedle() {
+  var a = Math.random() * Math.PI * 2;
+  var r = Math.random() * HAYSTACK_RADIUS * 0.85;
+  var maxY = HAYSTACK_HEIGHT * 0.75;
+  var h = 0.4 + Math.random() * maxY;
+  needle.position.set(Math.cos(a) * r, h, Math.sin(a) * r);
+  needle.rotation.set(Math.random(), Math.random()*Math.PI*2, Math.random());
+}
+
+var needleRelocateTimer = 0;
+var needleRelocateInterval = 30 + Math.random()*30;
+function updateNeedlePosition(dt) {
+  if (state.foundNeedle) return;
+  needleRelocateTimer += dt;
+  if (needleRelocateTimer >= needleRelocateInterval) {
+    needleRelocateTimer = 0;
+    needleRelocateInterval = 30 + Math.random()*30;
+    relocateNeedle();
+  }
+}
+
+function makeWoodTexture(size) {
+  size = size || 512;
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#7a4520';
+  ctx.fillRect(0, 0, size, size);
+  var plankH = size / 8;
+  for (var i = 0; i < 8; i++) {
+    var y = i * plankH;
+    var shade = 0.85 + Math.random()*0.3;
+    ctx.fillStyle = 'rgb('+Math.floor(150*shade)+','+Math.floor(90*shade)+','+Math.floor(45*shade)+')';
+    ctx.fillRect(0, y, size, plankH-2);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, y+plankH-2, size, 2);
+    for (var k = 0; k < 40; k++) {
+      ctx.strokeStyle = 'rgba(0,0,0,'+(0.05+Math.random()*0.2)+')';
+      ctx.lineWidth = 0.5 + Math.random()*1.5;
+      ctx.beginPath();
+      var yy = y + Math.random()*plankH;
+      ctx.moveTo(0, yy);
+      for (var x = 0; x <= size; x += 15) ctx.lineTo(x, yy + Math.sin(x*0.05+k)*3);
+      ctx.stroke();
+    }
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function makeCowTexture(size) {
+  size = size || 512;
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#f8f4ec';
+  ctx.fillRect(0, 0, size, size);
+  for (var i = 0; i < 20000; i++) {
+    var x = Math.random()*size, y = Math.random()*size;
+    var v = 240 + Math.random()*15;
+    ctx.fillStyle = 'rgba('+Math.floor(v)+','+Math.floor(v-3)+','+Math.floor(v-10)+','+(0.15+Math.random()*0.2)+')';
+    ctx.fillRect(x, y, 1, 2+Math.random()*4);
+  }
+  function drawSpot(cx, cy, radius) {
+    var grad = ctx.createRadialGradient(cx, cy, radius*0.5, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(15,10,5,1)');
+    grad.addColorStop(0.6, 'rgba(25,18,12,1)');
+    grad.addColorStop(1, 'rgba(30,22,15,0.8)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    for (var p = 0; p <= 12; p++) {
+      var ang = (p/12)*Math.PI*2;
+      var r = radius * (0.75 + Math.random()*0.3);
+      var px = cx + Math.cos(ang)*r;
+      var py = cy + Math.sin(ang)*r;
+      if (p === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+  drawSpot(100, 120, 80);
+  drawSpot(400, 200, 95);
+  drawSpot(250, 420, 70);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function makeLeavesTexture(size) {
+  size = size || 256;
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#2d4a1c';
+  ctx.fillRect(0, 0, size, size);
+  for (var i = 0; i < 3000; i++) {
+    var x = Math.random()*size, y = Math.random()*size;
+    var g = 0.5 + Math.random()*0.7;
+    ctx.fillStyle = 'rgba('+Math.floor(70*g)+','+Math.floor(130*g)+','+Math.floor(45*g)+','+(0.5+Math.random()*0.5)+')';
+    ctx.beginPath();
+    ctx.arc(x, y, 3+Math.random()*6, 0, Math.PI*2);
+    ctx.fill();
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function makeBarkTexture(size) {
+  size = size || 256;
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#4a2e18';
+  ctx.fillRect(0, 0, size, size);
+  for (var i = 0; i < 400; i++) {
+    var x = Math.random()*size;
+    var g = 0.7 + Math.random()*0.6;
+    ctx.strokeStyle = 'rgba('+Math.floor(90*g)+','+Math.floor(60*g)+','+Math.floor(30*g)+',0.8)';
+    ctx.lineWidth = 1 + Math.random()*3;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    var cy = 0;
+    while (cy < size) {
+      cy += 10 + Math.random()*20;
+      x += (Math.random()-0.5)*4;
+      ctx.lineTo(x, cy);
+    }
+    ctx.stroke();
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+var barn = new THREE.Group();
+barn.position.set(0, 0, 22);
+scene.add(barn);
+
+var woodTex = makeWoodTexture(512);
+woodTex.repeat.set(2, 1);
+var woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.9 });
+var woodDarkTex = makeWoodTexture(512);
+var woodDarkMat = new THREE.MeshStandardMaterial({ map: woodDarkTex, color: 0xc08858, roughness: 0.9 });
+var roofMat = new THREE.MeshStandardMaterial({ color: 0x8b2a1a, roughness: 0.9 });
+var doorMat = new THREE.MeshStandardMaterial({ map: woodDarkTex, color: 0xa86838, roughness: 0.85 });
+
+var BARN_W = 12, BARN_D = 10, BARN_H = 6.5, WALL_T = 0.4;
+var DOOR_W = 2.4, DOOR_H = 4.5;
+
+var barnFloor = new THREE.Mesh(new THREE.BoxGeometry(BARN_W - WALL_T*2, 0.15, BARN_D - WALL_T*2),
+  new THREE.MeshStandardMaterial({ map: woodDarkTex, color: 0xb89070, roughness: 1 }));
+barnFloor.position.set(0, 0.075, 0);
+barnFloor.receiveShadow = true;
+barn.add(barnFloor);
+
+var backWall = new THREE.Mesh(new THREE.BoxGeometry(BARN_W, BARN_H, WALL_T), woodMat);
+backWall.position.set(0, BARN_H/2, BARN_D/2);
+backWall.castShadow = true;
+backWall.receiveShadow = true;
+barn.add(backWall);
+
+[-BARN_W/2, BARN_W/2].forEach(function(x) {
+  var sw = new THREE.Mesh(new THREE.BoxGeometry(WALL_T, BARN_H, BARN_D), woodMat);
+  sw.position.set(x, BARN_H/2, 0);
+  sw.castShadow = true;
+  sw.receiveShadow = true;
+  barn.add(sw);
+});
+
+var frontWallSide = (BARN_W - DOOR_W * 2 - 0.3) / 2;
+var frontLeft = new THREE.Mesh(new THREE.BoxGeometry(frontWallSide, BARN_H, WALL_T), woodMat);
+frontLeft.position.set(-(DOOR_W + 0.15 + frontWallSide/2), BARN_H/2, -BARN_D/2);
+frontLeft.castShadow = true;
+frontLeft.receiveShadow = true;
+barn.add(frontLeft);
+
+var frontRight = new THREE.Mesh(new THREE.BoxGeometry(frontWallSide, BARN_H, WALL_T), woodMat);
+frontRight.position.set(DOOR_W + 0.15 + frontWallSide/2, BARN_H/2, -BARN_D/2);
+frontRight.castShadow = true;
+frontRight.receiveShadow = true;
+barn.add(frontRight);
+
+var lintel = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W*2 + 0.3, BARN_H - DOOR_H, WALL_T), woodMat);
+lintel.position.set(0, DOOR_H + (BARN_H - DOOR_H)/2, -BARN_D/2);
+lintel.castShadow = true;
+barn.add(lintel);
+
+var DOOR_OPEN_ANGLE = Math.PI / 5;
+
+var leftDoorPivot = new THREE.Group();
+leftDoorPivot.position.set(-(DOOR_W + 0.15), 0, -BARN_D/2);
+barn.add(leftDoorPivot);
+var leftDoor = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.18), doorMat);
+leftDoor.position.set(DOOR_W/2, DOOR_H/2, 0);
+leftDoor.castShadow = true;
+leftDoor.receiveShadow = true;
+leftDoorPivot.add(leftDoor);
+leftDoorPivot.rotation.y = DOOR_OPEN_ANGLE;
+
+var rightDoorPivot = new THREE.Group();
+rightDoorPivot.position.set(DOOR_W + 0.15, 0, -BARN_D/2);
+barn.add(rightDoorPivot);
+var rightDoor = new THREE.Mesh(new THREE.BoxGeometry(DOOR_W, DOOR_H, 0.18), doorMat);
+rightDoor.position.set(-DOOR_W/2, DOOR_H/2, 0);
+rightDoor.castShadow = true;
+rightDoor.receiveShadow = true;
+rightDoorPivot.add(rightDoor);
+rightDoorPivot.rotation.y = -DOOR_OPEN_ANGLE;
+
+var roofGeo = new THREE.BoxGeometry(BARN_W + 1.2, 0.5, BARN_D * 0.65);
+var roofL = new THREE.Mesh(roofGeo, roofMat);
+roofL.position.set(0, BARN_H + 1.5, -BARN_D * 0.25);
+roofL.rotation.x = -Math.PI / 6;
+roofL.castShadow = true;
+barn.add(roofL);
+var roofR = new THREE.Mesh(roofGeo, roofMat);
+roofR.position.set(0, BARN_H + 1.5, BARN_D * 0.25);
+roofR.rotation.x = Math.PI / 6;
+roofR.castShadow = true;
+barn.add(roofR);
+
+for (var bx = -BARN_W/2 + 0.5; bx <= BARN_W/2 - 0.5; bx += 1) addCollider(bx, 22 + BARN_D/2, 0.55);
+for (var bz = -BARN_D/2 + 0.5; bz <= BARN_D/2 - 0.5; bz += 1) {
+  addCollider(-BARN_W/2, 22 + bz, 0.55);
+  addCollider(BARN_W/2, 22 + bz, 0.55);
+}
+for (var fx = -BARN_W/2 + 0.5; fx <= BARN_W/2 - 0.5; fx += 0.5) addCollider(fx, 22 - BARN_D/2, 0.6);
+
+var cow = new THREE.Group();
+cow.position.set(15, 0, 5);
+var dirToCenter = new THREE.Vector3(0,0,0).sub(new THREE.Vector3(15,0,5));
+cow.rotation.y = Math.atan2(dirToCenter.x, dirToCenter.z);
+scene.add(cow);
+
+var cowTex = makeCowTexture(512);
+var cowBodyMat = new THREE.MeshStandardMaterial({ map: cowTex, roughness: 0.9 });
+var cowPinkMat = new THREE.MeshStandardMaterial({ color: 0xf0a8b0, roughness: 0.85 });
+var cowBlackMat = new THREE.MeshStandardMaterial({ color: 0x0a0505, roughness: 0.4 });
+var cowHornMat = new THREE.MeshStandardMaterial({ color: 0xe8dcc0, roughness: 0.7 });
+var cowHoofMat = new THREE.MeshStandardMaterial({ color: 0x2a1f15, roughness: 0.7 });
+var cowMouthMat = new THREE.MeshStandardMaterial({ color: 0x3a1a1a, roughness: 0.6 });
+
+var body = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 2.2, 20), cowBodyMat);
+body.rotation.x = Math.PI / 2;
+body.position.set(0, 1.7, 0);
+body.castShadow = true;
+cow.add(body);
+
+var bodyFront = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 16), cowBodyMat);
+bodyFront.position.set(0, 1.7, 1.1);
+bodyFront.castShadow = true;
+cow.add(bodyFront);
+
+var bodyBack = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 16), cowBodyMat);
+bodyBack.position.set(0, 1.7, -1.1);
+bodyBack.castShadow = true;
+cow.add(bodyBack);
+
+var HEAD_Y = 2.6;
+var HEAD_Z = 1.75;
+var head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 22, 18), cowBodyMat);
+head.position.set(0, HEAD_Y, HEAD_Z);
+head.scale.set(1.0, 0.95, 1.1);
+head.castShadow = true;
+cow.add(head);
+
+var snout = new THREE.Mesh(
+  new THREE.SphereGeometry(0.42, 18, 14, 0, Math.PI*2, 0, Math.PI*0.75),
+  cowPinkMat
+);
+snout.position.set(0, HEAD_Y - 0.18, HEAD_Z + 0.55);
+snout.rotation.x = Math.PI / 2;
+snout.scale.set(1.05, 1.0, 1.2);
+cow.add(snout);
+
+[-0.15, 0.15].forEach(function(x) {
+  var nostril = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), cowBlackMat);
+  nostril.position.set(x, HEAD_Y - 0.12, HEAD_Z + 0.9);
+  nostril.scale.set(1.2, 0.7, 0.5);
+  cow.add(nostril);
+});
+
+for (var m = 0; m < 11; m++) {
+  var t = m / 10;
+  var angle = Math.PI * (0.12 + t * 0.76);
+  var mx = Math.cos(angle) * 0.24;
+  var my = -Math.sin(angle) * 0.1 - 0.02;
+  var dot = new THREE.Mesh(new THREE.SphereGeometry(0.024, 6, 6), cowMouthMat);
+  dot.position.set(mx, HEAD_Y - 0.36 + my, HEAD_Z + 0.85);
+  cow.add(dot);
+}
+
+var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 });
+[-0.4, 0.4].forEach(function(x) {
+  var cheek = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cheekMat);
+  cheek.position.set(x, HEAD_Y - 0.22, HEAD_Z + 0.35);
+  cheek.scale.set(1, 0.7, 0.4);
+  cow.add(cheek);
+});
+
+var eyeRadius = 0.09;
+[-0.24, 0.24].forEach(function(x) {
+  var eye = new THREE.Mesh(new THREE.SphereGeometry(eyeRadius, 14, 14), cowBlackMat);
+  eye.position.set(x, HEAD_Y + 0.3, HEAD_Z + 0.52);
+  eye.castShadow = false;
+  cow.add(eye);
+});
+
+[-0.65, 0.65].forEach(function(x) {
+  var ear = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), cowBodyMat);
+  ear.position.set(x, HEAD_Y + 0.25, HEAD_Z - 0.1);
+  ear.scale.set(0.8, 1.5, 0.5);
+  ear.rotation.z = x > 0 ? -0.6 : 0.6;
+  ear.rotation.y = x > 0 ? 0.3 : -0.3;
+  cow.add(ear);
+});
+
+[-0.4, 0.4].forEach(function(x) {
+  var horn = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.28, 8), cowHornMat);
+  horn.position.set(x, HEAD_Y + 0.45, HEAD_Z - 0.05);
+  horn.rotation.z = x > 0 ? 0.5 : -0.5;
+  cow.add(horn);
+});
+
+[{x:-0.55,z:0.9},{x:0.55,z:0.9},{x:-0.55,z:-0.9},{x:0.55,z:-0.9}].forEach(function(p) {
+  var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 1.4, 12), cowBodyMat);
+  leg.position.set(p.x, 0.8, p.z);
+  leg.castShadow = true;
+  cow.add(leg);
+  var hoof = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.23, 0.2, 12), cowHoofMat);
+  hoof.position.set(p.x, 0.1, p.z);
+  hoof.castShadow = true;
+  cow.add(hoof);
+});
+
+var tail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8), cowBodyMat);
+tail.position.set(0, 1.9, -1.7);
+tail.rotation.x = 0.6;
+cow.add(tail);
+var tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cowBlackMat);
+tailTip.position.set(0, 1.4, -2.15);
+cow.add(tailTip);
+
+var udder = new THREE.Mesh(
+  new THREE.SphereGeometry(0.32, 14, 10, 0, Math.PI*2, 0, Math.PI*0.75),
+  cowPinkMat
+);
+udder.position.set(0, 1.1, 0.3);
+udder.rotation.x = Math.PI;
+cow.add(udder);
+
+addCollider(15, 5, 2.2);
+
+var barkTex = makeBarkTexture(256);
+var leavesTex = makeLeavesTexture(256);
+
+function makeTree(x, z) {
+  var tree = new THREE.Group();
+  tree.position.set(x, 0, z);
+  tree.userData.viewPosition = new THREE.Vector3(x, 0, z);
+  var trunkHeight = 4 + Math.random()*1.5;
+  var trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, trunkHeight, 10),
+    new THREE.MeshStandardMaterial({ map: barkTex, roughness: 1 }));
+  trunk.position.y = trunkHeight/2;
+  trunk.castShadow = true;
+  trunk.receiveShadow = true;
+  tree.add(trunk);
+  var leafMat = new THREE.MeshStandardMaterial({ map: leavesTex, roughness: 1 });
+  for (var i = 0; i < 6; i++) {
+    var layerSize = 1.5 - i*0.12 + Math.random()*0.3;
+    var leaf = new THREE.Mesh(new THREE.SphereGeometry(layerSize, 12, 10), leafMat);
+    leaf.position.set((Math.random()-0.5)*1.6, trunkHeight - 0.3 + i*0.6 + Math.random()*0.4, (Math.random()-0.5)*1.6);
+    leaf.scale.y = 0.85;
+    leaf.castShadow = true;
+    leaf.receiveShadow = true;
+    tree.add(leaf);
+  }
+  var topLeaf = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 10), leafMat);
+  topLeaf.position.y = trunkHeight + 0.8;
+  topLeaf.scale.y = 0.9;
+  topLeaf.castShadow = true;
+  tree.add(topLeaf);
+  visibleObjects.push(tree);
+  return tree;
+}
+
+[[-25,-10],[-30,15],[25,-15],[30,10],[-15,25],[20,25],[-22,20],[28,-22]].forEach(function(p) {
+  scene.add(makeTree(p[0], p[1]));
+  addCollider(p[0], p[1], 0.8);
+});
+
+function makeBush(x, z) {
+  var bush = new THREE.Mesh(
+    new THREE.SphereGeometry(0.7 + Math.random()*0.3, 8, 6),
+    new THREE.MeshStandardMaterial({ map: leavesTex, color: 0x4a7030, roughness: 1 })
+  );
+  bush.position.set(x, 0.6, z);
+  bush.scale.y = 0.8;
+  bush.castShadow = true;
+  bush.receiveShadow = true;
+  scene.add(bush);
+}
+for (var b2 = 0; b2 < 30; b2++) {
+  var bx2 = (Math.random()-0.5)*90;
+  var bz2 = (Math.random()-0.5)*90;
+  if (Math.abs(bx2) < 6 && Math.abs(bz2) < 6) continue;
+  makeBush(bx2, bz2);
+}
+
+var fenceMat = new THREE.MeshStandardMaterial({ map: woodDarkTex, color: 0xd8a870, roughness: 0.9 });
+var fenceGeo = new THREE.BoxGeometry(0.25, 2, 0.25);
+for (var fi = -40; fi <= 40; fi += 4) {
+  [-40, 40].forEach(function(z) {
+    var post = new THREE.Mesh(fenceGeo, fenceMat);
+    post.position.set(fi, 1, z);
+    post.castShadow = true;
+    post.receiveShadow = true;
+    scene.add(post);
+  });
+  [-40, 40].forEach(function(x) {
+    var post = new THREE.Mesh(fenceGeo, fenceMat);
+    post.position.set(x, 1, fi);
+    post.castShadow = true;
+    post.receiveShadow = true;
+    scene.add(post);
+  });
+}
+
+function makeLabel(text) {
+  var canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, 512, 128);
+  ctx.font = 'Bold 44px Arial';
+  ctx.fillStyle = '#ffd700';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(canvas);
+  var mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  var sprite = new THREE.Sprite(mat);
+  sprite.scale.set(5, 1.2, 1);
+  return sprite;
+}
+
+var stackLabel = makeLabel('🌾 СТОГ — клик');
+stackLabel.position.set(0, HAYSTACK_HEIGHT + 1.5, 0);
+haystackGroup.add(stackLabel);
+var cowLabel = makeLabel('🐄 КОРОВА — [E]');
+cowLabel.position.set(0, 4.5, 0);
+cow.add(cowLabel);
+var barnLabel = makeLabel('🏠 АМБАР — [E]');
+barnLabel.position.set(0, BARN_H + 3.5, -BARN_D/2);
+barn.add(barnLabel);
+
+var player = {
+  position: new THREE.Vector3(0, 1.7, 15),
+  yaw: 0, pitch: 0, radius: 0.4,
+  velocityY: 0, isGrounded: true, groundY: 1.7,
+  jumpForce: 7.0, gravity: 20.0
+};
+
+var keys = { w:false, a:false, s:false, d:false,
+  arrowup:false, arrowdown:false, arrowleft:false, arrowright:false, shift:false };
+var MOUSE_SENSITIVITY = 0.005;
+var TOUCH_SENSITIVITY = 0.010;
+var isLocked = false;
+var shopOpen = false;
+
+var lookArea = document.getElementById('lookArea');
+var lookHint = document.getElementById('lookHint');
+var touchLookActive = false;
+var lastTouchX = 0, lastTouchY = 0;
+
+function isUITarget(target) {
+  var moveJoystick = document.getElementById('moveJoystick');
+  var runBtn = document.getElementById('runBtn');
+  var jumpBtn = document.getElementById('jumpBtn');
+  var shootBtn = document.getElementById('shootBtn');
+  return (moveJoystick && (target === moveJoystick || moveJoystick.contains(target))) ||
+         target === runBtn || target === jumpBtn || target === shootBtn;
+}
+
+lookArea.addEventListener('touchstart', function(e) {
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    if (isUITarget(e.changedTouches[i].target)) return;
+  }
+  e.preventDefault();
+  var touch = e.changedTouches[0];
+  touchLookActive = true;
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  if (lookHint) lookHint.style.display = 'none';
+}, { passive: false });
+
+lookArea.addEventListener('touchmove', function(e) {
+  if (!touchLookActive) return;
+  e.preventDefault();
+  var touch = e.changedTouches[0];
+  var dx = touch.clientX - lastTouchX;
+  var dy = touch.clientY - lastTouchY;
+  player.yaw -= dx * TOUCH_SENSITIVITY;
+  player.pitch -= dy * TOUCH_SENSITIVITY;
+  player.pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, player.pitch));
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+}, { passive: false });
+
+lookArea.addEventListener('touchend', function() { touchLookActive = false; });
+lookArea.addEventListener('touchcancel', function() { touchLookActive = false; });
+
+var canvasEl = renderer.domElement;
+var pointerLocked = false;
+
+function safePointerLock() {
+  if (!tutorialCompleted) return;
+  if (!document.hasFocus()) return;
+  try { if (canvasEl) canvasEl.requestPointerLock(); } catch (e) {}
+}
+
+canvasEl.addEventListener('click', function() {
+  if (!tutorialCompleted) return;
+  if (!pointerLocked && !touchLookActive && !shopOpen && !adminOpen) safePointerLock();
+});
+
+document.addEventListener('pointerlockchange', function() {
+  pointerLocked = document.pointerLockElement === canvasEl;
+  isLocked = pointerLocked;
+  var ctp = document.getElementById('click-to-play');
+  if (pointerLocked) { if (ctp) ctp.classList.remove('show'); }
+  else if (tutorialCompleted && !state.foundNeedle && !shopOpen && !adminOpen && !isMobileDevice) {
+    if (ctp) ctp.classList.add('show');
+  }
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!pointerLocked) return;
+  player.yaw -= e.movementX * MOUSE_SENSITIVITY;
+  player.pitch -= e.movementY * MOUSE_SENSITIVITY;
+  player.pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, player.pitch));
+});
+
+function jump() {
+  if (player.isGrounded && !shopOpen && !state.foundNeedle && !adminOpen) {
+    player.velocityY = player.jumpForce;
+    player.isGrounded = false;
+  }
+}
+
+var moveJoystick = document.getElementById('moveJoystick');
+var moveKnob = document.getElementById('moveKnob');
+var moveActive = false;
+var joystickInput = { x: 0, y: 0 };
+
+function handleMoveStart(e) { e.preventDefault(); e.stopPropagation(); moveActive = true; }
+function handleMoveMove(e) {
+  if (!moveActive) return;
+  e.preventDefault(); e.stopPropagation();
+  var touch = e.touches ? e.touches[0] : e;
+  var rect = moveJoystick.getBoundingClientRect();
+  var cx = rect.left + rect.width/2;
+  var cy = rect.top + rect.height/2;
+  var dx = touch.clientX - cx;
+  var dy = touch.clientY - cy;
+  var maxDist = rect.width/2 - 25;
+  var dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
+  moveKnob.style.transform = 'translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))';
+  joystickInput.x = dx/maxDist;
+  joystickInput.y = dy/maxDist;
+}
+function handleMoveEnd(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  moveActive = false;
+  moveKnob.style.transform = 'translate(-50%, -50%)';
+  joystickInput.x = 0;
+  joystickInput.y = 0;
+}
+moveJoystick.addEventListener('touchstart', handleMoveStart, { passive: false });
+moveJoystick.addEventListener('touchmove', handleMoveMove, { passive: false });
+moveJoystick.addEventListener('touchend', handleMoveEnd, { passive: false });
+moveJoystick.addEventListener('touchcancel', handleMoveEnd, { passive: false });
+moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.stopPropagation(); moveActive = true; });
+document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
+document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
+
+document.addEventListener('keydown', function(e) {
+  var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
+  if (!key) return;
+  if (key === '0') { e.preventDefault(); toggleAdmin(); return; }
+  if (key === 'escape' && adminOpen) { toggleAdmin(); return; }
+  if (key === 'w' || key === 'ц') keys.w = true;
+  if (key === 'a' || key === 'ф') keys.a = true;
+  if (key === 's' || key === 'ы') keys.s = true;
+  if (key === 'd' || key === 'в') keys.d = true;
+  if (key === 'arrowup') keys.arrowup = true;
+  if (key === 'arrowdown') keys.arrowdown = true;
+  if (key === 'arrowleft') keys.arrowleft = true;
+  if (key === 'arrowright') keys.arrowright = true;
+  if (e.shiftKey) keys.shift = true;
+  if (key === ' ' || key === 'spacebar' || e.code === 'Space') { e.preventDefault(); jump(); }
+  if (key === 'e' || key === 'у') pressEButton();
+  if (key === 'z' || key === 'я' || key === 'p') { e.preventDefault(); toggleShop(); }
+});
+document.addEventListener('keyup', function(e) {
+  var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
+  if (!key) return;
+  if (key === 'w' || key === 'ц') keys.w = false;
+  if (key === 'a' || key === 'ф') keys.a = false;
+  if (key === 's' || key === 'ы') keys.s = false;
+  if (key === 'd' || key === 'в') keys.d = false;
+  if (key === 'arrowup') keys.arrowup = false;
+  if (key === 'arrowdown') keys.arrowdown = false;
+  if (key === 'arrowleft') keys.arrowleft = false;
+  if (key === 'arrowright') keys.arrowright = false;
+  if (!e.shiftKey) keys.shift = false;
+});
+
+// ============================================
+// 🛠️ АДМИН-ПАНЕЛЬ
+// ============================================
+var adminOpen = false;
+
+function toggleAdmin() {
+  adminOpen = !adminOpen;
+  var panel = document.getElementById('admin-panel');
+  if (adminOpen) {
+    panel.classList.add('show');
+    document.exitPointerLock();
+    document.getElementById('admin-money').value = state.money;
+    document.getElementById('admin-hay').value = state.hay;
+    document.getElementById('admin-milk').value = state.milk;
+    document.getElementById('admin-speed').value = state.moveSpeed;
+    document.getElementById('admin-maxhay').value = state.maxHay;
+  } else {
+    panel.classList.remove('show');
+    if (!isMobileDevice && !state.foundNeedle && tutorialCompleted) safePointerLock();
+  }
+}
+
+function adminSet(what) {
+  var val;
+  if (what === 'money') {
+    val = parseInt(document.getElementById('admin-money').value) || 0;
+    state.money = val;
+  } else if (what === 'hay') {
+    val = parseInt(document.getElementById('admin-hay').value) || 0;
+    state.hay = Math.min(val, state.maxHay);
+  } else if (what === 'milk') {
+    val = parseInt(document.getElementById('admin-milk').value) || 0;
+    state.milk = val;
+  } else if (what === 'speed') {
+    val = parseFloat(document.getElementById('admin-speed').value) || 5;
+    state.moveSpeed = val;
+  } else if (what === 'maxhay') {
+    val = parseInt(document.getElementById('admin-maxhay').value) || 25;
+    state.maxHay = val;
+  }
+  updateHUD();
+  updateShopMenu();
+}
+
+function adminQuick(action) {
+  if (action === 'money') {
+    state.money += 10000;
+  } else if (action === 'all') {
+    state.money += 10000;
+    state.hay = state.maxHay;
+    state.milk += 100;
+    state.speedLvl = 7;
+    state.gatherLvl = 7;
+    state.invLvl = 7;
+    state.maxHay = 25 + (state.invLvl - 1) * 15;
+    state.luckLvl = 5;
+    state.moveSpeed = 5 + (state.speedLvl - 1) * 1.5;
+    state.gatherCooldown = Math.max(0.1, 0.8 * Math.pow(0.7, state.gatherLvl - 1));
+    state.hasFork = true;
+    state.hasDynamite = true;
+    state.hasVacuum = true;
+    state.autoGatherLvl = 5;
+  } else if (action === 'tools') {
+    state.hasFork = true;
+    state.hasDynamite = true;
+    state.hasVacuum = true;
+  } else if (action === 'luck') {
+    state.luckLvl = 5;
+  } else if (action === 'needle') {
+    findNeedle();
+    toggleAdmin();
+    return;
+  } else if (action === 'reset') {
+    if (confirm('Точно сбросить игру?')) location.reload();
+    return;
+  }
+  updateHUD();
+  updateShopMenu();
+  toggleAdmin();
+}
+
+var runBtn = document.getElementById('runBtn');
+var jumpBtn = document.getElementById('jumpBtn');
+var staminaFillMobile = document.getElementById('staminaFill-mobile');
+var isRunningTouch = false;
+
+function startRunTouch(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (state.stamina > 0.5) { isRunningTouch = true; runBtn.classList.add('active'); }
+}
+function stopRunTouch(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  isRunningTouch = false;
+  runBtn.classList.remove('active');
+}
+runBtn.addEventListener('touchstart', startRunTouch, { passive: false });
+runBtn.addEventListener('touchend', stopRunTouch, { passive: false });
+runBtn.addEventListener('touchcancel', stopRunTouch, { passive: false });
+runBtn.addEventListener('mousedown', startRunTouch);
+runBtn.addEventListener('mouseup', stopRunTouch);
+runBtn.addEventListener('mouseleave', stopRunTouch);
+
+function handleJump(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  jumpBtn.classList.add('active');
+  setTimeout(function() { jumpBtn.classList.remove('active'); }, 120);
+  jump();
+}
+jumpBtn.addEventListener('touchstart', handleJump, { passive: false });
+jumpBtn.addEventListener('mousedown', handleJump);
+
+var shootBtn = document.getElementById('shootBtn');
+
+function pressEButton(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (shootBtn) {
+    shootBtn.classList.add('active');
+    setTimeout(function() { shootBtn.classList.remove('active'); }, 120);
+  }
+  if (shopOpen || state.foundNeedle || adminOpen) return;
+  var dHaystack = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
+  var dBarn = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  if (dHaystack < HAYSTACK_RADIUS + 10) {
+    if (state.hay >= state.maxHay) { showHint('Инвентарь полон!'); return; }
+    tryGatherHay(); return;
+  }
+  if (dCow < 7) { interact(); return; }
+  if (dBarn < 12) { interact(); return; }
+  showHint('Рядом ничего нет');
+}
+if (shootBtn) {
+  shootBtn.addEventListener('touchstart', pressEButton, { passive: false });
+  shootBtn.addEventListener('mousedown', pressEButton);
+}
+
+var clickToPlay = document.getElementById('click-to-play');
+clickToPlay.addEventListener('click', function() {
+  if (!tutorialCompleted) return;
+  safePointerLock();
+});
+
+var isMouseDownGather = false;
+canvasEl.addEventListener('mousedown', function(e) {
+  if (!pointerLocked || e.button !== 0 || shopOpen || adminOpen) return;
+  if (state.foundNeedle) return;
+  isMouseDownGather = true;
+  tryGatherHay();
+});
+document.addEventListener('mouseup', function() { isMouseDownGather = false; });
+
+canvasEl.addEventListener('touchstart', function(e) {
+  if (e.target !== canvasEl) return;
+  if (shopOpen || adminOpen) return;
+  if (state.foundNeedle) return;
+  if (isNearHaystack()) tryGatherHay();
+}, { passive: true });
+
+function isNearHaystack() {
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  return d < HAYSTACK_RADIUS + 10;
+}
+
+function tryGatherHay() {
+  var now = performance.now();
+  if (now - state.lastGatherTime < state.gatherCooldown * 1000) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) { showHint('Далеко от стога!'); return; }
+  if (state.hay >= state.maxHay) { showHint('Инвентарь полон!'); return; }
+  var hayPerGather = 1, toolUsed = '';
+  if (state.vacuumActive) { hayPerGather = 8; toolUsed = 'vacuum'; spawnVacuumParticles(); }
+  else if (state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
+    hayPerGather = 5; state.lastForkTime = now; toolUsed = 'fork'; spawnForkParticle();
+  }
+  else if (state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
+    hayPerGather = 15; state.lastDynamiteTime = now; toolUsed = 'dynamite'; spawnExplosion();
+  }
+  state.lastGatherTime = now;
+  var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
+  state.hay += actualHay;
+  state.totalHay += actualHay;
+  var luckBonus = (state.luckLvl - 1) * 0.0015 * actualHay;
+  if (Math.random() < 0.003 + luckBonus) { findNeedle(); return; }
+  if (toolUsed !== 'vacuum') spawnStalkParticle();
+  var txt = '+' + actualHay + ' сена';
+  if (toolUsed === 'fork') txt += ' +вилы';
+  if (toolUsed === 'dynamite') txt += ' +динамит';
+  if (toolUsed === 'vacuum') txt += ' +пылесос';
+  showPopup(txt, window.innerWidth/2, window.innerHeight/2 - 50);
+  updateHUD();
+  updateShopMenu();
+}
+
+function spawnForkParticle() { for (var i = 0; i < 5; i++) setTimeout(spawnStalkParticle, i*50); }
+function spawnExplosion() {
+  for (var i = 0; i < 20; i++) {
+    var part = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15),
+      new THREE.MeshBasicMaterial({ color: [0xff6600, 0xffcc00, 0xff3300][i%3] }));
+    part.position.copy(haystackGroup.position);
+    part.position.y += HAYSTACK_HEIGHT/2;
+    part.position.x += (Math.random()-0.5)*3;
+    part.position.z += (Math.random()-0.5)*3;
+    var vel = new THREE.Vector3((Math.random()-0.5)*15, Math.random()*12+5, (Math.random()-0.5)*15);
+    scene.add(part);
+    particles.push({ mesh: part, vel: vel, angVel: new THREE.Vector3(Math.random()*20, Math.random()*20, Math.random()*20), life: 2 });
+  }
+}
+function spawnVacuumParticles() {
+  for (var i = 0; i < 8; i++) {
+    var stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.04, 0.4, 4),
+      new THREE.MeshBasicMaterial({ color: 0xe8c547 }));
+    var dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    stalk.position.copy(camera.position).addScaledVector(dir, 3 + Math.random()*5);
+    stalk.position.x += (Math.random()-0.5)*4;
+    stalk.position.z += (Math.random()-0.5)*4;
+    var toPlayer = new THREE.Vector3().subVectors(camera.position, stalk.position).normalize();
+    var vel = new THREE.Vector3(toPlayer.x*10, 2, toPlayer.z*10);
+    scene.add(stalk);
+    particles.push({ mesh: stalk, vel: vel, angVel: new THREE.Vector3(Math.random()*15, Math.random()*15, Math.random()*15), life: 0.8 });
+  }
+}
+
+function interact() {
+  if (shopOpen || state.foundNeedle || adminOpen) return;
+  var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
+  if (dCow < 7) {
+    if (state.hay > 0) {
+      var milk = state.hay;
+      state.milk += milk;
+      state.hay = 0;
+      showPopup('+' + milk + ' молока', window.innerWidth/2, window.innerHeight/2 - 50);
+      showHint('Корова дала ' + milk + ' л молока!');
+    } else showHint('Корова ждёт сена...');
+    updateHUD(); updateShopMenu();
+    return;
+  }
+  var dBarn = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  if (dBarn < 12) toggleShop();
+}
+
+function findNeedle() {
+  state.foundNeedle = true;
+  needle.visible = true;
+  document.exitPointerLock();
+  setTimeout(function() {
+    document.getElementById('final-money').textContent = state.money;
+    document.getElementById('final-milk').textContent = state.totalMilkSold;
+    document.getElementById('final-hay').textContent = state.totalHay;
+    document.getElementById('message').classList.add('show');
+  }, 500);
+}
+
+function showPopup(text, x, y) {
+  var p = document.createElement('div');
+  p.className = 'popup';
+  p.textContent = text;
+  p.style.left = x + 'px';
+  p.style.top = y + 'px';
+  document.getElementById('popups').appendChild(p);
+  setTimeout(function() { p.remove(); }, 1300);
+}
+
+var hintTimeout;
+function showHint(text) {
+  if (isMobileDevice) return;
+  var hint = document.getElementById('hint');
+  if (!hint) return;
+  hint.innerHTML = text;
+  hint.classList.add('show');
+  clearTimeout(hintTimeout);
+  hintTimeout = setTimeout(function() {
+    hint.innerHTML = '<b>ЛКМ</b> — собрать сено | <b>E</b> — корова/амбар | <b>Z</b> — магазин';
+  }, 2500);
+}
+
+function spawnStalkParticle() {
+  var stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.5, 4),
+    new THREE.MeshStandardMaterial({ color: 0xe8c547, roughness: 0.85 }));
+  var dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  stalk.position.copy(camera.position).addScaledVector(dir, 1.5);
+  var vel = new THREE.Vector3((Math.random()-0.5)*4, 2 + Math.random()*2, (Math.random()-0.5)*4);
+  var angVel = new THREE.Vector3((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*10);
+  scene.add(stalk);
+  particles.push({ mesh: stalk, vel: vel, angVel: angVel, life: 1.2 });
+}
+function updateParticles(dt) {
+  for (var i = particles.length - 1; i >= 0; i--) {
+    var p = particles[i];
+    p.life -= dt;
+    p.vel.y -= 9.8 * dt;
+    p.mesh.position.addScaledVector(p.vel, dt);
+    p.mesh.rotation.x += p.angVel.x * dt;
+    p.mesh.rotation.y += p.angVel.y * dt;
+    p.mesh.rotation.z += p.angVel.z * dt;
+    if (p.life <= 0 || p.mesh.position.y < 0) {
+      scene.remove(p.mesh);
+      particles.splice(i, 1);
+    }
+  }
+}
+
+var shopMenu = document.getElementById('shop-menu');
+
+function toggleShop() {
+  var d = player.position.distanceTo(new THREE.Vector3(0, 0, 22));
+  if (!shopOpen && d > 12) { showHint('Подойди к амбару'); return; }
+  shopOpen = !shopOpen;
+  if (shopOpen) {
+    shopMenu.classList.add('open');
+    document.exitPointerLock();
+    updateShopMenu();
+  } else {
+    shopMenu.classList.remove('open');
+    if (!state.foundNeedle && !isMobileDevice && !adminOpen && tutorialCompleted) safePointerLock();
+  }
+}
+
+document.getElementById('shop-close').onclick = toggleShop;
+
+function updateShopMenu() {
+  document.getElementById('shop-money').textContent = state.money;
+  document.getElementById('shop-milk').textContent = state.milk;
+  document.getElementById('speedLvl').textContent = state.speedLvl;
+  document.getElementById('gatherLvl').textContent = state.gatherLvl;
+  document.getElementById('invLvl').textContent = state.invLvl;
+  document.getElementById('luckLvl').textContent = state.luckLvl;
+  var sp = PRICES.speed[state.speedLvl - 1];
+  var gp = PRICES.gather[state.gatherLvl - 1];
+  var ip = PRICES.inv[state.invLvl - 1];
+  var lp = PRICES.luck[state.luckLvl - 1];
+  document.getElementById('speedPrice').textContent = sp ? sp + '$' : 'MAX';
+  document.getElementById('gatherPrice').textContent = gp ? gp + '$' : 'MAX';
+  document.getElementById('invPrice').textContent = ip ? ip + '$' : 'MAX';
+  document.getElementById('luckPrice').textContent = lp ? lp + '$' : 'MAX';
+  document.getElementById('buySpeed').disabled = !sp || state.money < sp;
+  document.getElementById('buyGather').disabled = !gp || state.money < gp;
+  document.getElementById('buyInv').disabled = !ip || state.money < ip;
+  document.getElementById('buyLuck').disabled = !lp || state.money < lp;
+  document.getElementById('sellMilkCount').textContent = state.milk;
+  document.getElementById('sellMilkPrice').textContent = (state.milk * MILK_PRICE) + '$';
+  document.getElementById('sellMilk').disabled = state.milk === 0;
+
+  // Вилы
+  var forkBtn = document.getElementById('buyFork');
+  var forkPriceEl = document.getElementById('forkPrice');
+  if (state.hasFork) {
+    forkBtn.childNodes[0].nodeValue = 'Куплено';
+    forkBtn.disabled = true;
+    forkPriceEl.textContent = '';
+  } else {
+    forkBtn.childNodes[0].nodeValue = 'Купить';
+    forkBtn.disabled = state.money < PRICES.fork[0];
+    forkPriceEl.textContent = PRICES.fork[0] + '$';
+  }
+
+  // Динамит
+  var dynBtn = document.getElementById('buyDynamite');
+  var dynPriceEl = document.getElementById('dynamitePrice');
+  if (state.hasDynamite) {
+    dynBtn.childNodes[0].nodeValue = 'Куплено';
+    dynBtn.disabled = true;
+    dynPriceEl.textContent = '';
+  } else {
+    dynBtn.childNodes[0].nodeValue = 'Купить';
+    dynBtn.disabled = state.money < PRICES.dynamite[0];
+    dynPriceEl.textContent = PRICES.dynamite[0] + '$';
+  }
+
+  // Пылесос
+  var vacBtn = document.getElementById('buyVacuum');
+  var vacPriceEl = document.getElementById('vacuumPrice');
+  if (state.hasVacuum) {
+    vacBtn.childNodes[0].nodeValue = 'Куплено';
+    vacBtn.disabled = true;
+    vacPriceEl.textContent = '';
+  } else {
+    vacBtn.childNodes[0].nodeValue = 'Купить';
+    vacBtn.disabled = state.money < PRICES.vacuum[0];
+    vacPriceEl.textContent = PRICES.vacuum[0] + '$';
+  }
+
+  document.getElementById('autoGatherLvl').textContent = state.autoGatherLvl;
+  var agp = PRICES.autoGather[state.autoGatherLvl];
+  document.getElementById('autoGatherPrice').textContent = agp ? agp + '$' : 'MAX';
+  document.getElementById('buyAutoGather').disabled = !agp || state.money < agp;
+}
+
+document.getElementById('sellMilk').onclick = function() {
+  if (state.milk === 0) return;
+  var e = state.milk * MILK_PRICE;
+  state.money += e;
+  state.totalMilkSold += state.milk;
+  showPopup('+' + e + '$', window.innerWidth/2, window.innerHeight/2);
+  state.milk = 0;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buySpeed').onclick = function() {
+  var p = PRICES.speed[state.speedLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.speedLvl++;
+  state.moveSpeed = 5 + (state.speedLvl - 1) * 1.5;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyGather').onclick = function() {
+  var p = PRICES.gather[state.gatherLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.gatherLvl++;
+  state.gatherCooldown = Math.max(0.1, 0.8 * Math.pow(0.7, state.gatherLvl - 1));
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyInv').onclick = function() {
+  var p = PRICES.inv[state.invLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.invLvl++;
+  state.maxHay = 25 + (state.invLvl - 1) * 15;
+  updateHUD(); updateShopMenu();
+};
+document.getElementById('buyLuck').onclick = function() {
+  var p = PRICES.luck[state.luckLvl - 1];
+  if (!p || state.money < p) return;
+  state.money -= p; state.luckLvl++;
+  updateShopMenu();
+};
+document.getElementById('buyFork').onclick = function() {
+  if (state.hasFork || state.money < PRICES.fork[0]) return;
+  state.money -= PRICES.fork[0]; state.hasFork = true;
+  showHint('Вилы куплены!');
+  updateShopMenu();
+};
+document.getElementById('buyDynamite').onclick = function() {
+  if (state.hasDynamite || state.money < PRICES.dynamite[0]) return;
+  state.money -= PRICES.dynamite[0]; state.hasDynamite = true;
+  showHint('Динамит куплен!');
+  updateShopMenu();
+};
+document.getElementById('buyVacuum').onclick = function() {
+  if (state.hasVacuum || state.money < PRICES.vacuum[0]) return;
+  state.money -= PRICES.vacuum[0]; state.hasVacuum = true;
+  showHint('Пылесос куплен!');
+  updateShopMenu();
+};
+document.getElementById('buyAutoGather').onclick = function() {
+  var p = PRICES.autoGather[state.autoGatherLvl];
+  if (!p || state.money < p) return;
+  state.money -= p; state.autoGatherLvl++;
+  showHint('Автосбор ур.' + state.autoGatherLvl);
+  updateShopMenu();
+};
+
+function updateHUD() {
+  document.getElementById('money').textContent = state.money;
+  document.getElementById('hay').textContent = state.hay;
+  document.getElementById('maxHay').textContent = state.maxHay;
+  document.getElementById('milk').textContent = state.milk;
+  document.getElementById('speed').textContent = state.moveSpeed.toFixed(1);
+  var invFill = document.getElementById('inventory-fill');
+  var invText = document.getElementById('inventory-text');
+  if (invFill && invText) {
+    var fillPercent = (state.hay / state.maxHay) * 100;
+    invFill.style.width = fillPercent + '%';
+    invText.textContent = state.hay + ' / ' + state.maxHay;
+  }
+}
+
+function updateStaminaUI() {
+  var p = (state.stamina / state.staminaMax) * 100;
+  if (staminaFillMobile) {
+    staminaFillMobile.style.width = p + '%';
+    if (p < 20) staminaFillMobile.style.background = 'linear-gradient(90deg, #ff4444, #ff6b6b)';
+    else if (p < 50) staminaFillMobile.style.background = 'linear-gradient(90deg, #ffaa00, #ffcc00)';
+    else staminaFillMobile.style.background = 'linear-gradient(90deg, #00FF88, #00CC66)';
+  }
+}
+
+function resolveCollisions(newPos) {
+  for (var i = 0; i < colliders.length; i++) {
+    var c = colliders[i];
+    var dx = newPos.x - c.x, dz = newPos.z - c.z;
+    var distSq = dx*dx + dz*dz;
+    var minDist = c.r + player.radius;
+    if (distSq < minDist*minDist) {
+      var dist = Math.sqrt(distSq) || 0.001;
+      var overlap = minDist - dist;
+      newPos.x += (dx/dist) * overlap;
+      newPos.z += (dz/dist) * overlap;
+    }
+  }
+  newPos.x = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, newPos.x));
+  newPos.z = Math.max(-WORLD_BOUND, Math.min(WORLD_BOUND, newPos.z));
+  return newPos;
+}
+
+var clock = new THREE.Clock();
+var moveTime = 0;
+var visibilityTimer = 0;
+
+function updatePlayer(dt) {
+  if (shopOpen || state.foundNeedle || adminOpen) return;
+  var inputX = joystickInput.x;
+  var inputY = joystickInput.y;
+  var pcX = 0, pcY = 0;
+  if (keys.w || keys.arrowup) pcY -= 1;
+  if (keys.s || keys.arrowdown) pcY += 1;
+  if (keys.a || keys.arrowleft) pcX -= 1;
+  if (keys.d || keys.arrowright) pcX += 1;
+  inputX += pcX;
+  inputY += pcY;
+  var isMoving = Math.abs(inputX) > 0.01 || Math.abs(inputY) > 0.01;
+  var isRunning = (keys.shift || isRunningTouch) && state.stamina > 0 && isMoving;
+  if (isRunning) {
+    state.stamina -= state.staminaDrain * dt;
+    if (state.stamina < 0) state.stamina = 0;
+  } else {
+    state.stamina += state.staminaRegen * dt;
+    if (state.stamina > state.staminaMax) state.stamina = state.staminaMax;
+  }
+  updateStaminaUI();
+
+  if (isMoving) {
+    var mag = Math.sqrt(inputX*inputX + inputY*inputY);
+    if (mag > 1) { inputX /= mag; inputY /= mag; }
+    var speedMult = isRunning ? 1.8 : 1;
+    var speed = state.moveSpeed * speedMult * 0.5;
+    var cos = Math.cos(player.yaw);
+    var sin = Math.sin(player.yaw);
+    var moveX = inputX * cos + inputY * sin;
+    var moveZ = -inputX * sin + inputY * cos;
+    var tryX = new THREE.Vector3(player.position.x + moveX*speed*dt, player.position.y, player.position.z);
+    resolveCollisions(tryX);
+    player.position.x = tryX.x;
+    var tryZ = new THREE.Vector3(player.position.x, player.position.y, player.position.z + moveZ*speed*dt);
+    resolveCollisions(tryZ);
+    player.position.z = tryZ.z;
+    moveTime += dt * speed;
+  }
+
+  if (!player.isGrounded) {
+    player.velocityY -= player.gravity * dt;
+    player.position.y += player.velocityY * dt;
+    if (player.position.y <= player.groundY) {
+      player.position.y = player.groundY;
+      player.velocityY = 0;
+      player.isGrounded = true;
+    }
+  }
+
+  var bob = (isMoving && player.isGrounded) ? Math.sin(moveTime*2) * 0.05 : 0;
+  camera.position.copy(player.position);
+  camera.position.y += bob;
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+}
+
+function updateCooldownUI() {
+  var now = performance.now();
+  var el = now - state.lastGatherTime;
+  var t = state.gatherCooldown * 1000;
+  var cd = document.getElementById('cooldown');
+  var cdf = document.getElementById('cooldown-fill');
+  if (cd && cdf) {
+    if (el < t) {
+      cd.classList.add('show');
+      cdf.style.width = (el/t) * 100 + '%';
+    } else cd.classList.remove('show');
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  var dt = Math.min(clock.getDelta(), 0.1);
+  updatePlayer(dt);
+  updateParticles(dt);
+  updateCooldownUI();
+  updateAutoGather(dt);
+  updateVacuum(dt);
+  updateAutoGatherPassive(dt);
+  updateNeedlePosition(dt);
+  checkMissions();
+  visibilityTimer += dt;
+  if (visibilityTimer >= UPDATE_INTERVAL) {
+    visibilityTimer = 0;
+    updateVisibility();
+  }
+  sun.position.set(player.position.x + 40, 60, player.position.z + 30);
+  sun.target.position.set(player.position.x, 0, player.position.z);
+  sun.target.updateMatrixWorld();
+  renderer.render(scene, camera);
+}
+
+function updateAutoGather(dt) {
+  if (!isMouseDownGather || shopOpen || state.foundNeedle || adminOpen) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) return;
+  if (state.hay >= state.maxHay) return;
+  tryGatherHay();
+}
+
+function updateAutoGatherPassive(dt) {
+  if (state.autoGatherLvl === 0 || shopOpen || state.foundNeedle || adminOpen) return;
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  if (d > HAYSTACK_RADIUS + 10) return;
+  if (state.hay >= state.maxHay) return;
+  var interval = Math.max(0.5, 3.0 - (state.autoGatherLvl - 1) * 0.4);
+  state.autoGatherTimer += dt;
+  if (state.autoGatherTimer >= interval) {
+    state.autoGatherTimer = 0;
+    var a = Math.min(state.autoGatherLvl, state.maxHay - state.hay);
+    state.hay += a;
+    state.totalHay += a;
+    if (Math.random() < 0.003 + (state.luckLvl - 1) * 0.0015 * a) { findNeedle(); return; }
+    showPopup('+' + a + ' сена', window.innerWidth/2, window.innerHeight/2 - 80);
+    updateHUD();
+  }
+}
+
+function updateVacuum(dt) {
+  if (!state.hasVacuum || shopOpen || state.foundNeedle || adminOpen) { state.vacuumActive = false; return; }
+  var d = player.position.distanceTo(haystackGroup.position.clone().add(new THREE.Vector3(0, HAYSTACK_HEIGHT/2, 0)));
+  if (d > HAYSTACK_RADIUS + 15) { state.vacuumActive = false; return; }
+  state.vacuumActive = isMouseDownGather;
+}
+
+function updateVisibility() {
+  camera.updateMatrixWorld();
+  for (var i = 0; i < visibleObjects.length; i++) {
+    var obj = visibleObjects[i];
+    if (obj.userData && obj.userData.viewPosition) {
+      obj.visible = player.position.distanceTo(obj.userData.viewPosition) < 80;
+    }
+  }
+}
+
+window.addEventListener('resize', function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+var tutorialSteps = [
+  { icon: '🎮', title: 'Добро пожаловать!', text: 'Цель — <b>найти иголку в стоге сена</b><br><br>Собирай сено, корми корову, продавай молоко!' },
+  { icon: '🌾', title: 'Собирай сено', text: '<b>ЛКМ по стогу</b> — берёшь колосок.<br><br>Прокачай инвентарь в амбаре!' },
+  { icon: '🦘', title: 'Прыгай!', text: 'Нажми <kbd>Space</kbd> для прыжка.<br><br>На мобиле — кнопка <b>JUMP</b>!' },
+  { icon: '🐄', title: 'Корми корову', text: 'Подойди к корове и нажми <kbd>E</kbd>.<br><br>Она даст <b>молоко</b>' },
+  { icon: '🏠', title: 'Продавай в амбаре', text: 'Иди к амбару и нажми <kbd>E</kbd>.' },
+  { icon: '🧵', title: 'Найди иголку!', text: 'Иголка <b>перемещается</b> каждые 30-60 секунд!<br><br>Удачи!' }
+];
+
+var currentTutorialStep = 0;
+var tutorialEl = document.getElementById('tutorial');
+var tutorialIcon = document.getElementById('tutorial-icon');
+var tutorialTitle = document.getElementById('tutorial-title');
+var tutorialText = document.getElementById('tutorial-text');
+var tutorialDots = document.getElementById('tutorial-dots');
+var tutorialNext = document.getElementById('tutorial-next');
+var tutorialSkip = document.getElementById('tutorial-skip');
+var tutorialShown = false;
+
+function buildTutorialDots() {
+  tutorialDots.innerHTML = '';
+  for (var i = 0; i < tutorialSteps.length; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'tutorial-dot' + (i === currentTutorialStep ? ' active' : '');
+    tutorialDots.appendChild(dot);
+  }
+}
+function showTutorial() {
+  if (tutorialShown) return;
+  tutorialShown = true;
+  currentTutorialStep = 0;
+  updateTutorialStep();
+  tutorialEl.classList.add('show');
+}
+function updateTutorialStep() {
+  var step = tutorialSteps[currentTutorialStep];
+  tutorialIcon.textContent = step.icon;
+  tutorialTitle.textContent = step.title;
+  tutorialText.innerHTML = step.text;
+  buildTutorialDots();
+  if (currentTutorialStep === tutorialSteps.length - 1) tutorialNext.textContent = 'Начать игру!';
+  else tutorialNext.textContent = 'Далее →';
+}
+function nextTutorialStep() {
+  if (!tutorialEl.classList.contains('show')) return;
+  if (currentTutorialStep < tutorialSteps.length - 1) {
+    currentTutorialStep++;
+    updateTutorialStep();
+  } else closeTutorial();
+}
+function closeTutorial() {
+  if (!tutorialEl.classList.contains('show')) return;
+  tutorialEl.classList.remove('show');
+  tutorialCompleted = true;
+  tutorialNext.disabled = true;
+  tutorialSkip.disabled = true;
+  if (!isMobileDevice) safePointerLock();
+  setTimeout(function() {
+    startMissionCycle();
+  }, 800);
+}
+tutorialNext.addEventListener('click', nextTutorialStep);
+tutorialSkip.addEventListener('click', closeTutorial);
+
+initGame();
+</script>
+</body>
+</html>
