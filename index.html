@@ -32,7 +32,6 @@
   #fullscreen-btn:hover { background: rgba(40,30,15,0.95); transform: scale(1.08); }
   #fullscreen-btn:active { transform: scale(0.95); }
   @media (max-width: 700px) { #fullscreen-btn { width: 38px; height: 38px; top: 8px; right: 8px; font-size: 17px; } }
-  @media (max-height: 480px) { #fullscreen-btn { width: 34px; height: 34px; top: 6px; right: 6px; font-size: 15px; } }
 
   #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #tutorial.show { display: flex; }
@@ -48,26 +47,15 @@
   #tutorial-buttons { display: flex; gap: 10px; }
   #tutorial-next { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #4a8f3a, #2d5a23); border: 2px solid #7cf05c; border-radius: 12px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
   #tutorial-skip { padding: 14px 20px; background: rgba(0,0,0,0.4); border: 2px solid #666; border-radius: 12px; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; }
-  #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
   @media (max-width: 700px) {
     #tutorial { padding: 12px; }
     #tutorial-box { padding: 22px 18px; border-radius: 18px; border-width: 3px; }
     #tutorial-icon { font-size: 44px; margin-bottom: 8px; }
     #tutorial-title { font-size: 18px; margin-bottom: 10px; }
     #tutorial-text { font-size: 13px; line-height: 1.5; margin-bottom: 15px; min-height: 70px; }
-    #tutorial-text kbd { font-size: 11px; padding: 1px 5px; }
     #tutorial-buttons { flex-direction: column-reverse; gap: 8px; }
     #tutorial-next { padding: 12px 14px; font-size: 14px; }
     #tutorial-skip { padding: 10px 14px; font-size: 12px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #tutorial-box { padding: 14px 18px; max-height: calc(100vh - 16px); border-radius: 14px; border-width: 2px; max-width: 620px; }
-    #tutorial-icon { font-size: 32px; margin-bottom: 4px; }
-    #tutorial-title { font-size: 16px; margin-bottom: 6px; }
-    #tutorial-text { font-size: 12px; line-height: 1.4; margin-bottom: 10px; min-height: 45px; }
-    #tutorial-buttons { flex-direction: row; gap: 8px; }
-    #tutorial-next { padding: 9px 14px; font-size: 13px; }
-    #tutorial-skip { padding: 9px 12px; font-size: 12px; }
   }
 
   #rotate-screen { position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1005, #000); display: none; align-items: center; justify-content: center; flex-direction: column; color: #ffd700; padding: 30px; text-align: center; }
@@ -92,11 +80,7 @@
   #loading .bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.1s linear; }
   #loading .percent { margin-top: 20px; font-size: 28px; font-weight: bold; color: #ffd700; }
   #loading .status { margin-top: 12px; font-size: 14px; color: #ccc; }
-  @media (max-width: 700px) {
-    #loading .title { font-size: 26px; } #loading .sub { font-size: 13px; margin-bottom: 22px; }
-    #loading .bar-outer { height: 22px; } #loading .percent { font-size: 22px; margin-top: 15px; }
-    #loading .status { font-size: 12px; }
-  }
+  @media (max-width: 700px) { #loading .title { font-size: 26px; } #loading .sub { font-size: 13px; margin-bottom: 22px; } #loading .bar-outer { height: 22px; } #loading .percent { font-size: 22px; margin-top: 15px; } }
 
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
   #lookHint { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: rgba(255,255,255,0.15); font-size: 14px; text-align: center; pointer-events: none; z-index: 8; }
@@ -130,7 +114,6 @@
   #hud .row { display: flex; justify-content: space-between; gap: 20px; }
   #hud b { color: #ffd700; }
   @media (max-width: 700px) { #hud { padding: 12px 16px; font-size: 15px; line-height: 1.7; top: 10px; left: 10px; border-radius: 12px; border-width: 2px; min-width: 170px; } #hud .row { gap: 16px; } }
-  @media (max-height: 500px) and (orientation: landscape) { #hud { padding: 10px 14px; font-size: 14px; line-height: 1.6; top: 8px; left: 8px; min-width: 160px; } #hud .row { gap: 14px; } }
 
   #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
   #inventory-bar.show { display: block; }
@@ -159,15 +142,8 @@
   @media (max-width: 700px) {
     #mission-panel { top: 10px; right: 10px; left: auto; bottom: auto; max-width: 62vw; min-width: 200px; padding: 12px 14px; border-width: 3px; border-radius: 14px; }
     #mission-title { font-size: 12px; margin-bottom: 6px; gap: 5px; letter-spacing: 0.8px; }
-    #mission-title .step-badge { width: 20px; height: 20px; font-size: 11px; }
     #mission-text { font-size: 14px; margin-bottom: 8px; line-height: 1.4; }
     #mission-progress { height: 5px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #mission-panel { top: 10px; right: 10px; max-width: 300px; min-width: 200px; padding: 10px 12px; border-width: 2px; border-radius: 12px; }
-    #mission-title { font-size: 11px; margin-bottom: 5px; }
-    #mission-text { font-size: 13px; margin-bottom: 6px; line-height: 1.35; }
-    #mission-progress { height: 4px; }
   }
 
   #mission-complete { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); z-index: 850; pointer-events: none; opacity: 0; background: linear-gradient(135deg, rgba(74,222,128,0.95), rgba(34,197,94,0.95)); border: 4px solid #4ade80; border-radius: 20px; padding: 25px 40px; text-align: center; color: #fff; box-shadow: 0 0 60px rgba(74,222,128,0.8); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s; max-width: 90vw; }
@@ -175,7 +151,6 @@
   #mission-complete .icon { font-size: 50px; margin-bottom: 10px; }
   #mission-complete .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
   #mission-complete .desc { font-size: 14px; opacity: 0.9; }
-  @media (max-width: 700px) { #mission-complete { padding: 20px 26px; } #mission-complete .icon { font-size: 40px; } #mission-complete .title { font-size: 17px; } #mission-complete .desc { font-size: 12px; } }
 
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
@@ -198,32 +173,13 @@
   #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; position: sticky; bottom: 0; }
   @media (max-width: 700px) {
     #shop-window { padding: 14px; border-radius: 14px; border-width: 3px; }
-    #shop-window h2 { font-size: 18px; margin-bottom: 6px; }
-    .money-row { font-size: 13px; margin-bottom: 10px; }
-    .money-row b { font-size: 16px; }
-    .shop-item { padding: 9px; gap: 8px; border-radius: 10px; margin-bottom: 7px; }
+    #shop-window h2 { font-size: 18px; }
+    .shop-item { padding: 9px; gap: 8px; }
     .shop-item .name { font-size: 12px; }
-    .shop-item .desc { font-size: 10px; }
-    .shop-item .lvl { font-size: 10px; }
     .shop-item button { padding: 8px 10px; font-size: 11px; min-width: 75px; }
-    .shop-item button .price { font-size: 10px; }
     #shop-close { padding: 10px 28px; font-size: 14px; }
   }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #shop-window { padding: 10px 14px; border-radius: 12px; border-width: 2px; max-width: 90vw; max-height: calc(100vh - 16px); }
-    #shop-window h2 { font-size: 15px; margin-bottom: 4px; }
-    .money-row { font-size: 11px; margin-bottom: 6px; }
-    .money-row b { font-size: 13px; }
-    .shop-item { padding: 6px 8px; gap: 6px; border-radius: 8px; margin-bottom: 5px; }
-    .shop-item .name { font-size: 11px; margin-bottom: 1px; }
-    .shop-item .desc { font-size: 9px; }
-    .shop-item .lvl { font-size: 9px; margin-top: 1px; }
-    .shop-item button { padding: 6px 8px; font-size: 10px; min-width: 65px; border-radius: 7px; }
-    .shop-item button .price { font-size: 9px; }
-    #shop-close { padding: 8px 24px; font-size: 12px; margin-top: 10px; }
-  }
 
-  /* 🏆 ОКНО ПОБЕДЫ — УВЕЛИЧЕНО НА ТЕЛЕФОНЕ */
   #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
   #message.show { display: flex; }
   #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; max-height: calc(100vh - 40px); overflow-y: auto; }
@@ -232,81 +188,27 @@
   #message-box .btn-row { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
   #message-box button { padding: 14px 40px; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
   #msg-end-btn { background: linear-gradient(180deg, #4a8f3a, #2d5a23); color: #fff; border: 3px solid #7cf05c !important; box-shadow: 0 0 20px rgba(124,240,92,0.5); }
-  #msg-end-btn:hover { background: linear-gradient(180deg, #5fa84a, #3a6d2e); }
   #msg-replay-btn { background: #ffd700; color: #000; }
-
   @media (max-width: 700px) {
     #message { padding: 14px; }
     #message-box { padding: 34px 26px; border-radius: 22px; border-width: 4px; max-width: 96vw; }
     #message-box h1 { font-size: 26px; margin-bottom: 18px; }
     #message-box p { font-size: 16px; margin: 12px 0; }
     #message-box button { padding: 16px 32px; font-size: 16px; border-radius: 14px; }
-    #message-box .btn-row { gap: 12px; margin-top: 24px; }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #message-box { padding: 16px 25px; border-radius: 14px; border-width: 2px; }
-    #message-box h1 { font-size: 18px; margin-bottom: 8px; }
-    #message-box p { font-size: 12px; margin: 5px 0; }
-    #message-box button { padding: 9px 24px; font-size: 13px; border-radius: 8px; }
   }
 
-  /* 🎬 КОНЦОВКА — слайд-шоу */
-  #ending-screen {
-    position: fixed; inset: 0; z-index: 1200;
-    background: #000;
-    display: none;
-    align-items: center; justify-content: center;
-    overflow: hidden;
-  }
+  #ending-screen { position: fixed; inset: 0; z-index: 1200; background: #000; display: none; align-items: center; justify-content: center; overflow: hidden; }
   #ending-screen.show { display: flex; }
-
-  .slide {
-    position: absolute; inset: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.8s ease;
-    padding: 20px;
-    text-align: center;
-  }
-  .slide.active {
-    display: flex;
-    opacity: 1;
-    animation: slideIn 0.8s ease;
-  }
-  @keyframes slideIn {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-  .slide-bg {
-    position: absolute; inset: 0;
-    background-size: cover; background-position: center;
-    filter: brightness(0.55);
-    z-index: 0;
-  }
-  .slide-content {
-    position: relative; z-index: 1;
-    max-width: 900px;
-    padding: 30px 40px;
-    background: rgba(0,0,0,0.45);
-    border-radius: 24px;
-    border: 3px solid rgba(255,215,0,0.5);
-    backdrop-filter: blur(4px);
-  }
+  .slide { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease; padding: 20px; text-align: center; }
+  .slide.active { display: flex; opacity: 1; animation: slideIn 0.8s ease; }
+  @keyframes slideIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+  .slide-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(0.55); z-index: 0; }
+  .slide-content { position: relative; z-index: 1; max-width: 900px; padding: 30px 40px; background: rgba(0,0,0,0.45); border-radius: 24px; border: 3px solid rgba(255,215,0,0.5); backdrop-filter: blur(4px); }
   .slide-emoji { font-size: 110px; margin-bottom: 20px; display: block; animation: floatEmoji 3s ease-in-out infinite; }
-  @keyframes floatEmoji {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
+  @keyframes floatEmoji { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
   .slide-title { font-size: 34px; font-weight: bold; color: #ffd700; margin-bottom: 16px; text-shadow: 0 0 20px rgba(255,215,0,0.5); }
   .slide-text { font-size: 18px; line-height: 1.7; color: #f0e0c0; }
-  .slide-num {
-    position: absolute; bottom: 30px; right: 30px;
-    color: rgba(255,215,0,0.6); font-size: 16px; font-weight: bold;
-    z-index: 2;
-  }
+  .slide-num { position: absolute; bottom: 30px; right: 30px; color: rgba(255,215,0,0.6); font-size: 16px; font-weight: bold; z-index: 2; }
   @media (max-width: 700px) {
     .slide-content { padding: 22px 20px; border-radius: 18px; }
     .slide-emoji { font-size: 78px; margin-bottom: 14px; }
@@ -314,289 +216,218 @@
     .slide-text { font-size: 15px; line-height: 1.6; }
     .slide-num { bottom: 14px; right: 14px; font-size: 13px; }
   }
-  @media (max-height: 500px) and (orientation: landscape) {
-    .slide-content { padding: 14px 22px; border-radius: 14px; max-width: 640px; }
-    .slide-emoji { font-size: 56px; margin-bottom: 8px; }
-    .slide-title { font-size: 20px; margin-bottom: 8px; }
-    .slide-text { font-size: 13px; line-height: 1.45; }
-    .slide-num { bottom: 10px; right: 10px; font-size: 12px; }
-  }
 
-  /* 🕺 Финальная сцена с танцором */
-  #final-scene {
-    position: absolute; inset: 0;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle at center, #2a1a05 0%, #000 70%);
-    text-align: center;
-    padding: 20px;
-    z-index: 3;
-  }
+  #final-scene { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #2a1a05 0%, #000 70%); text-align: center; padding: 20px; z-index: 3; }
   #final-scene.active { display: flex; animation: slideIn 1s ease; }
-
-  .dancer-stage {
-    position: relative;
-    width: 280px; height: 380px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .dancer {
-    position: relative;
-    width: 100px;
-    height: 200px;
-    animation: dancerBounce 0.6s ease-in-out infinite;
-    transform-origin: bottom center;
-  }
-  @keyframes dancerBounce {
-    0%,100% { transform: translateY(0) rotate(-3deg); }
-    50% { transform: translateY(-12px) rotate(3deg); }
-  }
-  .dancer-head {
-    position: absolute;
-    top: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 62px; height: 62px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffd9a8, #e8b070);
-    border: 3px solid #8a5020;
-    z-index: 3;
-  }
-  .dancer-head::before, .dancer-head::after {
-    content: '';
-    position: absolute;
-    top: 22px;
-    width: 8px; height: 8px;
-    background: #2a1005;
-    border-radius: 50%;
-  }
+  .dancer-stage { position: relative; width: 280px; height: 380px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
+  .dancer { position: relative; width: 100px; height: 200px; animation: dancerBounce 0.6s ease-in-out infinite; transform-origin: bottom center; }
+  @keyframes dancerBounce { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+  .dancer-head { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 62px; height: 62px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffd9a8, #e8b070); border: 3px solid #8a5020; z-index: 3; }
+  .dancer-head::before, .dancer-head::after { content: ''; position: absolute; top: 22px; width: 8px; height: 8px; background: #2a1005; border-radius: 50%; }
   .dancer-head::before { left: 14px; }
   .dancer-head::after { right: 14px; }
-  .dancer-smile {
-    position: absolute;
-    top: 38px; left: 50%;
-    transform: translateX(-50%);
-    width: 24px; height: 12px;
-    border: 3px solid #2a1005;
-    border-top: none;
-    border-radius: 0 0 24px 24px;
-  }
-  .dancer-body {
-    position: absolute;
-    top: 60px; left: 50%;
-    transform: translateX(-50%);
-    width: 66px; height: 82px;
-    border-radius: 16px 16px 10px 10px;
-    background: linear-gradient(180deg, #ff5050, #cc2020);
-    border: 3px solid #8a1010;
-    z-index: 2;
-  }
-  .dancer-arm {
-    position: absolute;
-    top: 66px;
-    width: 16px; height: 60px;
-    background: linear-gradient(180deg, #ffd9a8, #e8b070);
-    border: 3px solid #8a5020;
-    border-radius: 8px;
-    transform-origin: top center;
-    z-index: 1;
-  }
-  .dancer-arm.left {
-    left: 8px;
-    animation: armWaveLeft 0.5s ease-in-out infinite alternate;
-  }
-  .dancer-arm.right {
-    right: 8px;
-    animation: armWaveRight 0.5s ease-in-out infinite alternate;
-  }
-  @keyframes armWaveLeft {
-    0% { transform: rotate(30deg); }
-    100% { transform: rotate(-40deg); }
-  }
-  @keyframes armWaveRight {
-    0% { transform: rotate(-30deg); }
-    100% { transform: rotate(40deg); }
-  }
-  .dancer-leg {
-    position: absolute;
-    top: 138px;
-    width: 20px; height: 60px;
-    background: linear-gradient(180deg, #4060a0, #204080);
-    border: 3px solid #102040;
-    border-radius: 6px;
-    transform-origin: top center;
-    z-index: 1;
-  }
-  .dancer-leg.left {
-    left: 22px;
-    animation: legKickLeft 0.5s ease-in-out infinite alternate;
-  }
-  .dancer-leg.right {
-    right: 22px;
-    animation: legKickRight 0.5s ease-in-out infinite alternate;
-  }
-  @keyframes legKickLeft {
-    0% { transform: rotate(-12deg); }
-    100% { transform: rotate(12deg); }
-  }
-  @keyframes legKickRight {
-    0% { transform: rotate(12deg); }
-    100% { transform: rotate(-12deg); }
-  }
-
-  .dancer-shadow {
-    position: absolute;
-    bottom: 30px; left: 50%;
-    transform: translateX(-50%);
-    width: 110px; height: 20px;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.7), transparent 70%);
-    border-radius: 50%;
-    animation: shadowPulse 0.6s ease-in-out infinite;
-  }
-  @keyframes shadowPulse {
-    0%,100% { transform: translateX(-50%) scaleX(1); opacity: 0.7; }
-    50% { transform: translateX(-50%) scaleX(0.85); opacity: 0.5; }
-  }
-
-  .music-notes {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 1;
-  }
-  .note {
-    position: absolute;
-    font-size: 28px;
-    opacity: 0;
-    animation: noteFloat 4s ease-out infinite;
-  }
-  @keyframes noteFloat {
-    0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.5); }
-    15% { opacity: 1; transform: translateY(-30px) rotate(15deg) scale(1); }
-    100% { opacity: 0; transform: translateY(-250px) rotate(-30deg) scale(0.7); }
-  }
+  .dancer-smile { position: absolute; top: 38px; left: 50%; transform: translateX(-50%); width: 24px; height: 12px; border: 3px solid #2a1005; border-top: none; border-radius: 0 0 24px 24px; }
+  .dancer-body { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 66px; height: 82px; border-radius: 16px 16px 10px 10px; background: linear-gradient(180deg, #ff5050, #cc2020); border: 3px solid #8a1010; z-index: 2; }
+  .dancer-arm { position: absolute; top: 66px; width: 16px; height: 60px; background: linear-gradient(180deg, #ffd9a8, #e8b070); border: 3px solid #8a5020; border-radius: 8px; transform-origin: top center; z-index: 1; }
+  .dancer-arm.left { left: 8px; animation: armWaveLeft 0.5s ease-in-out infinite alternate; }
+  .dancer-arm.right { right: 8px; animation: armWaveRight 0.5s ease-in-out infinite alternate; }
+  @keyframes armWaveLeft { 0% { transform: rotate(30deg); } 100% { transform: rotate(-40deg); } }
+  @keyframes armWaveRight { 0% { transform: rotate(-30deg); } 100% { transform: rotate(40deg); } }
+  .dancer-leg { position: absolute; top: 138px; width: 20px; height: 60px; background: linear-gradient(180deg, #4060a0, #204080); border: 3px solid #102040; border-radius: 6px; transform-origin: top center; z-index: 1; }
+  .dancer-leg.left { left: 22px; animation: legKickLeft 0.5s ease-in-out infinite alternate; }
+  .dancer-leg.right { right: 22px; animation: legKickRight 0.5s ease-in-out infinite alternate; }
+  @keyframes legKickLeft { 0% { transform: rotate(-12deg); } 100% { transform: rotate(12deg); } }
+  @keyframes legKickRight { 0% { transform: rotate(12deg); } 100% { transform: rotate(-12deg); } }
+  .dancer-shadow { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 110px; height: 20px; background: radial-gradient(ellipse, rgba(0,0,0,0.7), transparent 70%); border-radius: 50%; animation: shadowPulse 0.6s ease-in-out infinite; }
+  @keyframes shadowPulse { 0%,100% { transform: translateX(-50%) scaleX(1); opacity: 0.7; } 50% { transform: translateX(-50%) scaleX(0.85); opacity: 0.5; } }
+  .music-notes { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+  .note { position: absolute; font-size: 28px; opacity: 0; animation: noteFloat 4s ease-out infinite; }
+  @keyframes noteFloat { 0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.5); } 15% { opacity: 1; transform: translateY(-30px) rotate(15deg) scale(1); } 100% { opacity: 0; transform: translateY(-250px) rotate(-30deg) scale(0.7); } }
   .note:nth-child(1) { left: 20%; bottom: 40%; animation-delay: 0s; }
   .note:nth-child(2) { left: 50%; bottom: 30%; animation-delay: 0.8s; }
   .note:nth-child(3) { left: 75%; bottom: 45%; animation-delay: 1.6s; }
   .note:nth-child(4) { left: 35%; bottom: 50%; animation-delay: 2.4s; }
   .note:nth-child(5) { left: 65%; bottom: 35%; animation-delay: 3.2s; }
-
-  #final-title {
-    color: #ffd700;
-    font-size: 38px;
-    font-weight: bold;
-    text-shadow: 0 0 30px rgba(255,215,0,0.8);
-    margin-bottom: 10px;
-    z-index: 2;
-    position: relative;
-    animation: titleGlow 2s ease-in-out infinite;
-  }
-  @keyframes titleGlow {
-    0%,100% { text-shadow: 0 0 30px rgba(255,215,0,0.8); }
-    50% { text-shadow: 0 0 50px rgba(255,215,0,1), 0 0 80px rgba(255,215,0,0.6); }
-  }
-  #final-subtitle {
-    color: #e0d0a0;
-    font-size: 18px;
-    margin-bottom: 30px;
-    z-index: 2;
-    position: relative;
-  }
-  #final-replay-btn {
-    padding: 16px 44px;
-    background: linear-gradient(180deg, #4a8f3a, #2d5a23);
-    border: 3px solid #7cf05c;
-    border-radius: 14px;
-    color: #fff;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 0 30px rgba(124,240,92,0.6);
-    z-index: 2;
-    position: relative;
-    transition: transform 0.2s;
-  }
-  #final-replay-btn:active { transform: scale(0.95); }
-  #final-replay-btn:hover { background: linear-gradient(180deg, #5fa84a, #3a6d2e); }
-
+  #final-title { color: #ffd700; font-size: 38px; font-weight: bold; text-shadow: 0 0 30px rgba(255,215,0,0.8); margin-bottom: 10px; z-index: 2; position: relative; animation: titleGlow 2s ease-in-out infinite; }
+  @keyframes titleGlow { 0%,100% { text-shadow: 0 0 30px rgba(255,215,0,0.8); } 50% { text-shadow: 0 0 50px rgba(255,215,0,1), 0 0 80px rgba(255,215,0,0.6); } }
+  #final-subtitle { color: #e0d0a0; font-size: 18px; margin-bottom: 30px; z-index: 2; position: relative; }
+  #final-replay-btn { padding: 16px 44px; background: linear-gradient(180deg, #4a8f3a, #2d5a23); border: 3px solid #7cf05c; border-radius: 14px; color: #fff; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 30px rgba(124,240,92,0.6); z-index: 2; position: relative; }
   @media (max-width: 700px) {
     #final-title { font-size: 28px; }
     #final-subtitle { font-size: 15px; margin-bottom: 22px; }
     #final-replay-btn { padding: 18px 40px; font-size: 17px; }
     .dancer-stage { width: 240px; height: 330px; }
-    .dancer { transform: scale(0.9); }
-  }
-  @media (max-height: 500px) and (orientation: landscape) {
-    #final-title { font-size: 22px; margin-bottom: 6px; }
-    #final-subtitle { font-size: 13px; margin-bottom: 12px; }
-    #final-replay-btn { padding: 11px 32px; font-size: 14px; }
-    .dancer-stage { width: 200px; height: 240px; margin-bottom: 8px; }
-    .dancer { transform: scale(0.7); }
   }
 
-  #ending-skip-btn {
-    position: absolute; top: 20px; right: 20px;
-    z-index: 10;
-    padding: 10px 20px;
-    background: rgba(0,0,0,0.6);
-    border: 2px solid rgba(255,215,0,0.6);
-    border-radius: 10px;
-    color: #ffd700;
+  #ending-skip-btn { position: absolute; top: 20px; right: 20px; z-index: 10; padding: 10px 20px; background: rgba(0,0,0,0.6); border: 2px solid rgba(255,215,0,0.6); border-radius: 10px; color: #ffd700; font-size: 14px; font-weight: bold; cursor: pointer; }
+  @media (max-width: 700px) { #ending-skip-btn { padding: 8px 14px; font-size: 12px; top: 12px; right: 12px; } }
+
+  /* ============================================
+     📞 ЗВОНОК — КОМПАКТНЫЙ, КНОПКИ ВСЕГДА ВИДНЫ
+     ============================================ */
+  #phone-call {
+    position: fixed; inset: 0; z-index: 900;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    overflow: hidden;
+  }
+  #phone-call.show { display: flex; }
+
+  #phone-call-box {
+    background: linear-gradient(180deg, #2a3a2a, #1a2a1a);
+    border: 3px solid #4ade80;
+    border-radius: 20px;
+    padding: 18px 16px 16px;
+    max-width: 360px;
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 60px rgba(74,222,128,0.5);
+    animation: phoneShake 0.8s infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
+  }
+  #phone-call-box.answered { animation: none; }
+  @keyframes phoneShake {
+    0%,100% { transform: rotate(-1.5deg) translateX(-3px); }
+    50% { transform: rotate(1.5deg) translateX(3px); }
+  }
+
+  #phone-icon {
+    font-size: 46px;
+    display: block;
+    margin-bottom: 6px;
+    animation: phonePulse 1s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes phonePulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  #phone-caller {
+    font-size: 17px;
+    font-weight: bold;
+    color: #4ade80;
+    margin-bottom: 3px;
+    flex-shrink: 0;
+  }
+  #phone-number {
+    font-size: 12px;
+    color: #a0d8a0;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  #phone-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #e0e0e0;
+    margin-bottom: 12px;
+    min-height: 36px;
+    flex-shrink: 0;
+  }
+  #phone-buttons {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #phone-answer {
+    flex: 1;
+    padding: 12px 10px;
+    background: linear-gradient(180deg, #22c55e, #16a34a);
+    border: 2px solid #4ade80;
+    border-radius: 50px;
+    color: #fff;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
+    box-shadow: 0 0 18px rgba(74,222,128,0.6);
+    animation: answerPulse 1.4s infinite;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
-  #ending-skip-btn:hover { background: rgba(0,0,0,0.85); }
-  @media (max-width: 700px) { #ending-skip-btn { padding: 8px 14px; font-size: 12px; top: 12px; right: 12px; } }
+  @keyframes answerPulse {
+    0%,100% { box-shadow: 0 0 18px rgba(74,222,128,0.6); }
+    50% { box-shadow: 0 0 30px rgba(74,222,128,1), 0 0 45px rgba(74,222,128,0.5); }
+  }
+  #phone-answer:active { transform: scale(0.95); }
+  #phone-decline {
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #dc2626, #991b1b);
+    border: 2px solid #ef4444;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #phone-decline:active { transform: scale(0.95); }
+
+  /* Подсказка про ответ */
+  #phone-tip {
+    font-size: 11px;
+    color: #ffd700;
+    margin-top: 8px;
+    animation: blink 1.4s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Мобильная адаптация */
+  @media (max-width: 700px) {
+    #phone-call-box { padding: 16px 14px 14px; border-radius: 18px; max-width: 320px; }
+    #phone-icon { font-size: 42px; }
+    #phone-caller { font-size: 16px; }
+    #phone-number { font-size: 11px; margin-bottom: 8px; }
+    #phone-text { font-size: 12px; margin-bottom: 10px; min-height: 32px; }
+    #phone-answer { padding: 13px 10px; font-size: 14px; }
+    #phone-decline { padding: 13px 14px; font-size: 14px; }
+    #phone-tip { font-size: 10px; margin-top: 6px; }
+  }
+
+  /* Очень маленькие экраны / альбомная */
+  @media (max-height: 480px) {
+    #phone-call-box { padding: 12px 14px 12px; max-width: 480px; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+    #phone-icon { font-size: 34px; margin-bottom: 0; width: 100%; }
+    #phone-caller { font-size: 14px; width: 100%; }
+    #phone-number { font-size: 10px; margin-bottom: 4px; width: 100%; }
+    #phone-text { font-size: 11px; margin-bottom: 6px; min-height: 28px; width: 100%; }
+    #phone-buttons { width: 100%; }
+    #phone-tip { width: 100%; margin-top: 4px; }
+  }
 
   #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
   #click-to-play.show { display: flex; }
   #click-to-play .title { color: #ffd700; font-size: 38px; font-weight: bold; text-shadow: 0 0 40px #ffd700; margin-bottom: 18px; }
   #click-to-play .sub { font-size: 16px; color: #ccc; }
   #click-to-play .blink { animation: blink 1.5s infinite; margin-top: 30px; font-size: 20px; color: #ffd700; }
-  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   #cooldown { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); width: 250px; height: 6px; background: rgba(0,0,0,0.75); border-radius: 4px; overflow: hidden; display: none; z-index: 18; }
   #cooldown.show { display: block; }
   #cooldown-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b6b, #ffd700); }
 
-  #phone-call { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
-  #phone-call.show { display: flex; }
-  #phone-call-box { background: linear-gradient(180deg, #2a3a2a, #1a2a1a); border: 4px solid #4ade80; border-radius: 28px; padding: 40px 50px; max-width: 420px; width: 100%; text-align: center; color: #fff; box-shadow: 0 0 80px rgba(74,222,128,0.5); animation: phoneShake 0.6s infinite; max-height: calc(100vh - 40px); overflow-y: auto; }
-  @keyframes phoneShake { 0%,100% { transform: rotate(-2deg) translateX(-4px); } 50% { transform: rotate(2deg) translateX(4px); } }
-  #phone-call-box.answered { animation: none; }
-  #phone-icon { font-size: 80px; display: block; margin-bottom: 20px; animation: phonePulse 1s infinite; }
-  @keyframes phonePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-  #phone-caller { font-size: 22px; font-weight: bold; color: #4ade80; margin-bottom: 8px; }
-  #phone-number { font-size: 16px; color: #a0d8a0; margin-bottom: 30px; letter-spacing: 2px; }
-  #phone-text { font-size: 15px; line-height: 1.6; color: #e0e0e0; margin-bottom: 30px; min-height: 60px; }
-  #phone-buttons { display: flex; gap: 12px; }
-  #phone-answer { flex: 1; padding: 14px 20px; background: linear-gradient(180deg, #22c55e, #16a34a); border: 3px solid #4ade80; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(74,222,128,0.6); }
-  #phone-decline { padding: 14px 20px; background: linear-gradient(180deg, #dc2626, #991b1b); border: 3px solid #ef4444; border-radius: 50px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
   #phone-bubble { position: fixed; top: 80px; right: 20px; background: #2a3a2a; border: 2px solid #4ade80; border-radius: 18px 18px 18px 4px; padding: 16px 20px; max-width: 320px; color: #fff; font-size: 14px; line-height: 1.5; z-index: 950; display: none; box-shadow: 0 8px 32px rgba(0,0,0,0.6); animation: bubbleIn 0.4s ease-out; }
   #phone-bubble.show { display: block; }
   @keyframes bubbleIn { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
   #phone-bubble::before { content: '📞'; position: absolute; left: -35px; top: 50%; transform: translateY(-50%); font-size: 24px; }
-  @media (max-width: 700px) {
-    #phone-call-box { padding: 22px 18px; border-radius: 20px; border-width: 3px; }
-    #phone-icon { font-size: 50px; margin-bottom: 12px; }
-    #phone-caller { font-size: 16px; margin-bottom: 5px; }
-    #phone-number { font-size: 12px; margin-bottom: 15px; letter-spacing: 1px; }
-    #phone-text { font-size: 12px; margin-bottom: 18px; min-height: 45px; line-height: 1.4; }
-    #phone-answer, #phone-decline { padding: 11px 12px; font-size: 13px; border-width: 2px; }
-    #phone-bubble { top: 55px; right: 8px; max-width: 72vw; font-size: 11px; padding: 10px 14px; }
-  }
+  @media (max-width: 700px) { #phone-bubble { top: 55px; right: 8px; max-width: 72vw; font-size: 11px; padding: 10px 14px; } #phone-bubble::before { left: -28px; font-size: 18px; } }
 
   #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #admin-panel.show { display: flex; }
-  #admin-box { background: linear-gradient(180deg, #1a1a2a, #0a0a15); border: 3px solid #ff00ff; border-radius: 20px; padding: 25px 30px; max-width: 500px; width: 100%; max-height: calc(100vh - 40px); overflow-y: auto; color: #fff; box-shadow: 0 0 60px rgba(255,0,255,0.5); }
-  #admin-box h2 { color: #ff00ff; text-align: center; margin-bottom: 20px; font-size: 24px; text-shadow: 0 0 15px #ff00ff; }
+  #admin-box { background: linear-gradient(180deg, #1a1a2a, #0a0a15); border: 3px solid #ff00ff; border-radius: 20px; padding: 25px 30px; max-width: 500px; width: 100%; max-height: calc(100vh - 40px); overflow-y: auto; color: #fff; }
+  #admin-box h2 { color: #ff00ff; text-align: center; margin-bottom: 20px; font-size: 24px; }
   .admin-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,0,255,0.2); }
-  .admin-section h3 { color: #00ffff; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .admin-section h3 { color: #00ffff; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
   .admin-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .admin-row label { flex: 1; font-size: 13px; color: #ccc; }
   .admin-row input { width: 100px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid #ff00ff; border-radius: 6px; color: #fff; font-size: 14px; font-family: monospace; }
@@ -619,16 +450,6 @@
     #inventory-bar { bottom: 90px; height: 22px; }
     #inventory-text { font-size: 12px; line-height: 18px; }
     #cooldown { bottom: 120px; width: 200px; }
-  }
-  @media (max-height: 420px) and (orientation: landscape) {
-    #moveJoystick { width: 95px; height: 95px; bottom: 12px; left: 12px; }
-    #moveKnob { width: 42px; height: 42px; }
-    #runBtn { width: 58px; height: 58px; bottom: 12px; right: 12px; font-size: 11px; }
-    #jumpBtn { width: 58px; height: 58px; bottom: 88px; right: 88px; font-size: 10px; }
-    #shootBtn { width: 58px; height: 58px; bottom: 88px; right: 12px; font-size: 20px; }
-    #toolBtn { width: 58px; height: 58px; bottom: 152px; right: 12px; }
-    #toolBtn .tool-emoji { font-size: 22px; }
-    #toolBtn .tool-name { font-size: 7px; }
   }
 
   #start-game-btn > div:first-child { font-size: 42px; padding: 0 15px; }
@@ -739,7 +560,6 @@
   </div>
 </div>
 
-<!-- 🏆 ОКНО ПОБЕДЫ -->
 <div id="message">
   <div id="message-box">
     <h1>🎉 ПОБЕДА! 🎉</h1>
@@ -754,11 +574,9 @@
   </div>
 </div>
 
-<!-- 🎬 КОНЦОВКА -->
 <div id="ending-screen">
   <button id="ending-skip-btn">Пропустить ▶▶</button>
 
-  <!-- Слайд 1: Дом -->
   <div class="slide" data-slide="0">
     <div class="slide-bg" style="background: linear-gradient(135deg, #6a4a2a, #3a2510);"></div>
     <div class="slide-content">
@@ -769,7 +587,6 @@
     <div class="slide-num">1 / 5</div>
   </div>
 
-  <!-- Слайд 2: Семья -->
   <div class="slide" data-slide="1">
     <div class="slide-bg" style="background: linear-gradient(135deg, #6a2a4a, #3a1025);"></div>
     <div class="slide-content">
@@ -780,7 +597,6 @@
     <div class="slide-num">2 / 5</div>
   </div>
 
-  <!-- Слайд 3: Дети -->
   <div class="slide" data-slide="2">
     <div class="slide-bg" style="background: linear-gradient(135deg, #2a6a4a, #103a25);"></div>
     <div class="slide-content">
@@ -791,7 +607,6 @@
     <div class="slide-num">3 / 5</div>
   </div>
 
-  <!-- Слайд 4: Достаток -->
   <div class="slide" data-slide="3">
     <div class="slide-bg" style="background: linear-gradient(135deg, #6a6a2a, #3a3a10);"></div>
     <div class="slide-content">
@@ -802,7 +617,6 @@
     <div class="slide-num">4 / 5</div>
   </div>
 
-  <!-- Слайд 5: Счастье -->
   <div class="slide" data-slide="4">
     <div class="slide-bg" style="background: linear-gradient(135deg, #4a2a6a, #25103a);"></div>
     <div class="slide-content">
@@ -813,7 +627,6 @@
     <div class="slide-num">5 / 5</div>
   </div>
 
-  <!-- 🕺 Финальная сцена с танцором -->
   <div id="final-scene">
     <div class="music-notes">
       <span class="note">🎵</span>
@@ -839,6 +652,7 @@
   </div>
 </div>
 
+<!-- 📞 ЗВОНОК — КОМПАКТНЫЙ -->
 <div id="phone-call">
   <div id="phone-call-box">
     <span id="phone-icon">📞</span>
@@ -847,8 +661,9 @@
     <div id="phone-text">Товарищ! Иголка потерялась в стоге. Найди её — и получишь награду!</div>
     <div id="phone-buttons">
       <button id="phone-decline">Отклонить</button>
-      <button id="phone-answer">Ответить</button>
+      <button id="phone-answer">Ответить ✓</button>
     </div>
+    <div id="phone-tip">👆 Нажми «Ответить», чтобы принять вызов</div>
   </div>
 </div>
 
@@ -904,42 +719,24 @@ if (typeof THREE === 'undefined') {
 }
 
 // ============================================
-// 🎬 КОНЦОВКА — слайд-шоу (5 слайдов по 10 секунд)
+// 🎬 КОНЦОВКА
 // ============================================
-var SLIDE_DURATION = 10000; // 10 секунд на слайд
+var SLIDE_DURATION = 10000;
 var endingMusic = new Audio('5.mp3');
 endingMusic.loop = true;
 endingMusic.volume = 0.7;
-
 var endingActive = false;
 var endingTimers = [];
-var currentSlide = 0;
 
 function startEnding() {
   if (endingActive) return;
   endingActive = true;
-
-  // Скрываем окно победы
   document.getElementById('message').classList.remove('show');
-
-  // Показываем экран концовки
-  var screen = document.getElementById('ending-screen');
-  screen.classList.add('show');
-
-  // Останавливаем рингтон если играет
+  document.getElementById('ending-screen').classList.add('show');
   if (phoneRingtone) { try { phoneRingtone.pause(); } catch(e) {} }
-
-  // Запускаем музыку
   endingMusic.currentTime = 0;
-  endingMusic.play().catch(function(e) {
-    console.log('Музыка концовки не запустилась:', e);
-  });
-
-  // Показываем первый слайд
-  currentSlide = 0;
+  endingMusic.play().catch(function(e) { console.log('Музыка не запустилась:', e); });
   showSlide(0);
-
-  // Запускаем таймеры на переключение слайдов
   scheduleSlides();
 }
 
@@ -949,24 +746,18 @@ function showSlide(index) {
     if (i === index) slides[i].classList.add('active');
     else slides[i].classList.remove('active');
   }
-  // Скрываем финальную сцену
   document.getElementById('final-scene').classList.remove('active');
 }
 
 function scheduleSlides() {
   var slides = document.querySelectorAll('.slide');
   var totalSlides = slides.length;
-
   for (var i = 0; i < totalSlides; i++) {
     (function(idx) {
       var t = setTimeout(function() {
         if (!endingActive) return;
-        if (idx + 1 < totalSlides) {
-          showSlide(idx + 1);
-        } else {
-          // После последнего слайда — финальная сцена с танцором
-          showFinalScene();
-        }
+        if (idx + 1 < totalSlides) showSlide(idx + 1);
+        else showFinalScene();
       }, SLIDE_DURATION * (idx + 1));
       endingTimers.push(t);
     })(i);
@@ -979,31 +770,12 @@ function showFinalScene() {
   document.getElementById('final-scene').classList.add('active');
 }
 
-function stopEnding() {
-  endingActive = false;
-  endingTimers.forEach(function(t) { clearTimeout(t); });
-  endingTimers = [];
-  try {
-    endingMusic.pause();
-    endingMusic.currentTime = 0;
-  } catch(e) {}
-  document.getElementById('ending-screen').classList.remove('show');
-}
-
-// Кнопка «Смотреть концовку» в окне победы
-document.getElementById('msg-end-btn').addEventListener('click', function() {
-  startEnding();
-});
-
-// Кнопка «Пропустить» в концовке
+document.getElementById('msg-end-btn').addEventListener('click', function() { startEnding(); });
 document.getElementById('ending-skip-btn').addEventListener('click', function() {
-  // Переходим сразу к финальной сцене
   endingTimers.forEach(function(t) { clearTimeout(t); });
   endingTimers = [];
   showFinalScene();
 });
-
-// Кнопка «Играть снова» в финальной сцене
 document.getElementById('final-replay-btn').addEventListener('click', function() {
   try { endingMusic.pause(); } catch(e) {}
   location.reload();
@@ -1013,17 +785,14 @@ document.getElementById('final-replay-btn').addEventListener('click', function()
 // 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ
 // ============================================
 var fullscreenBtn = document.getElementById('fullscreen-btn');
-
 function isFullscreen() {
   return !!(document.fullscreenElement || document.webkitFullscreenElement ||
             document.mozFullScreenElement || document.msFullscreenElement);
 }
-
 function updateFullscreenBtn() {
   fullscreenBtn.textContent = isFullscreen() ? '✕' : '⛶';
   fullscreenBtn.title = isFullscreen() ? 'Выйти из полного экрана' : 'Полный экран';
 }
-
 function toggleFullscreen() {
   if (!isFullscreen()) {
     var el = document.documentElement;
@@ -1039,16 +808,13 @@ function toggleFullscreen() {
     if (exit) { var r = exit.call(document); if (r && r.catch) r.catch(function(){}); }
   }
 }
-
 function fallbackFullscreen() {
   window.scrollTo(0, 1);
   setTimeout(function() { window.scrollTo(0, 1); handleResize(); }, 300);
   setTimeout(function() { handleResize(); }, 600);
 }
-
 fullscreenBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); });
 fullscreenBtn.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); toggleFullscreen(); }, { passive: false });
-
 ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
   document.addEventListener(evt, function() {
     updateFullscreenBtn();
@@ -1056,7 +822,6 @@ fullscreenBtn.addEventListener('touchstart', function(e) { e.preventDefault(); e
     setTimeout(handleResize, 400);
   });
 });
-
 var autoFsTried = false;
 function tryAutoFullscreen() {
   if (autoFsTried) return;
@@ -1130,11 +895,7 @@ function animateLoading() {
     updateHUD();
     updateShopMenu();
     updateToolButton();
-
-    if (!gameStarted) {
-      gameStarted = true;
-      animate();
-    }
+    if (!gameStarted) { gameStarted = true; animate(); }
 
     var startBtn = document.getElementById('start-game-btn');
     startBtn.style.display = 'flex';
@@ -1193,31 +954,46 @@ function showPhoneCall() {
   var phoneCallBox = document.getElementById('phone-call-box');
   var phoneText = document.getElementById('phone-text');
   var phoneIcon = document.getElementById('phone-icon');
+  var phoneTip = document.getElementById('phone-tip');
 
   phoneCall.classList.add('show');
   phoneRingtone.play().catch(function() {});
 
-  phoneAnswer.onclick = function() {
+  function answerCall() {
     phoneRingtone.pause();
     phoneRingtone.currentTime = 0;
     phoneCallBox.classList.add('answered');
     phoneIcon.textContent = '💬';
     phoneText.textContent = 'Товарищ! Ищи сено, корми корову. Найдёшь иголку — получишь награду!';
+    phoneTip.textContent = '✓ Вызов принят';
+    phoneTip.style.animation = 'none';
+    phoneTip.style.color = '#4ade80';
+    phoneAnswer.disabled = true;
+    phoneDecline.disabled = true;
+    phoneAnswer.style.opacity = '0.5';
+    phoneDecline.style.opacity = '0.5';
     putinVoice.play().catch(function(e) {});
     setTimeout(function() {
       phoneCall.classList.remove('show');
       showPhoneBubble('Товарищ, найди иголку в стоге! 🧵');
       afterPhoneCall();
     }, 3000);
-  };
+  }
 
-  phoneDecline.onclick = function() {
+  function declineCall() {
     phoneRingtone.pause();
     phoneRingtone.currentTime = 0;
     phoneCall.classList.remove('show');
     showPhoneBubble('Не бери трубку — но иголку всё равно ищи! 🧵');
     afterPhoneCall();
-  };
+  }
+
+  // Клики
+  phoneAnswer.onclick = answerCall;
+  phoneDecline.onclick = declineCall;
+  // Тач-события (мобильные) — с preventDefault
+  phoneAnswer.ontouchstart = function(e) { e.preventDefault(); e.stopPropagation(); answerCall(); };
+  phoneDecline.ontouchstart = function(e) { e.preventDefault(); e.stopPropagation(); declineCall(); };
 }
 
 function showPhoneBubble(text) {
@@ -1254,7 +1030,7 @@ var PRICES = {
 var MILK_PRICE = 50;
 
 // ============================================
-// 🎯 МИССИИ
+// МИССИИ
 // ============================================
 var missions = [
   { id: 'goto_haystack', icon: '🌾', title: 'МИССИЯ 1', text: 'Подойди к <b>стогу сена</b>',
@@ -1291,8 +1067,6 @@ var missionTitleTextEl = document.getElementById('mission-title-text');
 var missionTextEl = document.getElementById('mission-text');
 var missionProgressFill = document.getElementById('mission-progress-fill');
 var missionCompleteEl = document.getElementById('mission-complete');
-
-var missionVisible = false;
 var missionCycleTimer = null;
 var missionHiddenTimer = null;
 
@@ -1309,12 +1083,10 @@ function showMissionBriefly() {
   missionPanelEl.classList.remove('flash');
   void missionPanelEl.offsetWidth;
   missionPanelEl.classList.add('flash');
-  missionVisible = true;
   clearTimeout(missionCycleTimer);
   clearTimeout(missionHiddenTimer);
   missionCycleTimer = setTimeout(function() {
     missionPanelEl.classList.remove('show');
-    missionVisible = false;
     if (currentMission < missions.length && !state.foundNeedle) {
       missionHiddenTimer = setTimeout(function() {
         if (currentMission < missions.length && !state.foundNeedle) showMissionBriefly();
@@ -1341,7 +1113,6 @@ function completeMission() {
   clearTimeout(missionCycleTimer);
   clearTimeout(missionHiddenTimer);
   missionPanelEl.classList.remove('show');
-  missionVisible = false;
   if (currentMission < missions.length) {
     setTimeout(function() { showMissionBriefly(); }, 1500);
   } else {
@@ -1351,7 +1122,6 @@ function completeMission() {
       missionTextEl.innerHTML = '🎉 Все миссии выполнены!';
       missionProgressFill.style.width = '100%';
       missionPanelEl.classList.add('show');
-      missionVisible = true;
       setTimeout(function() { missionPanelEl.classList.remove('show'); }, 10000);
     }, 900);
   }
@@ -1385,8 +1155,7 @@ var skyMat = new THREE.ShaderMaterial({
 });
 scene.add(new THREE.Mesh(skyGeo, skyMat));
 
-var hemiLight = new THREE.HemisphereLight(0x9dc8ff, 0x6a8a3a, 0.5);
-scene.add(hemiLight);
+scene.add(new THREE.HemisphereLight(0x9dc8ff, 0x6a8a3a, 0.5));
 var sun = new THREE.DirectionalLight(0xffe0a8, 0.85);
 sun.position.set(40, 60, 30);
 sun.castShadow = true;
@@ -1395,8 +1164,7 @@ sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
 sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
 sun.shadow.camera.far = 180;
 sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
-scene.add(sun);
-scene.add(sun.target);
+scene.add(sun); scene.add(sun.target);
 var fillLight = new THREE.DirectionalLight(0x88b8ff, 0.2);
 fillLight.position.set(-30, 20, -30);
 scene.add(fillLight);
@@ -1438,10 +1206,7 @@ function makeGrassTexture(size) {
     var lw = 0.7 + Math.random()*1.0;
     drawWrapped(function(ox,oy) {
       ctx.strokeStyle = col2; ctx.lineWidth = lw;
-      ctx.beginPath();
-      ctx.moveTo(tx+ox, ty+oy);
-      ctx.lineTo(tx+ox+dx, ty+oy+dy);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(tx+ox, ty+oy); ctx.lineTo(tx+ox+dx, ty+oy+dy); ctx.stroke();
     });
   })();
   var tex = new THREE.CanvasTexture(c);
@@ -1671,8 +1436,7 @@ function makeBarkTexture(size) {
     var g = 0.7 + Math.random()*0.6;
     ctx.strokeStyle = 'rgba('+Math.floor(90*g)+','+Math.floor(60*g)+','+Math.floor(30*g)+',0.8)';
     ctx.lineWidth = 1 + Math.random()*3;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
+    ctx.beginPath(); ctx.moveTo(x, 0);
     var cy = 0;
     while (cy < size) {
       cy += 10 + Math.random()*20;
@@ -1689,7 +1453,6 @@ function makeBarkTexture(size) {
 var barn = new THREE.Group();
 barn.position.set(0, 0, 22);
 scene.add(barn);
-
 var woodTex = makeWoodTexture(512);
 woodTex.repeat.set(2, 1);
 var woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.9 });
@@ -1807,20 +1570,17 @@ head.position.set(0, HEAD_Y, HEAD_Z);
 head.scale.set(1.0, 0.95, 1.1);
 head.castShadow = true;
 cow.add(head);
-
 var snout = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14, 0, Math.PI*2, 0, Math.PI*0.75), cowPinkMat);
 snout.position.set(0, HEAD_Y - 0.18, HEAD_Z + 0.55);
 snout.rotation.x = Math.PI / 2;
 snout.scale.set(1.05, 1.0, 1.2);
 cow.add(snout);
-
 [-0.15, 0.15].forEach(function(x) {
   var nostril = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), cowBlackMat);
   nostril.position.set(x, HEAD_Y - 0.12, HEAD_Z + 0.9);
   nostril.scale.set(1.2, 0.7, 0.5);
   cow.add(nostril);
 });
-
 for (var m = 0; m < 11; m++) {
   var t = m / 10;
   var angle = Math.PI * (0.12 + t * 0.76);
@@ -1830,7 +1590,6 @@ for (var m = 0; m < 11; m++) {
   dot.position.set(mx, HEAD_Y - 0.36 + my, HEAD_Z + 0.85);
   cow.add(dot);
 }
-
 var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 });
 [-0.4, 0.4].forEach(function(x) {
   var cheek = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cheekMat);
@@ -1838,13 +1597,11 @@ var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 
   cheek.scale.set(1, 0.7, 0.4);
   cow.add(cheek);
 });
-
 [-0.24, 0.24].forEach(function(x) {
   var eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 14), cowBlackMat);
   eye.position.set(x, HEAD_Y + 0.3, HEAD_Z + 0.52);
   cow.add(eye);
 });
-
 [-0.65, 0.65].forEach(function(x) {
   var ear = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), cowBodyMat);
   ear.position.set(x, HEAD_Y + 0.25, HEAD_Z - 0.1);
@@ -1853,14 +1610,12 @@ var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 
   ear.rotation.y = x > 0 ? 0.3 : -0.3;
   cow.add(ear);
 });
-
 [-0.4, 0.4].forEach(function(x) {
   var horn = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.28, 8), cowHornMat);
   horn.position.set(x, HEAD_Y + 0.45, HEAD_Z - 0.05);
   horn.rotation.z = x > 0 ? 0.5 : -0.5;
   cow.add(horn);
 });
-
 [{x:-0.55,z:0.9},{x:0.55,z:0.9},{x:-0.55,z:-0.9},{x:0.55,z:-0.9}].forEach(function(p) {
   var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 1.4, 12), cowBodyMat);
   leg.position.set(p.x, 0.8, p.z);
@@ -1871,7 +1626,6 @@ var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 
   hoof.castShadow = true;
   cow.add(hoof);
 });
-
 var tail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8), cowBodyMat);
 tail.position.set(0, 1.9, -1.7);
 tail.rotation.x = 0.6;
@@ -1879,12 +1633,10 @@ cow.add(tail);
 var tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cowBlackMat);
 tailTip.position.set(0, 1.4, -2.15);
 cow.add(tailTip);
-
 var udder = new THREE.Mesh(new THREE.SphereGeometry(0.32, 14, 10, 0, Math.PI*2, 0, Math.PI*0.75), cowPinkMat);
 udder.position.set(0, 1.1, 0.3);
 udder.rotation.x = Math.PI;
 cow.add(udder);
-
 addCollider(15, 5, 2.2);
 
 var barkTex = makeBarkTexture(256);
@@ -1996,7 +1748,6 @@ var keys = { w:false, a:false, s:false, d:false,
   arrowup:false, arrowdown:false, arrowleft:false, arrowright:false, shift:false };
 var MOUSE_SENSITIVITY = 0.005;
 var TOUCH_SENSITIVITY = 0.010;
-var isLocked = false;
 var shopOpen = false;
 
 var lookArea = document.getElementById('lookArea');
@@ -2039,9 +1790,7 @@ lookArea.addEventListener('touchmove', function(e) {
   if (!touchLookActive || lookTouchId === null) return;
   var touch = null;
   for (var i = 0; i < e.changedTouches.length; i++) {
-    if (e.changedTouches[i].identifier === lookTouchId) {
-      touch = e.changedTouches[i]; break;
-    }
+    if (e.changedTouches[i].identifier === lookTouchId) { touch = e.changedTouches[i]; break; }
   }
   if (!touch) return;
   e.preventDefault();
@@ -2079,7 +1828,6 @@ canvasEl.addEventListener('click', function() {
 
 document.addEventListener('pointerlockchange', function() {
   pointerLocked = document.pointerLockElement === canvasEl;
-  isLocked = pointerLocked;
   var ctp = document.getElementById('click-to-play');
   if (pointerLocked) { if (ctp) ctp.classList.remove('show'); }
   else if (tutorialCompleted && !state.foundNeedle && !shopOpen && !adminOpen && !isMobileDevice) {
