@@ -775,7 +775,6 @@ function toggleFullscreen() {
       if (result && result.catch) {
         result.catch(function(e) {
           console.log('Fullscreen error:', e);
-          // Fallback для iOS Safari, где requestFullscreen недоступен
           fallbackFullscreen();
         });
       }
@@ -792,7 +791,6 @@ function toggleFullscreen() {
   }
 }
 
-// Фолбэк для iOS — прокрутка вниз, чтобы скрыть адресную строку
 function fallbackFullscreen() {
   window.scrollTo(0, 1);
   setTimeout(function() { window.scrollTo(0, 1); handleResize(); }, 300);
@@ -819,7 +817,6 @@ fullscreenBtn.addEventListener('touchstart', function(e) {
   });
 });
 
-// Автопопытка при первом клике (без кнопки, для лучшего погружения)
 var autoFsTried = false;
 function tryAutoFullscreen() {
   if (autoFsTried) return;
@@ -908,7 +905,6 @@ function animateLoading() {
       if (startClicked) return;
       startClicked = true;
       startBtn.style.display = 'none';
-      // Пытаемся войти в fullscreen по клику
       if (!isFullscreen()) toggleFullscreen();
       showPhoneCall();
     });
@@ -1026,7 +1022,6 @@ var state = {
   stamina: 10, staminaMax: 10, staminaRegen: 2.0, staminaDrain: 5.0
 };
 
-// Цены в рублях
 var PRICES = {
   speed: [200,400,800,1600,3200,6400,12800],
   gather: [300,600,1200,2400,4800,9600,19200],
@@ -1910,6 +1905,7 @@ var shopOpen = false;
 var lookArea = document.getElementById('lookArea');
 var lookHint = document.getElementById('lookHint');
 var touchLookActive = false;
+var lookTouchId = null;
 var lastTouchX = 0, lastTouchY = 0;
 
 function isUITarget(target) {
@@ -1923,21 +1919,30 @@ function isUITarget(target) {
 }
 
 lookArea.addEventListener('touchstart', function(e) {
+  if (touchLookActive) return;
   for (var i = 0; i < e.changedTouches.length; i++) {
-    if (isUITarget(e.changedTouches[i].target)) return;
+    var t = e.changedTouches[i];
+    if (isUITarget(t.target)) continue;
+    touchLookActive = true;
+    lookTouchId = t.identifier;
+    lastTouchX = t.clientX;
+    lastTouchY = t.clientY;
+    if (lookHint) lookHint.style.display = 'none';
+    break;
   }
-  e.preventDefault();
-  var touch = e.changedTouches[0];
-  touchLookActive = true;
-  lastTouchX = touch.clientX;
-  lastTouchY = touch.clientY;
-  if (lookHint) lookHint.style.display = 'none';
-}, { passive: false });
+}, { passive: true });
 
 lookArea.addEventListener('touchmove', function(e) {
-  if (!touchLookActive) return;
+  if (!touchLookActive || lookTouchId === null) return;
+  var touch = null;
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === lookTouchId) {
+      touch = e.changedTouches[i];
+      break;
+    }
+  }
+  if (!touch) return;
   e.preventDefault();
-  var touch = e.changedTouches[0];
   var dx = touch.clientX - lastTouchX;
   var dy = touch.clientY - lastTouchY;
   player.yaw -= dx * TOUCH_SENSITIVITY;
@@ -1947,8 +1952,18 @@ lookArea.addEventListener('touchmove', function(e) {
   lastTouchY = touch.clientY;
 }, { passive: false });
 
-lookArea.addEventListener('touchend', function() { touchLookActive = false; });
-lookArea.addEventListener('touchcancel', function() { touchLookActive = false; });
+function endLookTouch(e) {
+  if (!touchLookActive || lookTouchId === null) return;
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === lookTouchId) {
+      touchLookActive = false;
+      lookTouchId = null;
+      break;
+    }
+  }
+}
+lookArea.addEventListener('touchend', endLookTouch);
+lookArea.addEventListener('touchcancel', endLookTouch);
 
 var canvasEl = renderer.domElement;
 var pointerLocked = false;
@@ -1993,12 +2008,34 @@ var moveJoystick = document.getElementById('moveJoystick');
 var moveKnob = document.getElementById('moveKnob');
 var moveActive = false;
 var joystickInput = { x: 0, y: 0 };
+var joystickTouchId = null;
 
-function handleMoveStart(e) { e.preventDefault(); e.stopPropagation(); moveActive = true; }
+function handleMoveStart(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  moveActive = true;
+  if (e.changedTouches && e.changedTouches.length) {
+    joystickTouchId = e.changedTouches[0].identifier;
+  }
+}
 function handleMoveMove(e) {
   if (!moveActive) return;
-  e.preventDefault(); e.stopPropagation();
-  var touch = e.touches ? e.touches[0] : e;
+  e.preventDefault();
+  e.stopPropagation();
+  var touch = null;
+  if (e.changedTouches && joystickTouchId !== null) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joystickTouchId) {
+        touch = e.changedTouches[i];
+        break;
+      }
+    }
+  } else if (e.touches && e.touches.length) {
+    touch = e.touches[0];
+  } else {
+    touch = e;
+  }
+  if (!touch) return;
   var rect = moveJoystick.getBoundingClientRect();
   var cx = rect.left + rect.width/2;
   var cy = rect.top + rect.height/2;
@@ -2014,6 +2051,7 @@ function handleMoveMove(e) {
 function handleMoveEnd(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
   moveActive = false;
+  joystickTouchId = null;
   moveKnob.style.transform = 'translate(-50%, -50%)';
   joystickInput.x = 0;
   joystickInput.y = 0;
@@ -2023,7 +2061,7 @@ moveJoystick.addEventListener('touchmove', handleMoveMove, { passive: false });
 moveJoystick.addEventListener('touchend', handleMoveEnd, { passive: false });
 moveJoystick.addEventListener('touchcancel', handleMoveEnd, { passive: false });
 moveJoystick.addEventListener('mousedown', function(e) { e.preventDefault(); e.stopPropagation(); moveActive = true; });
-document.addEventListener('mousemove', function(e) { if (moveActive) handleMoveMove(e); });
+document.addEventListener('mousemove', function(e) { if (moveActive && !e.touches) handleMoveMove(e); });
 document.addEventListener('mouseup', function() { if (moveActive) handleMoveEnd(); });
 
 document.addEventListener('keydown', function(e) {
@@ -2775,7 +2813,6 @@ function closeTutorial() {
 tutorialNext.addEventListener('click', nextTutorialStep);
 tutorialSkip.addEventListener('click', closeTutorial);
 
-// Инициализация кнопки fullscreen
 updateFullscreenBtn();
 
 initGame();
