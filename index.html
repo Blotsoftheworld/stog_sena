@@ -34,9 +34,59 @@
     z-index: 1;
   }
 
-  #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  /* 📺 Кнопка полноэкранного режима */
+  #fullscreen-btn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 60;
+    width: 42px;
+    height: 42px;
+    background: rgba(20,15,10,0.85);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    color: #ffd700;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.2);
+    transition: transform 0.2s, background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    padding: 0;
+    line-height: 1;
+  }
+  #fullscreen-btn:hover { background: rgba(40,30,15,0.95); transform: scale(1.08); }
+  #fullscreen-btn:active { transform: scale(0.95); }
+  #fullscreen-btn.hidden { display: none; }
+
+  @media (max-width: 700px) {
+    #fullscreen-btn {
+      width: 38px;
+      height: 38px;
+      top: 8px;
+      right: 8px;
+      font-size: 17px;
+      border-width: 2px;
+      border-radius: 9px;
+    }
+  }
+
+  @media (max-height: 480px) {
+    #fullscreen-btn {
+      width: 34px;
+      height: 34px;
+      top: 6px;
+      right: 6px;
+      font-size: 15px;
+    }
+  }
+
+  #tutorial { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #tutorial.show { display: flex; }
-  #tutorial-box { background: linear-gradient(180deg, rgba(60,40,15,0.98), rgba(30,20,8,0.98)); border: 4px solid #ffd700; border-radius: 24px; padding: 35px 40px; max-width: 500px; width: 100%; box-shadow: 0 0 80px rgba(255,215,0,0.4); text-align: center; color: #fff; }
+  #tutorial-box { background: linear-gradient(180deg, rgba(60,40,15,0.98), rgba(30,20,8,0.98)); border: 4px solid #ffd700; border-radius: 24px; padding: 35px 40px; max-width: 500px; width: 100%; box-shadow: 0 0 80px rgba(255,215,0,0.4); text-align: center; color: #fff; max-height: calc(100vh - 40px); overflow-y: auto; }
   #tutorial-icon { font-size: 64px; margin-bottom: 15px; display: block; }
   #tutorial-title { color: #ffd700; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
   #tutorial-text { font-size: 16px; line-height: 1.7; color: #e0e0e0; margin-bottom: 25px; min-height: 100px; }
@@ -51,6 +101,7 @@
   #tutorial-skip:hover { background: rgba(0,0,0,0.6); color: #fff; }
   #tutorial-next:disabled, #tutorial-skip:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* Адаптация по ширине */
   @media (max-width: 700px) {
     #tutorial { padding: 12px; }
     #tutorial-box { padding: 22px 18px; border-radius: 18px; border-width: 3px; }
@@ -63,6 +114,20 @@
     #tutorial-skip { padding: 10px 14px; font-size: 12px; }
     #tutorial-dots { gap: 6px; margin-bottom: 15px; }
     .tutorial-dot { width: 8px; height: 8px; }
+  }
+
+  /* Адаптация по высоте (альбомная ориентация телефона) */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #tutorial { padding: 8px; align-items: center; }
+    #tutorial-box { padding: 14px 18px; max-height: calc(100vh - 16px); border-radius: 14px; border-width: 2px; max-width: 620px; }
+    #tutorial-icon { font-size: 32px; margin-bottom: 4px; }
+    #tutorial-title { font-size: 16px; margin-bottom: 6px; }
+    #tutorial-text { font-size: 12px; line-height: 1.4; margin-bottom: 10px; min-height: 45px; }
+    #tutorial-dots { margin-bottom: 10px; gap: 5px; }
+    .tutorial-dot { width: 7px; height: 7px; }
+    #tutorial-buttons { flex-direction: row; gap: 8px; }
+    #tutorial-next { padding: 9px 14px; font-size: 13px; }
+    #tutorial-skip { padding: 9px 12px; font-size: 12px; }
   }
 
   #rotate-screen { position: fixed; inset: 0; z-index: 1000; background: linear-gradient(180deg, #1a1005, #000); display: none; align-items: center; justify-content: center; flex-direction: column; color: #ffd700; padding: 30px; text-align: center; }
@@ -96,11 +161,19 @@
   #loading .status { margin-top: 12px; font-size: 14px; color: #ccc; }
 
   @media (max-width: 700px) {
-    #loading .title { font-size: 28px; }
-    #loading .sub { font-size: 13px; margin-bottom: 25px; }
+    #loading .title { font-size: 26px; }
+    #loading .sub { font-size: 13px; margin-bottom: 22px; }
     #loading .bar-outer { height: 22px; }
     #loading .percent { font-size: 22px; margin-top: 15px; }
     #loading .status { font-size: 12px; }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    #loading .title { font-size: 24px; margin-bottom: 8px; }
+    #loading .sub { font-size: 12px; margin-bottom: 15px; }
+    #loading .bar-outer { width: 320px; height: 18px; border-width: 2px; }
+    #loading .percent { font-size: 18px; margin-top: 10px; }
+    #loading .status { font-size: 11px; margin-top: 8px; }
   }
 
   #lookArea { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; z-index: 12; }
@@ -134,6 +207,11 @@
     #hud .row { gap: 12px; }
   }
 
+  @media (max-height: 500px) and (orientation: landscape) {
+    #hud { padding: 6px 10px; font-size: 10px; line-height: 1.4; top: 6px; left: 6px; }
+    #hud .row { gap: 10px; }
+  }
+
   #inventory-bar { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); width: 340px; max-width: 80vw; height: 26px; background: rgba(10,10,10,0.85); border-radius: 13px; border: 2px solid rgba(255,215,0,0.7); overflow: hidden; display: none; z-index: 18; }
   #inventory-bar.show { display: block; }
   #inventory-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #b8860b, #ffd700, #ffe66d); transition: width 0.25s; }
@@ -145,7 +223,7 @@
 
   /* Mission panel */
   #mission-panel {
-    position: fixed; top: 15px; right: 15px; z-index: 30;
+    position: fixed; top: 15px; right: 65px; z-index: 30;
     background: linear-gradient(135deg, rgba(30,20,10,0.95), rgba(50,35,15,0.95));
     border: 3px solid #ffd700; border-radius: 16px;
     padding: 14px 18px; max-width: 320px; min-width: 260px;
@@ -185,11 +263,11 @@
 
   @media (max-width: 700px) {
     #mission-panel {
-      top: 8px;
+      top: 55px;
       right: 8px;
       left: auto;
       bottom: auto;
-      max-width: 55vw;
+      max-width: 60vw;
       min-width: 170px;
       padding: 7px 10px;
       border-width: 2px;
@@ -206,13 +284,31 @@
     #mission-complete .desc { font-size: 11px; }
   }
 
+  @media (max-height: 500px) and (orientation: landscape) {
+    #mission-panel {
+      top: 50px;
+      right: 6px;
+      max-width: 240px;
+      min-width: 150px;
+      padding: 6px 9px;
+    }
+    #mission-title { font-size: 9px; margin-bottom: 2px; }
+    #mission-title .step-badge { width: 13px; height: 13px; font-size: 8px; }
+    #mission-text { font-size: 10px; margin-bottom: 4px; }
+    #mission-progress { height: 3px; }
+    #mission-complete { padding: 14px 20px; }
+    #mission-complete .icon { font-size: 30px; margin-bottom: 6px; }
+    #mission-complete .title { font-size: 13px; }
+    #mission-complete .desc { font-size: 10px; }
+  }
+
   #popups { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   .popup { position: absolute; color: #ffd700; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 6px #000; animation: floatUp 1.3s forwards; }
   @keyframes floatUp { 0% { transform: translate(-50%,0); opacity: 1; } 100% { transform: translate(-50%,-110px); opacity: 0; } }
 
   #shop-menu { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 200; padding: 15px; }
   #shop-menu.open { display: flex; }
-  #shop-window { background: linear-gradient(rgba(70,45,20,0.98), rgba(40,25,10,0.98)); border: 4px solid #c9a227; border-radius: 18px; padding: 20px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+  #shop-window { background: linear-gradient(rgba(70,45,20,0.98), rgba(40,25,10,0.98)); border: 4px solid #c9a227; border-radius: 18px; padding: 20px; width: 100%; max-width: 500px; max-height: calc(100vh - 30px); overflow-y: auto; }
   #shop-window h2 { color: #ffd700; text-align: center; margin-bottom: 8px; font-size: 22px; }
   .money-row { color: #fff; text-align: center; margin-bottom: 15px; font-size: 15px; }
   .money-row b { color: #ffd700; font-size: 18px; }
@@ -224,7 +320,7 @@
   .shop-item button { background: linear-gradient(180deg, #4a8f3a, #2d5a23); color: #fff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: bold; cursor: pointer; min-width: 90px; }
   .shop-item button:disabled { background: #333; color: #666; cursor: not-allowed; }
   .shop-item button .price { display: block; color: #ffd700; font-size: 11px; margin-top: 2px; }
-  #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+  #shop-close { display: block; margin: 15px auto 0; padding: 12px 35px; background: linear-gradient(180deg, #c0392b, #8b1e0f); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; position: sticky; bottom: 0; }
 
   @media (max-width: 700px) {
     #shop-window { padding: 14px; border-radius: 14px; border-width: 3px; }
@@ -240,9 +336,25 @@
     #shop-close { padding: 10px 28px; font-size: 14px; }
   }
 
+  /* 🎯 Адаптация магазина по высоте (альбомная ориентация телефона) */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #shop-menu { padding: 8px; }
+    #shop-window { padding: 10px 14px; border-radius: 12px; border-width: 2px; max-width: 90vw; max-height: calc(100vh - 16px); }
+    #shop-window h2 { font-size: 15px; margin-bottom: 4px; }
+    .money-row { font-size: 11px; margin-bottom: 6px; }
+    .money-row b { font-size: 13px; }
+    .shop-item { padding: 6px 8px; gap: 6px; border-radius: 8px; margin-bottom: 5px; }
+    .shop-item .name { font-size: 11px; margin-bottom: 1px; }
+    .shop-item .desc { font-size: 9px; }
+    .shop-item .lvl { font-size: 9px; margin-top: 1px; }
+    .shop-item button { padding: 6px 8px; font-size: 10px; min-width: 65px; border-radius: 7px; }
+    .shop-item button .price { font-size: 9px; }
+    #shop-close { padding: 8px 24px; font-size: 12px; margin-top: 10px; }
+  }
+
   #message { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
   #message.show { display: flex; }
-  #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; }
+  #message-box { text-align: center; color: #fff; padding: 40px 50px; background: linear-gradient(180deg, #2a2a2a, #111); border: 4px solid #ffd700; border-radius: 24px; max-width: 90vw; max-height: calc(100vh - 40px); overflow-y: auto; }
   #message-box h1 { color: #ffd700; font-size: 32px; margin-bottom: 20px; }
   #message-box p { font-size: 17px; margin: 10px 0; }
   #message-box button { margin-top: 25px; padding: 14px 40px; background: #ffd700; color: #000; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
@@ -252,6 +364,13 @@
     #message-box h1 { font-size: 22px; margin-bottom: 14px; }
     #message-box p { font-size: 14px; }
     #message-box button { padding: 12px 30px; font-size: 14px; }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    #message-box { padding: 16px 25px; border-radius: 14px; border-width: 2px; }
+    #message-box h1 { font-size: 18px; margin-bottom: 8px; }
+    #message-box p { font-size: 12px; margin: 5px 0; }
+    #message-box button { margin-top: 12px; padding: 9px 24px; font-size: 12px; border-radius: 8px; }
   }
 
   #click-to-play { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(30,20,10,0.9), rgba(0,0,0,0.98)); display: none; align-items: center; justify-content: center; z-index: 100; color: #fff; flex-direction: column; cursor: pointer; padding: 20px; text-align: center; }
@@ -265,9 +384,9 @@
   #cooldown.show { display: block; }
   #cooldown-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff6b6b, #ffd700); }
 
-  #phone-call { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  #phone-call { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #phone-call.show { display: flex; }
-  #phone-call-box { background: linear-gradient(180deg, #2a3a2a, #1a2a1a); border: 4px solid #4ade80; border-radius: 28px; padding: 40px 50px; max-width: 420px; width: 100%; text-align: center; color: #fff; box-shadow: 0 0 80px rgba(74,222,128,0.5); animation: phoneShake 0.6s infinite; }
+  #phone-call-box { background: linear-gradient(180deg, #2a3a2a, #1a2a1a); border: 4px solid #4ade80; border-radius: 28px; padding: 40px 50px; max-width: 420px; width: 100%; text-align: center; color: #fff; box-shadow: 0 0 80px rgba(74,222,128,0.5); animation: phoneShake 0.6s infinite; max-height: calc(100vh - 40px); overflow-y: auto; }
   @keyframes phoneShake { 0%,100% { transform: rotate(-2deg) translateX(-4px); } 50% { transform: rotate(2deg) translateX(4px); } }
   #phone-call-box.answered { animation: none; }
   #phone-icon { font-size: 80px; display: block; margin-bottom: 20px; animation: phonePulse 1s infinite; }
@@ -298,9 +417,22 @@
     #phone-bubble::before { left: -28px; font-size: 18px; }
   }
 
-  #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  /* 🎯 Адаптация звонка по высоте (альбомная ориентация телефона) */
+  @media (max-height: 500px) and (orientation: landscape) {
+    #phone-call { padding: 8px; }
+    #phone-call-box { padding: 14px 22px; border-radius: 16px; border-width: 2px; max-height: calc(100vh - 16px); max-width: 520px; }
+    #phone-icon { font-size: 36px; margin-bottom: 6px; }
+    #phone-caller { font-size: 14px; margin-bottom: 3px; }
+    #phone-number { font-size: 11px; margin-bottom: 10px; letter-spacing: 1px; }
+    #phone-text { font-size: 11px; margin-bottom: 12px; min-height: 32px; line-height: 1.35; }
+    #phone-answer, #phone-decline { padding: 8px 12px; font-size: 11px; border-width: 2px; }
+    #phone-buttons { gap: 8px; }
+    #phone-bubble { top: 50px; right: 6px; font-size: 10px; padding: 8px 12px; max-width: 60vw; }
+  }
+
+  #admin-panel { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
   #admin-panel.show { display: flex; }
-  #admin-box { background: linear-gradient(180deg, #1a1a2a, #0a0a15); border: 3px solid #ff00ff; border-radius: 20px; padding: 25px 30px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; color: #fff; box-shadow: 0 0 60px rgba(255,0,255,0.5); }
+  #admin-box { background: linear-gradient(180deg, #1a1a2a, #0a0a15); border: 3px solid #ff00ff; border-radius: 20px; padding: 25px 30px; max-width: 500px; width: 100%; max-height: calc(100vh - 40px); overflow-y: auto; color: #fff; box-shadow: 0 0 60px rgba(255,0,255,0.5); }
   #admin-box h2 { color: #ff00ff; text-align: center; margin-bottom: 20px; font-size: 24px; text-shadow: 0 0 15px #ff00ff; }
   .admin-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,0,255,0.2); }
   .admin-section h3 { color: #00ffff; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
@@ -315,6 +447,19 @@
   #admin-close { display: block; margin: 0 auto; padding: 10px 30px; background: linear-gradient(180deg, #666, #333); border: 2px solid #ff00ff; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; }
   #admin-close:hover { background: linear-gradient(180deg, #888, #555); }
   .admin-hint { font-size: 11px; color: #888; text-align: center; margin-top: 10px; }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    #admin-box { padding: 14px 18px; border-radius: 14px; border-width: 2px; }
+    #admin-box h2 { font-size: 16px; margin-bottom: 10px; }
+    .admin-section { margin-bottom: 10px; padding-bottom: 8px; }
+    .admin-section h3 { font-size: 11px; margin-bottom: 6px; }
+    .admin-row { margin-bottom: 5px; gap: 6px; }
+    .admin-row label { font-size: 11px; }
+    .admin-row input { width: 80px; padding: 4px 8px; font-size: 12px; }
+    .admin-btn { padding: 5px 10px; font-size: 11px; }
+    #admin-close { padding: 7px 22px; font-size: 12px; }
+    .admin-hint { font-size: 9px; margin-top: 6px; }
+  }
 
   /* Скрываем десктопные подсказки на мобильных */
   @media (max-width: 900px), (pointer: coarse) {
@@ -334,9 +479,41 @@
     #inventory-text { font-size: 12px; line-height: 18px; }
     #cooldown { bottom: 120px; width: 200px; }
   }
+
+  /* 🎯 Ещё более компактные кнопки для низких экранов */
+  @media (max-height: 420px) and (orientation: landscape) {
+    #moveJoystick { width: 95px; height: 95px; bottom: 12px; left: 12px; }
+    #moveKnob { width: 42px; height: 42px; }
+    #runBtn { width: 58px; height: 58px; bottom: 12px; right: 12px; font-size: 11px; }
+    #jumpBtn { width: 58px; height: 58px; bottom: 88px; right: 88px; font-size: 10px; }
+    #shootBtn { width: 58px; height: 58px; bottom: 88px; right: 12px; font-size: 20px; }
+    #stamina-bar-mobile { bottom: 118px; left: 12px; width: 95px; height: 5px; }
+    #inventory-bar { bottom: 78px; height: 20px; }
+    #inventory-text { font-size: 11px; line-height: 16px; }
+    #cooldown { bottom: 100px; width: 170px; }
+  }
+
+  /* Начальный экран "Начать игру" адаптация */
+  #start-game-btn > div:first-child {
+    font-size: 42px;
+    padding: 0 15px;
+  }
+  @media (max-width: 700px) {
+    #start-game-btn > div:first-child { font-size: 26px; margin-bottom: 12px; }
+    #start-game-btn > div:nth-child(2) { font-size: 13px; margin-bottom: 22px; }
+    #start-game-btn-inner { padding: 14px 36px !important; font-size: 16px !important; }
+  }
+  @media (max-height: 500px) and (orientation: landscape) {
+    #start-game-btn > div:first-child { font-size: 22px; margin-bottom: 8px; }
+    #start-game-btn > div:nth-child(2) { font-size: 12px; margin-bottom: 14px; }
+    #start-game-btn-inner { padding: 11px 30px !important; font-size: 14px !important; }
+  }
 </style>
 </head>
 <body>
+
+<!-- 📺 Кнопка полноэкранного режима -->
+<button id="fullscreen-btn" title="Полный экран">⛶</button>
 
 <div id="tutorial">
   <div id="tutorial-box">
@@ -370,7 +547,7 @@
 <div id="stamina-bar-mobile"><div id="staminaFill-mobile"></div></div>
 <div id="runBtn">RUN</div>
 <div id="jumpBtn">JUMP</div>
-<div id="shootBtn">🌾</div>
+<div id="shootBtn">E</div>
 
 <div id="pcHint">
   <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> движение |
@@ -547,9 +724,8 @@
   <div style="
     color:#ffd700; font-size:42px; font-weight:bold;
     text-shadow:0 0 40px #ffd700; margin-bottom:20px;
-    padding: 0 15px;
   ">🧵 Иголка в стоге сена</div>
-  <div style="color:#ccc; font-size:16px; margin-bottom:35px; padding: 0 15px;">
+  <div style="color:#ccc; font-size:16px; margin-bottom:35px;">
     Собирай сено, корми корову — и найди иголку!
   </div>
   <button id="start-game-btn-inner" style="
@@ -570,33 +746,90 @@ if (typeof THREE === 'undefined') {
 }
 
 // ============================================
-// 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ
+// 🖥️ ПОЛНОЭКРАННЫЙ РЕЖИМ (С КНОПКОЙ)
 // ============================================
-function goFullscreen() {
-  var el = document.documentElement;
-  if (el.requestFullscreen) {
-    el.requestFullscreen().catch(function(e) { console.log('Fullscreen error:', e); });
-  } else if (el.webkitRequestFullscreen) {
-    el.webkitRequestFullscreen();
-  } else if (el.mozRequestFullScreen) {
-    el.mozRequestFullScreen();
-  } else if (el.msRequestFullscreen) {
-    el.msRequestFullscreen();
+var fullscreenBtn = document.getElementById('fullscreen-btn');
+
+function isFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+            document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function updateFullscreenBtn() {
+  if (isFullscreen()) {
+    fullscreenBtn.textContent = '✕';
+    fullscreenBtn.title = 'Выйти из полного экрана';
+  } else {
+    fullscreenBtn.textContent = '⛶';
+    fullscreenBtn.title = 'Полный экран';
   }
 }
 
-var fullscreenTried = false;
-function tryFullscreenOnce() {
-  if (fullscreenTried) return;
-  fullscreenTried = true;
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    goFullscreen();
+function toggleFullscreen() {
+  if (!isFullscreen()) {
+    var el = document.documentElement;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen ||
+              el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      var result = req.call(el);
+      if (result && result.catch) {
+        result.catch(function(e) {
+          console.log('Fullscreen error:', e);
+          // Fallback для iOS Safari, где requestFullscreen недоступен
+          fallbackFullscreen();
+        });
+      }
+    } else {
+      fallbackFullscreen();
+    }
+  } else {
+    var exit = document.exitFullscreen || document.webkitExitFullscreen ||
+               document.mozCancelFullScreen || document.msExitFullscreen;
+    if (exit) {
+      var r = exit.call(document);
+      if (r && r.catch) r.catch(function(e) { console.log(e); });
+    }
   }
-  document.removeEventListener('click', tryFullscreenOnce);
-  document.removeEventListener('touchstart', tryFullscreenOnce);
 }
-document.addEventListener('click', tryFullscreenOnce);
-document.addEventListener('touchstart', tryFullscreenOnce, { passive: true });
+
+// Фолбэк для iOS — прокрутка вниз, чтобы скрыть адресную строку
+function fallbackFullscreen() {
+  window.scrollTo(0, 1);
+  setTimeout(function() { window.scrollTo(0, 1); handleResize(); }, 300);
+  setTimeout(function() { handleResize(); }, 600);
+}
+
+fullscreenBtn.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  toggleFullscreen();
+});
+
+fullscreenBtn.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  toggleFullscreen();
+}, { passive: false });
+
+['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(function(evt) {
+  document.addEventListener(evt, function() {
+    updateFullscreenBtn();
+    setTimeout(handleResize, 100);
+    setTimeout(handleResize, 400);
+  });
+});
+
+// Автопопытка при первом клике (без кнопки, для лучшего погружения)
+var autoFsTried = false;
+function tryAutoFullscreen() {
+  if (autoFsTried) return;
+  autoFsTried = true;
+  if (!isFullscreen() && !isMobileDevice) {
+    toggleFullscreen();
+  }
+  document.removeEventListener('click', tryAutoFullscreen);
+}
+document.addEventListener('click', tryAutoFullscreen);
 
 // ============================================
 // ОБЩИЕ ПЕРЕМЕННЫЕ
@@ -675,6 +908,8 @@ function animateLoading() {
       if (startClicked) return;
       startClicked = true;
       startBtn.style.display = 'none';
+      // Пытаемся войти в fullscreen по клику
+      if (!isFullscreen()) toggleFullscreen();
       showPhoneCall();
     });
   }, 500);
@@ -1682,8 +1917,9 @@ function isUITarget(target) {
   var runBtn = document.getElementById('runBtn');
   var jumpBtn = document.getElementById('jumpBtn');
   var shootBtn = document.getElementById('shootBtn');
+  var fsBtn = document.getElementById('fullscreen-btn');
   return (moveJoystick && (target === moveJoystick || moveJoystick.contains(target))) ||
-         target === runBtn || target === jumpBtn || target === shootBtn;
+         target === runBtn || target === jumpBtn || target === shootBtn || target === fsBtn;
 }
 
 lookArea.addEventListener('touchstart', function(e) {
@@ -1807,6 +2043,7 @@ document.addEventListener('keydown', function(e) {
   if (key === ' ' || key === 'spacebar' || e.code === 'Space') { e.preventDefault(); jump(); }
   if (key === 'e' || key === 'у') pressEButton();
   if (key === 'z' || key === 'я' || key === 'p') { e.preventDefault(); toggleShop(); }
+  if (key === 'f' || key === 'а') { e.preventDefault(); toggleFullscreen(); }
 });
 document.addEventListener('keyup', function(e) {
   var key = (e.key && typeof e.key === 'string') ? e.key.toLowerCase() : '';
@@ -2469,8 +2706,6 @@ window.addEventListener('orientationchange', function() {
   setTimeout(handleResize, 400);
   setTimeout(checkOrientation, 100);
 });
-document.addEventListener('fullscreenchange', function() { setTimeout(handleResize, 100); });
-document.addEventListener('webkitfullscreenchange', function() { setTimeout(handleResize, 100); });
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', handleResize);
   window.visualViewport.addEventListener('scroll', handleResize);
@@ -2539,6 +2774,9 @@ function closeTutorial() {
 }
 tutorialNext.addEventListener('click', nextTutorialStep);
 tutorialSkip.addEventListener('click', closeTutorial);
+
+// Инициализация кнопки fullscreen
+updateFullscreenBtn();
 
 initGame();
 </script>
