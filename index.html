@@ -854,6 +854,8 @@ function animateLoading() {
       startClicked = true;
       startBtn.style.display = 'none';
       if (!isFullscreen()) toggleFullscreen();
+      initAudio(); // Инициализация звуков
+      startAmbientSounds(); // Запуск фоновых звуков
       showPhoneCall();
     });
   }, 500);
@@ -891,6 +893,325 @@ phoneRingtone.volume = 0.5;
 var putinVoice = new Audio('putin-voice.mp3');
 putinVoice.volume = 1.0;
 var phoneCallShown = false;
+
+// 🎵 ЗВУКОВЫЕ ЭФФЕКТЫ (Web Audio API)
+// ============================================
+var audioCtx = null;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Звук сбора сена (шорох)
+function playHaySound() {
+  try {
+    var ctx = initAudio();
+    var noise = ctx.createBufferSource();
+    var bufferSize = ctx.sampleRate * 0.15;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+    }
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 3000 + Math.random() * 1000;
+    filter.Q.value = 1;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialDecayTo && gain.gain.exponentialDecayTo(0.01, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+// Звук вил (металлический)
+function playForkSound() {
+  try {
+    var ctx = initAudio();
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
+// Звук динамита (взрыв)
+function playExplosionSound() {
+  try {
+    var ctx = initAudio();
+    var noise = ctx.createBufferSource();
+    var bufferSize = ctx.sampleRate * 0.5;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 3);
+    }
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1000, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.4);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+
+// Звук коровы из файла
+var cowVoice = new Audio('korova.mp3');
+cowVoice.volume = 0.8;
+function playCowSound() {
+  try {
+    cowVoice.currentTime = 0;
+    cowVoice.play().catch(function(e) { console.log('Звук коровы не воспроизвёлся:', e); });
+  } catch(e) {}
+}
+
+// Звук надоя (струя молока)
+function playMilkSound() {
+  try {
+    var ctx = initAudio();
+    var noise = ctx.createBufferSource();
+    var bufferSize = ctx.sampleRate * 0.3;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 4);
+    }
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 800;
+    filter.Q.value = 2;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+// Звук нахождения иголки
+function playNeedleSound() {
+  try {
+    var ctx = initAudio();
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.3);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.3);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+// 🎵 ПРИРОДНЫЕ ЗВУКИ (фоновые)
+// ============================================
+
+// Звук птиц (чириканье)
+function playBirdSound() {
+  try {
+    var ctx = initAudio();
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    var startFreq = 2000 + Math.random() * 1500;
+    osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+    osc.frequency.setValueAtTime(startFreq * 1.2, ctx.currentTime + 0.05);
+    osc.frequency.setValueAtTime(startFreq * 0.9, ctx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(startFreq * 1.1, ctx.currentTime + 0.15);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.02);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch(e) {}
+}
+
+// Звук ветра
+function playWindSound() {
+  try {
+    var ctx = initAudio();
+    var noise = ctx.createBufferSource();
+    var bufferSize = ctx.sampleRate * 2;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    noise.buffer = buffer;
+    noise.loop = true;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 400;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.02, ctx.currentTime);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    return { source: noise, gain: gain };
+  } catch(e) { return null; }
+}
+
+// Таймер для случайных звуков природы
+var ambientSounds = { wind: null, birdTimer: null };
+
+function startAmbientSounds() {
+  // Запускаем звук ветра
+  if (!ambientSounds.wind) {
+    ambientSounds.wind = playWindSound();
+  }
+  // Периодические звуки птиц
+  if (ambientSounds.birdTimer) clearInterval(ambientSounds.birdTimer);
+  ambientSounds.birdTimer = setInterval(function() {
+    if (shopOpen || state.foundNeedle || adminOpen) return;
+    if (Math.random() < 0.3) playBirdSound();
+  }, 8000);
+}
+
+// Звук шагов
+var lastStepTime = 0;
+function playStepSound() {
+  var now = performance.now();
+  if (now - lastStepTime < 350) return;
+  lastStepTime = now;
+  try {
+    var ctx = initAudio();
+    var noise = ctx.createBufferSource();
+    var bufferSize = ctx.sampleRate * 0.08;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 5);
+    }
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 600;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + 0.08);
+  } catch(e) {}
+}
+
+// Звук прыжка (Bunny Hop из Half-Life)
+function playJumpSound() {
+  try {
+    var ctx = initAudio();
+    // Основной тон - как в HL
+    var osc1 = ctx.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(180, ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(450, ctx.currentTime + 0.06);
+    osc1.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.12);
+    
+    // Второй гармонический слой
+    var osc2 = ctx.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(360, ctx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.06);
+    osc2.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.12);
+    
+    var gain1 = ctx.createGain();
+    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain1.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.06);
+    gain1.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+    
+    var gain2 = ctx.createGain();
+    gain2.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain2.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.06);
+    gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+    
+    osc1.connect(gain1);
+    osc2.connect(gain2);
+    gain1.connect(ctx.destination);
+    gain2.connect(ctx.destination);
+    
+    osc1.start();
+    osc2.start();
+    osc1.stop(ctx.currentTime + 0.15);
+    osc2.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+// Звук открытия магазина
+function playShopSound() {
+  try {
+    var ctx = initAudio();
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+// Звук покупки
+function playBuySound() {
+  try {
+    var ctx = initAudio();
+    var osc1 = ctx.createOscillator();
+    var osc2 = ctx.createOscillator();
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+    osc1.frequency.setValueAtTime(523, ctx.currentTime); // C5
+    osc2.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + 0.15);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.25);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+    osc1.start();
+    osc2.start(ctx.currentTime + 0.1);
+    osc1.stop(ctx.currentTime + 0.25);
+    osc2.stop(ctx.currentTime + 0.25);
+  } catch(e) {}
+}
 
 function afterPhoneCall() { setTimeout(function() { showTutorial(); }, 600); }
 
@@ -1487,6 +1808,10 @@ var dirToCenter = new THREE.Vector3(0,0,0).sub(new THREE.Vector3(15,0,5));
 cow.rotation.y = Math.atan2(dirToCenter.x, dirToCenter.z);
 scene.add(cow);
 
+// Переменные для анимации коровы
+var cowHead, cowTail, cowTailTip, cowEars = [];
+var cowAnimTime = 0;
+
 var cowTex = makeCowTexture(512);
 var cowBodyMat = new THREE.MeshStandardMaterial({ map: cowTex, roughness: 0.9 });
 var cowPinkMat = new THREE.MeshStandardMaterial({ color: 0xf0a8b0, roughness: 0.85 });
@@ -1510,56 +1835,99 @@ bodyBack.castShadow = true;
 cow.add(bodyBack);
 
 var HEAD_Y = 2.6, HEAD_Z = 1.75;
-var head = new THREE.Mesh(new THREE.SphereGeometry(0.68, 22, 18), cowBodyMat);
-head.position.set(0, HEAD_Y, HEAD_Z);
-head.scale.set(1.0, 0.95, 1.1);
-head.castShadow = true;
-cow.add(head);
+
+// Группа для головы - чтобы всё лицо двигалось вместе
+var cowHeadGroup = new THREE.Group();
+cowHeadGroup.position.set(0, HEAD_Y, HEAD_Z);
+cow.add(cowHeadGroup);
+
+// Задняя часть головы
+cowHead = new THREE.Mesh(new THREE.SphereGeometry(0.68, 22, 18), cowBodyMat);
+cowHead.scale.set(1.0, 0.95, 1.1);
+cowHead.castShadow = true;
+cowHeadGroup.add(cowHead);
+
+// Морда (snout)
 var snout = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14, 0, Math.PI*2, 0, Math.PI*0.75), cowPinkMat);
-snout.position.set(0, HEAD_Y - 0.18, HEAD_Z + 0.55);
+snout.position.set(0, -0.18, 0.55);
 snout.rotation.x = Math.PI / 2;
 snout.scale.set(1.05, 1.0, 1.2);
-cow.add(snout);
+cowHeadGroup.add(snout);
+
+// Ноздри
 [-0.15, 0.15].forEach(function(x) {
   var nostril = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), cowBlackMat);
-  nostril.position.set(x, HEAD_Y - 0.12, HEAD_Z + 0.9);
+  nostril.position.set(x, -0.12, 0.9);
   nostril.scale.set(1.2, 0.7, 0.5);
-  cow.add(nostril);
+  cowHeadGroup.add(nostril);
 });
+
+// Рот
 for (var m = 0; m < 11; m++) {
   var t = m / 10;
   var angle = Math.PI * (0.12 + t * 0.76);
   var mx = Math.cos(angle) * 0.24;
   var my = -Math.sin(angle) * 0.1 - 0.02;
   var dot = new THREE.Mesh(new THREE.SphereGeometry(0.024, 6, 6), cowMouthMat);
-  dot.position.set(mx, HEAD_Y - 0.36 + my, HEAD_Z + 0.85);
-  cow.add(dot);
+  dot.position.set(mx, -0.36 + my, 0.85);
+  cowHeadGroup.add(dot);
 }
+
+// Щёки
 var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 });
 [-0.4, 0.4].forEach(function(x) {
   var cheek = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cheekMat);
-  cheek.position.set(x, HEAD_Y - 0.22, HEAD_Z + 0.35);
+  cheek.position.set(x, -0.22, 0.35);
   cheek.scale.set(1, 0.7, 0.4);
-  cow.add(cheek);
+  cowHeadGroup.add(cheek);
 });
+
+// Реалистичные глаза коровы (все части в группе)
+var cowEyeGroup = [];
 [-0.24, 0.24].forEach(function(x) {
-  var eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 14), cowBlackMat);
-  eye.position.set(x, HEAD_Y + 0.3, HEAD_Z + 0.52);
-  cow.add(eye);
+  // Белок глаза - сфера
+  var eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.5 });
+  var eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), eyeWhiteMat);
+  eyeWhite.position.set(x, 0.3, 0.58);
+  eyeWhite.scale.set(1, 0.8, 0.7);
+  cowHeadGroup.add(eyeWhite);
+  
+  // Радужка - сфера карего цвета
+  var irisMat = new THREE.MeshStandardMaterial({ 
+    color: 0x3d1f0a, 
+    roughness: 0.4,
+    metalness: 0.1
+  });
+  var iris = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 12), irisMat);
+  iris.position.set(x, 0.3, 0.62);
+  iris.scale.set(1, 0.9, 0.5);
+  cowHeadGroup.add(iris);
+  
+  // Зрачок - чёрная сфера
+  var pupil = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), cowBlackMat);
+  pupil.position.set(x, 0.3, 0.635);
+  cowHeadGroup.add(pupil);
+  
+  // Блик - маленькая белая сфера
+  var highlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var highlight = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), highlightMat);
+  highlight.position.set(x + 0.025, 0.35, 0.64);
+  cowHeadGroup.add(highlight);
 });
 [-0.65, 0.65].forEach(function(x) {
   var ear = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), cowBodyMat);
-  ear.position.set(x, HEAD_Y + 0.25, HEAD_Z - 0.1);
+  ear.position.set(x, 0.25, -0.1);
   ear.scale.set(0.8, 1.5, 0.5);
   ear.rotation.z = x > 0 ? -0.6 : 0.6;
   ear.rotation.y = x > 0 ? 0.3 : -0.3;
-  cow.add(ear);
+  cowHeadGroup.add(ear);
+  cowEars.push({ mesh: ear, side: x > 0 ? 1 : -1, baseRotZ: ear.rotation.z, baseY: 0.25, baseZ: -0.1 });
 });
 [-0.4, 0.4].forEach(function(x) {
   var horn = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.28, 8), cowHornMat);
-  horn.position.set(x, HEAD_Y + 0.45, HEAD_Z - 0.05);
+  horn.position.set(x, 0.45, -0.05);
   horn.rotation.z = x > 0 ? 0.5 : -0.5;
-  cow.add(horn);
+  cowHeadGroup.add(horn);
 });
 [{x:-0.55,z:0.9},{x:0.55,z:0.9},{x:-0.55,z:-0.9},{x:0.55,z:-0.9}].forEach(function(p) {
   var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 1.4, 12), cowBodyMat);
@@ -1571,13 +1939,13 @@ var cheekMat = new THREE.MeshStandardMaterial({ color: 0xff9a9a, roughness: 0.9 
   hoof.castShadow = true;
   cow.add(hoof);
 });
-var tail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8), cowBodyMat);
-tail.position.set(0, 1.9, -1.7);
-tail.rotation.x = 0.6;
-cow.add(tail);
-var tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cowBlackMat);
-tailTip.position.set(0, 1.4, -2.15);
-cow.add(tailTip);
+cowTail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.0, 8), cowBodyMat);
+cowTail.position.set(0, 1.9, -1.7);
+cowTail.rotation.x = 0.6;
+cow.add(cowTail);
+cowTailTip = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), cowBlackMat);
+cowTailTip.position.set(0, 1.4, -2.15);
+cow.add(cowTailTip);
 var udder = new THREE.Mesh(new THREE.SphereGeometry(0.32, 14, 10, 0, Math.PI*2, 0, Math.PI*0.75), cowPinkMat);
 udder.position.set(0, 1.1, 0.3);
 udder.rotation.x = Math.PI;
@@ -1791,6 +2159,7 @@ function jump() {
   if (player.isGrounded && !shopOpen && !state.foundNeedle && !adminOpen) {
     player.velocityY = player.jumpForce;
     player.isGrounded = false;
+    playJumpSound();
   }
 }
 
@@ -2062,13 +2431,13 @@ function tryGatherHay() {
   if (state.hay >= state.maxHay) { showHint('Инвентарь полон!'); return; }
 
   var hayPerGather = 1, toolUsed = state.currentTool;
-  if (toolUsed === 'vacuum' && state.hasVacuum) { hayPerGather = 8; spawnVacuumParticles(); }
+  if (toolUsed === 'vacuum' && state.hasVacuum) { hayPerGather = 8; spawnVacuumParticles(); playHaySound(); }
   else if (toolUsed === 'fork' && state.hasFork && now - state.lastForkTime >= state.forkCooldown*1000) {
-    hayPerGather = 5; state.lastForkTime = now; spawnForkParticle();
+    hayPerGather = 5; state.lastForkTime = now; spawnForkParticle(); playForkSound();
   }
   else if (toolUsed === 'dynamite' && state.hasDynamite && now - state.lastDynamiteTime >= state.dynamiteCooldown*1000) {
-    hayPerGather = 15; state.lastDynamiteTime = now; spawnExplosion();
-  } else { toolUsed = 'hand'; hayPerGather = 1; }
+    hayPerGather = 15; state.lastDynamiteTime = now; spawnExplosion(); playExplosionSound();
+  } else { toolUsed = 'hand'; hayPerGather = 1; playHaySound(); }
 
   state.lastGatherTime = now;
   var actualHay = Math.min(hayPerGather, state.maxHay - state.hay);
@@ -2120,12 +2489,17 @@ function interact() {
   var dCow = player.position.distanceTo(cow.position.clone().add(new THREE.Vector3(0, 2, 0)));
   if (dCow < 7) {
     if (state.hay > 0) {
+      playCowSound();
+      setTimeout(function() { playMilkSound(); }, 150);
       var milk = state.hay;
       state.milk += milk;
       state.hay = 0;
       showPopup('+' + milk + ' молока', window.innerWidth/2, window.innerHeight/2 - 50);
       showHint('Корова дала ' + milk + ' л молока!');
-    } else showHint('Корова ждёт сена...');
+    } else {
+      playCowSound();
+      showHint('Корова ждёт сена...');
+    }
     updateHUD(); updateShopMenu();
     return;
   }
@@ -2136,6 +2510,7 @@ function interact() {
 function findNeedle() {
   state.foundNeedle = true;
   needle.visible = true;
+  playNeedleSound();
   document.exitPointerLock();
   setTimeout(function() {
     document.getElementById('final-money').textContent = state.money;
@@ -2175,6 +2550,39 @@ function spawnStalkParticle() {
   scene.add(stalk);
   particles.push({ mesh: stalk, vel: vel, angVel: angVel, life: 1.2 });
 }
+// Анимация коровы
+function updateCowAnimation(dt) {
+  if (!cowHead) return;
+  cowAnimTime += dt;
+  
+  // Анимация головы - вся группа двигается вместе
+  if (cowHeadGroup) {
+    cowHeadGroup.rotation.z = Math.sin(cowAnimTime * 2) * 0.08;
+    cowHeadGroup.rotation.y = Math.sin(cowAnimTime * 1.2) * 0.1;
+    cowHeadGroup.rotation.x = Math.sin(cowAnimTime * 1.5) * 0.03;
+  }
+  
+  // Анимация ушей - подёргивание
+  if (cowEars && cowEars.length > 0) {
+    cowEars.forEach(function(earObj) {
+      var wiggle = Math.sin(cowAnimTime * 5 + earObj.side * 1.5) * 0.15;
+      var twitch = Math.sin(cowAnimTime * 12) * 0.05 * (Math.random() > 0.7 ? 1 : 0);
+      earObj.mesh.rotation.z = earObj.baseRotZ + wiggle + twitch;
+      earObj.mesh.rotation.x = Math.sin(cowAnimTime * 4) * 0.08;
+    });
+  }
+  
+  // Анимация хвоста - размахивание
+  if (cowTail && cowTailTip) {
+    var tailSwing = Math.sin(cowAnimTime * 4) * 0.4;
+    cowTail.rotation.z = tailSwing;
+    // ХвостTip движется вместе с хвостом
+    var tipSwing = Math.sin(cowAnimTime * 4) * 0.5;
+    cowTailTip.position.x = Math.sin(tipSwing) * 0.15;
+    cowTailTip.position.z = -2.15 + Math.cos(tipSwing) * 0.1;
+  }
+}
+
 function updateParticles(dt) {
   for (var i = particles.length - 1; i >= 0; i--) {
     var p = particles[i];
@@ -2198,9 +2606,11 @@ function toggleShop() {
   shopOpen = !shopOpen;
   if (shopOpen) {
     shopMenu.classList.add('open');
+    playShopSound();
     document.exitPointerLock();
     updateShopMenu();
   } else {
+    playShopSound();
     shopMenu.classList.remove('open');
     if (!state.foundNeedle && !isMobileDevice && !adminOpen && tutorialCompleted) safePointerLock();
   }
@@ -2253,6 +2663,7 @@ document.getElementById('sellMilk').onclick = function() {
   state.money += e;
   state.totalMilkSold += state.milk;
   showPopup('+' + e + '₽', window.innerWidth/2, window.innerHeight/2);
+  playBuySound();
   state.milk = 0;
   updateHUD(); updateShopMenu();
 };
@@ -2261,6 +2672,7 @@ document.getElementById('buySpeed').onclick = function() {
   if (!p || state.money < p) return;
   state.money -= p; state.speedLvl++;
   state.moveSpeed = 5 + (state.speedLvl - 1) * 1.5;
+  playBuySound();
   updateHUD(); updateShopMenu();
 };
 document.getElementById('buyGather').onclick = function() {
@@ -2268,6 +2680,7 @@ document.getElementById('buyGather').onclick = function() {
   if (!p || state.money < p) return;
   state.money -= p; state.gatherLvl++;
   state.gatherCooldown = Math.max(0.1, 0.8 * Math.pow(0.7, state.gatherLvl - 1));
+  playBuySound();
   updateHUD(); updateShopMenu();
 };
 document.getElementById('buyInv').onclick = function() {
@@ -2275,29 +2688,34 @@ document.getElementById('buyInv').onclick = function() {
   if (!p || state.money < p) return;
   state.money -= p; state.invLvl++;
   state.maxHay = 25 + (state.invLvl - 1) * 15;
+  playBuySound();
   updateHUD(); updateShopMenu();
 };
 document.getElementById('buyLuck').onclick = function() {
   var p = PRICES.luck[state.luckLvl - 1];
   if (!p || state.money < p) return;
   state.money -= p; state.luckLvl++;
+  playBuySound();
   updateShopMenu();
 };
 document.getElementById('buyFork').onclick = function() {
   if (state.hasFork || state.money < PRICES.fork[0]) return;
   state.money -= PRICES.fork[0]; state.hasFork = true;
+  playBuySound();
   showHint('Вилы куплены!');
   updateShopMenu(); updateToolButton();
 };
 document.getElementById('buyDynamite').onclick = function() {
   if (state.hasDynamite || state.money < PRICES.dynamite[0]) return;
   state.money -= PRICES.dynamite[0]; state.hasDynamite = true;
+  playBuySound();
   showHint('Динамит куплен!');
   updateShopMenu(); updateToolButton();
 };
 document.getElementById('buyVacuum').onclick = function() {
   if (state.hasVacuum || state.money < PRICES.vacuum[0]) return;
   state.money -= PRICES.vacuum[0]; state.hasVacuum = true;
+  playBuySound();
   showHint('Пылесос куплен!');
   updateShopMenu(); updateToolButton();
 };
@@ -2305,6 +2723,7 @@ document.getElementById('buyAutoGather').onclick = function() {
   var p = PRICES.autoGather[state.autoGatherLvl];
   if (!p || state.money < p) return;
   state.money -= p; state.autoGatherLvl++;
+  playBuySound();
   showHint('Автосбор ур.' + state.autoGatherLvl);
   updateShopMenu();
 };
@@ -2386,6 +2805,7 @@ function updatePlayer(dt) {
     resolveCollisions(tryZ);
     player.position.z = tryZ.z;
     moveTime += dt * speed;
+    if (player.isGrounded) playStepSound();
   }
   if (!player.isGrounded) {
     player.velocityY -= player.gravity * dt;
@@ -2420,6 +2840,7 @@ function animate() {
   requestAnimationFrame(animate);
   var dt = Math.min(clock.getDelta(), 0.1);
   updatePlayer(dt);
+  updateCowAnimation(dt);
   updateParticles(dt);
   updateCooldownUI();
   updateAutoGather(dt);
